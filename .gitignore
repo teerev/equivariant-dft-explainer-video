@@ -208,3 +208,18 @@ __marimo__/
 
 .DS_Store
 
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.pdf
+
+# Manim cache
+**/__pycache__/
+**/.mypy_cache/
+media/
+
