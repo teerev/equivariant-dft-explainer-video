@@ -19,9 +19,9 @@ class ConvolutionScan(RightRegionScene):
         rng = np.random.default_rng(seed=2025)
         input_values = rng.integers(low=0, high=256, size=(input_size, input_size))
         kernel_values = np.array([
-            [1, 0, -1],
-            [1, 0, -1],
-            [1, 0, -1],
+            [0.8, 0.1, -0.6],
+            [0.2, 0.05, -0.35],
+            [0.45, -0.2, -0.7],
         ])
 
         cell_size = 0.5
@@ -99,7 +99,11 @@ class ConvolutionScan(RightRegionScene):
                     square = Square(side_length=0.35)
                     square.set_stroke(color=stroke_color, width=1.5)
                     square.set_fill(color=BLACK, opacity=0.1)
-                    value_label = Integer(int(matrix[r, c]), font_size=18)
+                    value = matrix[r, c]
+                    if float(value).is_integer():
+                        value_label = Integer(int(value), font_size=18)
+                    else:
+                        value_label = DecimalNumber(float(value), num_decimal_places=2, font_size=18)
                     value_label.scale(0.6)
                     value_label.set_color(text_color)
                     value_label.move_to(square.get_center())
@@ -136,16 +140,11 @@ class ConvolutionScan(RightRegionScene):
         self.play(FadeIn(elementwise_panel))
         self.wait(0.25)
 
-        # Pre-create placeholders for output values
-        output_value_labels = []
-        for i in range(output_size):
-            row_labels = []
-            for j in range(output_size):
-                value_label = Integer(0, font_size=20, color=WHITE).scale(0.6)
-                value_label.move_to(output_grid[i][j].get_center())
-                output_grid[i][j].add(value_label)
-                row_labels.append(value_label)
-            output_value_labels.append(row_labels)
+        # Storage for output value labels (start empty so numbers appear only when computed)
+        output_value_labels = [
+            [None for _ in range(output_size)]
+            for _ in range(output_size)
+        ]
 
         # ============================================================
         # 5. SCANNING ANIMATION
@@ -184,16 +183,27 @@ class ConvolutionScan(RightRegionScene):
                 highlight = active_square.copy()
                 highlight.set_fill(color=GREEN, opacity=0.6)
 
-                # Compute the convolution result for this position
-                output_value = int(np.sum(product_vals))
-                new_value_label = Integer(output_value, font_size=20, color=WHITE).scale(0.6)
+                # Compute the convolution result for this position (keep float precision)
+                output_value = float(np.sum(product_vals))
+                new_value_label = DecimalNumber(
+                    output_value, num_decimal_places=2, font_size=20, color=WHITE
+                ).scale(0.6)
                 new_value_label.move_to(active_square.get_center())
 
                 # Update output cell value as it lights up
-                self.play(
-                    FadeIn(highlight, run_time=0.2),
-                    Transform(output_value_labels[out_i][out_j], new_value_label),
-                )
+                existing_label = output_value_labels[out_i][out_j]
+                if existing_label is None:
+                    output_value_labels[out_i][out_j] = new_value_label
+                    active_square.add(new_value_label)
+                    self.play(
+                        FadeIn(highlight, run_time=0.2),
+                        FadeIn(new_value_label, run_time=0.2),
+                    )
+                else:
+                    self.play(
+                        FadeIn(highlight, run_time=0.2),
+                        Transform(existing_label, new_value_label),
+                    )
                 self.play(FadeOut(highlight, run_time=0.2))
 
         # ============================================================
