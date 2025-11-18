@@ -17,7 +17,7 @@ class ConvolutionScan(RightRegionScene):
         output_size = input_size - kernel_size + 1  # 4×4 map
 
         rng = np.random.default_rng(seed=2025)
-        input_values = rng.integers(low=0, high=256, size=(input_size, input_size))
+        input_values = rng.random((input_size, input_size))
         kernel_values = np.array([
             [0.8, 0.1, -0.6],
             [0.2, 0.05, -0.35],
@@ -36,7 +36,11 @@ class ConvolutionScan(RightRegionScene):
                 square = Square(side_length=cell_size)
                 square.set_stroke(color=GRAY, width=1)
                 square.move_to(np.array([j*cell_size, -i*cell_size, 0]))
-                value_label = Integer(int(input_values[i, j]), font_size=18)
+                value = input_values[i, j]
+                if float(value).is_integer():
+                    value_label = Integer(int(value), font_size=18)
+                else:
+                    value_label = DecimalNumber(float(value), num_decimal_places=2, font_size=18)
                 value_label.scale(0.7)
                 value_label.move_to(square.get_center())
                 cell = VGroup(square, value_label)
