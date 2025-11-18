@@ -221,5 +221,17 @@ __marimo__/
 # Manim cache
 **/__pycache__/
 **/.mypy_cache/
-media/
+**/media/
+
+.plan
+
+# LaTeX junk
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+**/.build/
 
