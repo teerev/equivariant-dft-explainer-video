@@ -176,13 +176,89 @@ We need to show that $(g X) * F = g (X * F)$, i.e., translating the input first 
      &&\text{(definition of convolution)} \\
 \label{eq:discrete-eq5}
   &= \sum_{u = 0}^{K-1} \sum_{v = 0}^{L-1} X_{\,u+i-a,\ v+j-b}\, F_{u v}
-     &&\text{(rearranging terms inside the indices).}
 \end{align}
 
 The right-hand sides of \eqref{eq:discrete-eq2} and \eqref{eq:discrete-eq5} are identical, hence $((g X) * F)_{i j} = (g (X * F))_{i j}$ for all $(i, j)$, which establishes discrete translational equivariance.
 
 
+
+\subsection{Continuous convolution definition}
+
+We work with a bottom–left origin so that the discrete indices $(i,j)$ are
+aligned with Cartesian coordinates $(x,y)$: increasing $i$ moves to the right
+and increasing $j$ moves upwards.
+
+We begin with the discrete convolution derived earlier,
+\begin{equation}
+  \label{eq:discrete-conv}
+  Y_{ij} = (X * F)_{ij} =
+  \sum_{u = 0}^{K-1}
+  \sum_{v = 0}^{L-1}
+  X_{\,i+u,\; j+v}\, F_{uv},
+\end{equation}
+where $X_{ij}$ denotes the input image, $F_{uv}$ the kernel of size
+$K \times L$, and $Y_{ij}$ the resulting feature map.
+
+Introduce continuous coordinates
+\begin{equation}
+  \label{eq:coord-map}
+  s = i\,\Delta x,\qquad t = j\,\Delta y,
+\end{equation}
+so that each pixel index $(i,j)$ corresponds to the point $(s,t)$ in the plane.
+Similarly, for each kernel offset $(u,v)$ we define continuous displacements
+\begin{equation}
+  \label{eq:offset-map}
+  \sigma_u = u\,\Delta x,\qquad \tau_v = v\,\Delta y.
+\end{equation}
+
+We now regard the discrete arrays as samples of underlying continuous
+functions, i.e.
+\begin{equation}
+  X_{ij} \approx X(i\,\Delta x,\; j\,\Delta y) = X(s,t),\qquad
+  F_{uv} \approx F(u\,\Delta x,\; v\,\Delta y) = F(\sigma_u,\tau_v).
+\end{equation}
+Substituting these into \eqref{eq:discrete-conv} and using
+$s = i\,\Delta x$, $t = j\,\Delta y$ gives the Riemann–sum
+representation
+\begin{equation}
+  \label{eq:riemann-sum}
+  Y(s,t)
+  \;\approx\;
+  \sum_{u = 0}^{K-1}
+  \sum_{v = 0}^{L-1}
+  X\bigl(s + u\,\Delta x,\; t + v\,\Delta y\bigr)\,
+  F\bigl(u\,\Delta x,\; v\,\Delta y\bigr)\,
+  \Delta x\,\Delta y.
+\end{equation}
+
+In the continuum limit $\Delta x,\Delta y \to 0$ with
+$A = K\,\Delta x$ and $B = L\,\Delta y$ held fixed, the sums converge
+to a double integral over the kernel support $[0,A] \times [0,B]$:
+\begin{equation}
+  \label{eq:continuous-conv}
+  Y(s,t) = (X * F)(s,t)
+  \;=\;
+  \int_{0}^{A}\!\!\int_{0}^{B}
+  X(s + \sigma,\; t + \tau)\,
+  F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau.
+\end{equation}
+This is the continuous convolution (more precisely, the continuous analogue
+of the discrete operator in \eqref{eq:discrete-conv}) corresponding to the
+bottom–left–origin discrete setup above.
+
+
+
 \subsection{Translational equivariance: continuous case}
+
+
+
+
+
+
+
+
+
+
 
 We now consider the continuous analogue of the discrete convolution. As before,
 we regard the kernel $F$ as fixed and write the convolution of a continuous
@@ -247,7 +323,6 @@ then expand the convolution:
   &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
      X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
      F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
-     &&\text{(rearranging terms inside the arguments).}
 \end{align}
 
 The right-hand sides of \eqref{eq:continuous-eq2} and
@@ -264,76 +339,101 @@ in direct analogy with the discrete case.
 
 
 
-\subsection{ALL NEEDS REVISING FROM HERE: Rotational non-equivariance: continuous case}
+\subsection{Rotational non-equivariance: continuous case}
 
-We write the continuous 2D convolution as
+We keep the same continuous convolution operator as in
+\eqref{eq:continuous-conv}, treating the kernel $F$ as fixed:
 \begin{equation}
-\label{eq:continuous-2d}
-(X * F)(x)
+  \label{eq:continuous-conv-rot}
+  (X * F)(s,t)
   \;=\;
-  \int_{\mathbb{R}^2} X(x + y)\,F(y)\,dy,
-  \qquad x\in\mathbb{R}^2.
+  \int_{\mathbb{R}^2}
+  X(s + \sigma,\; t + \tau)\,
+  F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau.
 \end{equation}
-Let $R\in SO(2)$ be a rotation matrix and let its action on functions be
+It is convenient to write $x = (s,t)^\top$ and $y = (\sigma,\tau)^\top$,
+so this is equivalently
 \begin{equation}
-\label{eq:rotation-action}
-(RX)(x) := X(R^{-1}x),
+  (X * F)(x)
+  \;=\;
+  \int_{\mathbb{R}^2} X(x + y)\,F(y)\,\mathrm{d}y.
 \end{equation}
-so that $RX$ is just $X$ viewed in a rotated coordinate system.  Rotation
+
+Let $R \in SO(2)$ be a rotation matrix and define its action on functions by
+\begin{equation}
+  \label{eq:rotation-action}
+  (R X)(x) := X(R^{-1} x),
+\end{equation}
+so that $R X$ is just $X$ viewed in a rotated coordinate system. Rotation
 equivariance of the convolution would mean
 \begin{equation}
-\label{eq:rotation-equivariance}
-R(X*F) \;=\; (RX)*F
-\quad\text{for all }X\text{ and all rotations }R.
+  \label{eq:rotation-equivariance}
+  R(X * F) \;=\; (R X) * F
+  \quad\text{for all }X\text{ and all }R\in SO(2).
 \end{equation}
 
-Compute both sides explicitly.  On the one hand,
-\begin{equation}
-\label{eq:rotation-left}
-\bigl(R(X*F)\bigr)(x)
-  = (X*F)(R^{-1}x)
-  = \int_{\mathbb{R}^2} X(R^{-1}x + y)\,F(y)\,dy.
-\end{equation}
-On the other hand,
-\begin{equation}
-\label{eq:rotation-right}
-\bigl((RX)*F\bigr)(x)
-  = \int_{\mathbb{R}^2} (RX)(x + y)\,F(y)\,dy
-  = \int_{\mathbb{R}^2} X(R^{-1}(x + y))\,F(y)\,dy.
-\end{equation}
-Set $y = Rz$ in the last integral (so $dy = dz$), to get
-\begin{equation}
-\label{eq:rotation-right-change}
-\bigl((RX)*F\bigr)(x)
-  = \int_{\mathbb{R}^2} X(R^{-1}x + z)\,F(Rz)\,dz.
-\end{equation}
+As in the translational case, we compare the two sides explicitly.
 
-For rotation equivariance we would need, for all $X$ and $x$,
+\textbf{Rotate first, then convolve.}
+Plug the rotated input into the convolution:
+\begin{align}
+  \label{eq:rot-eq1}
+  ((R X) * F)(x)
+    &= \int_{\mathbb{R}^2} (R X)(x + y)\,F(y)\,\mathrm{d}y
+       &&\text{(definition of convolution)} \\
+  \label{eq:rot-eq2}
+    &= \int_{\mathbb{R}^2} X(R^{-1}(x + y))\,F(y)\,\mathrm{d}y
+       &&\text{(definition of rotation action)}.
+\end{align}
+
+\textbf{Convolve first, then rotate.}
+Now rotate the output of the convolution:
+\begin{align}
+  \label{eq:rot-eq3}
+  (R (X * F))(x)
+    &= (X * F)(R^{-1} x)
+       &&\text{(definition of rotation action)} \\
+  \label{eq:rot-eq4}
+    &= \int_{\mathbb{R}^2} X(R^{-1} x + y)\,F(y)\,\mathrm{d}y
+       &&\text{(definition of convolution)}.
+\end{align}
+
+To compare \eqref{eq:rot-eq2} and \eqref{eq:rot-eq4}, make a change of
+variables $y = R z$ in \eqref{eq:rot-eq2}. Since $R$ is orthogonal,
+$\mathrm{d}y = \mathrm{d}z$, and we obtain
+\begin{align}
+  \label{eq:rot-eq5}
+  ((R X) * F)(x)
+    &= \int_{\mathbb{R}^2} X\bigl(R^{-1} x + z\bigr)\,F(R z)\,\mathrm{d}z.
+\end{align}
+By contrast, \eqref{eq:rot-eq4} can be written (renaming $y$ to $z$) as
+\begin{align}
+  \label{eq:rot-eq6}
+  (R (X * F))(x)
+    &= \int_{\mathbb{R}^2} X\bigl(R^{-1} x + z\bigr)\,F(z)\,\mathrm{d}z.
+\end{align}
+
+For rotation equivariance \eqref{eq:rotation-equivariance} to hold, we would
+need \eqref{eq:rot-eq5} and \eqref{eq:rot-eq6} to be equal for all $X$ and
+all $x$. Since $X$ is arbitrary, the integrands must agree almost everywhere:
 \begin{equation}
-\label{eq:rotation-condition}
-\int_{\mathbb{R}^2} X(R^{-1}x + y)\,F(y)\,dy
-  \;=\;
-\int_{\mathbb{R}^2} X(R^{-1}x + z)\,F(Rz)\,dz.
+  \label{eq:rot-condition}
+  F(z) = F(R z)
+  \quad\text{for all }z\in\mathbb{R}^2\text{ and all }R\in SO(2).
 \end{equation}
-Since this must hold for every $X$, the integrands must agree almost
-everywhere:
+Thus $F$ must be invariant under every rotation, i.e.\ rotationally
+symmetric (radial, $F(z) = f(\|z\|)$). For a generic, anisotropic kernel
+(e.g.\ an oriented edge detector) this condition fails, so in general
 \begin{equation}
-\label{eq:rotation-integrand}
-F(y) = F(Ry)
-\quad\text{for all }y\in\mathbb{R}^2.
+  R(X * F) \;\neq\; (R X) * F.
 \end{equation}
-Thus $F$ must be invariant under every rotation $R$, i.e.
-\begin{equation}
-\label{eq:kernel-invariance}
-F(Ru) = F(u)\quad\forall\,u,\,R\in SO(2),
-\end{equation}
-which means that $F$ is rotationally symmetric (radial, $F(u)=f(\|u\|)$).
-For a generic, anisotropic kernel (e.g.\ an oriented edge detector) this condition fails, so in general
-\begin{equation}
-\label{eq:rotation-failure}
-R(X*F) \neq (RX)*F.
-\end{equation}
-Therefore ordinary convolution is \emph{not} rotationally equivariant unless the kernel itself is rotationally symmetric.
+Therefore ordinary convolution is \emph{not} rotationally equivariant unless
+the kernel itself is rotationally symmetric, in sharp contrast to the
+translational case.
+
+
+
+
 
 \section{Thatcher effect}
 
