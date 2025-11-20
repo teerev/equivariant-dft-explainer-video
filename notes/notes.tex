@@ -58,7 +58,7 @@ The defining ingredient of a convolutional network is a mapping between two func
 
 \textbf{video: ConvolutionalScan.mp4}
 
-Formalising it a bit, the convolutional layer depends on four functions $X$ (the input image), $F$ (the kernel), $Y$ (the feature map), and $f$, the function that keeps track of the indices between the input image and the feature map.
+Formalising it a bit, the convolutional layer depends on three functions $X$ (the input image), $F$ (the kernel), $Y$ (the feature map).
 
 % Function definitions
 \begin{equation}
@@ -67,7 +67,6 @@ Formalising it a bit, the convolutional layer depends on four functions $X$ (the
 	F & : \mathbb{Z}^2 \rightarrow \mathbb{R} \\
 	W & : \mathbb{Z}^2 \rightarrow \mathbb{R} \\
 	G & : \mathbb{Z}^2 \rightarrow \mathbb{R} \\
-	f & : \mathbb{Z}^2 \rightarrow \mathbb{Z}^2
 \end{aligned}
 \end{equation}
 
@@ -96,7 +95,7 @@ To calculate the value of the pixel in the feature map - indicated in cyan - we 
   X_{\,u+2,\ v+1}\, F_{u v}.
   \end{equation}
 
-The +2 and +1 are there because the kernel is shifted across 2 pixels and up 1 pixel, and this corresponds directly to the position of the indices i and j in the feature map pointing to the output pixel, so we can identify the 2 and the 1 and i and j in the feature map coordinates:
+The +2 and +1 are there because the kernel is shifted across 2 pixels and up 1 pixel, and this corresponds directly to the position of the indices i and j in the feature map pointing to the output pixel, so we can identify the 2 as the 1 and i and j in the feature map coordinates:
 
 \begin{equation}
   \label{eq:discrete-conv-image2}
@@ -141,40 +140,48 @@ and the general formula for the discrete convolution is
   \forall j \in \{0, 1, \ldots, N-L\}.
 \end{equation}
 
-\subsection{ALL NEEDS REVISING FROM HERE: Translational equivariance: discrete case}
 
-If you translate the input image $F$ according to some translation $g$ and then perform the convolution $f$, the resulting feature map is the same as if you do the convolution $f$ first and then translate the feature map by the same translation $g$. Here, $g \in T(\mathbb{Z}^2)$, where $T(\mathbb{Z}^2)$ denotes the group of discrete translations on the pixel grid.
+
+\subsection{Translational equivariance: discrete case}
+
+We can denote the convolution $X * F$ as $f(X; F)$, where X is the input variable and the filter, F, can be regarded as a fixed parameter. The kernel F is learned during training, but I'm just talking about performing a single convolution here, for which the kernel is fixed. The short hand notation we can use is $f(X)$, or just $f$.
+
+If you translate the input image $X$ according to some translation $g$ and then perform the convolution $f$, the resulting feature map is the same as if you do the convolution $f$ first and then translate the feature map by the same translation $g$. Here, $g \in T(\mathbb{Z}^2)$, where $T(\mathbb{Z}^2)$ denotes the group of discrete translations in either X or Y.
 
 Here is the proof:
 
-Let $g$ be a translation by $(a, b) \in \mathbb{Z}^2$, so that $(g F)(i', j') = F(i' - a, j' - b)$ for any $(i', j') \in \mathbb{Z}^2$.
+Let $g$ be a translation by $(a, b) \in \mathbb{Z}^2$, so that $(g X)(i, j) = X(i - a, j - b)$ for any $(i, j) \in \mathbb{Z}^2$.
 
-We need to show that $(g F) * W = g (F * W)$, i.e., that translating the input first and then convolving yields the same result as convolving first and then translating the feature map.
+We need to show that $(g X) * F = g (X * F)$, i.e., translating the input first and then convolving yields the same feature map as convolving first and then translating the output.
 
-Consider the left-hand side: applying translation first, then convolution. At feature map position $(i, j)$:
-
-\begin{equation}
+\textbf{Translate first, then convolve.} Plug the translated input into the convolution definition and immediately use the definition of $g$:
+\begin{align}
 \label{eq:discrete-eq1}
-((g F) * W)_{i j} = \sum_{u = 0}^{L-1} \sum_{v = 0}^{K-1} (g F)_{\,i - u,\ j - v}\, W_{u v}
-\end{equation}
-
-Since $(g F)_{i - u, j - v} = F((i - u) - a, (j - v) - b) = F(i - u - a, j - v - b)$, we have:
-
-\begin{equation}
+((g X) * F)_{i j}
+  &= \sum_{u = 0}^{K-1} \sum_{v = 0}^{L-1} (g X)_{\,u+i,\ v+j}\, F_{u v}
+     &&\text{(definition of convolution)} \\
 \label{eq:discrete-eq2}
-((g F) * W)_{i j} = \sum_{u = 0}^{L-1} \sum_{v = 0}^{K-1} F_{\,i - u - a,\ j - v - b}\, W_{u v}
-\end{equation}
+  &= \sum_{u = 0}^{K-1} \sum_{v = 0}^{L-1} X_{\,(u+i)-a,\ (v+j)-b}\, F_{u v}
+     &&\text{(definition of translation)}.
+\end{align}
 
-Now applying convolution first, then translation gives:
-
-\begin{equation}
+\textbf{Convolve first, then translate.} Start with the feature map and evaluate it at the shifted index, then expand the convolution:
+\begin{align}
 \label{eq:discrete-eq3}
-(g (F * W))_{i j} = (F * W)_{i - a, j - b} = \sum_{u = 0}^{L-1} \sum_{v = 0}^{K-1} F_{\,i - a - u,\ j - b - v}\, W_{u v}
-\end{equation}
+(g (X * F))_{i j}
+  &= (X * F)_{i - a, j - b}
+     &&\text{(definition of translation)} \\
+\label{eq:discrete-eq4}
+  &= \sum_{u = 0}^{K-1} \sum_{v = 0}^{L-1} X_{\, (i-a)+u,\ (j-b)+v}\, F_{u v}
+     &&\text{(definition of convolution)} \\
+\label{eq:discrete-eq5}
+  &= \sum_{u = 0}^{K-1} \sum_{v = 0}^{L-1} X_{\,u+i-a,\ v+j-b}\, F_{u v}
+     &&\text{(rearranging terms inside the indices).}
+\end{align}
 
-And immediately we see that $((g F) * W)_{i j} = (g (F * W))_{i j}$ for all $(i, j)$, establishing translational equivariance.
+The right-hand sides of \eqref{eq:discrete-eq2} and \eqref{eq:discrete-eq5} are identical, hence $((g X) * F)_{i j} = (g (X * F))_{i j}$ for all $(i, j)$, which establishes discrete translational equivariance.
 
-\subsection{Translational equivariance: continuous case}
+\subsection{ALL NEEDS REVISING FROM HERE: Translational equivariance: continuous case}
 
 To pass from the discrete convolution used in CNNs to the continuous
 convolution formula, we reinterpret the pixel indices as samples of a
