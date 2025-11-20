@@ -88,40 +88,30 @@ class ConvIndexDiagram(Scene):
         # ------------------------------------------------------------------
         # Index labels
         # ------------------------------------------------------------------
-        # j' labels (white grid, vertical)
-        jprime_labels = VGroup()
-        x_jprime = origin_white[0] - 0.8 * cell
+        # j labels (white grid, vertical)
+        j_labels = VGroup()
+        x_j = origin_white[0] - 0.8 * cell
         for j in range(white_size[1]):
             y = origin_white[1] + (j + 0.5) * cell
-            lab = MathTex(rf"j'={j}", color=WHITE)
-            lab.scale(0.4)
-            lab.move_to(np.array([x_jprime, y, 0.0]))
-            jprime_labels.add(lab)
-
-        # i' labels (white grid, horizontal)
-        iprime_labels = VGroup()
-        y_iprime = origin_white[1] - 0.6 * cell
-        for i in range(white_size[0]):
-            x = origin_white[0] + (i + 0.5) * cell
-            lab = MathTex(rf"i'={i}", color=WHITE)
-            lab.scale(0.4)
-            lab.rotate(90 * DEGREES)
-            lab.move_to(np.array([x, y_iprime - 0.2 * cell, 0.0]))
-            iprime_labels.add(lab)
-
-        # j labels (green grid, vertical)
-        j_labels = VGroup()
-        x_j = origin_white[0] - 2.6 * cell
-        for j in range(green_size[1]):
-            y = origin_green[1] + (j + 0.5) * cell
-            lab = MathTex(rf"j={j}", color=GREEN_B)
+            lab = MathTex(rf"j={j}", color=WHITE)
             lab.scale(0.4)
             lab.move_to(np.array([x_j, y, 0.0]))
             j_labels.add(lab)
 
+        # i labels (white grid, horizontal)
+        i_labels = VGroup()
+        y_i_base = origin_white[1] - 0.6 * cell
+        for i in range(white_size[0]):
+            x = origin_white[0] + (i + 0.5) * cell
+            lab = MathTex(rf"i={i}", color=WHITE)
+            lab.scale(0.4)
+            lab.rotate(90 * DEGREES)
+            lab.move_to(np.array([x, y_i_base - 0.2 * cell, 0.0]))
+            i_labels.add(lab)
+
         # v labels (red grid, vertical)
         v_labels = VGroup()
-        x_v = origin_white[0] - 4.6 * cell
+        x_v = origin_white[0] - 2.3 * cell
         for v in range(red_size[1]):
             y = origin_red[1] + (v + 0.5) * cell
             lab = MathTex(rf"v={v}", color=RED)
@@ -129,20 +119,9 @@ class ConvIndexDiagram(Scene):
             lab.move_to(np.array([x_v, y, 0.0]))
             v_labels.add(lab)
 
-        # i labels (green grid, horizontal)
-        i_labels = VGroup()
-        y_i = y_iprime - 0.7 * cell
-        for i in range(green_size[0]):
-            x = origin_green[0] + (i + 0.5) * cell
-            lab = MathTex(rf"i={i}", color=GREEN_B)
-            lab.scale(0.4)
-            lab.rotate(90 * DEGREES)
-            lab.move_to(np.array([x, y_i - 0.8 * cell, 0.0]))
-            i_labels.add(lab)
-
         # u labels (red grid, horizontal)
         u_labels = VGroup()
-        y_u = y_i - 0.7 * cell
+        y_u = y_i_base# - 0.7 * cell
         for u in range(red_size[0]):
             x = origin_red[0] + (u + 0.5) * cell
             lab = MathTex(rf"u={u}", color=RED)
@@ -159,11 +138,9 @@ class ConvIndexDiagram(Scene):
             white_grid,
             red_grid,
             center_square,
-            jprime_labels,
-            iprime_labels,
             j_labels,
-            v_labels,
             i_labels,
+            v_labels,
             u_labels,
         )
 
