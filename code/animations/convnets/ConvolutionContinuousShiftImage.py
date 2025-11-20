@@ -22,14 +22,29 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
                 "include_tip": False,
             },
         )
+        axes.shift(LEFT * 1.5 + DOWN * 1.5)   
+        axes_shift = LEFT * 1.5 + DOWN * 1.0
+        axes.shift(axes_shift)
         axes_labels = axes.get_axis_labels(MathTex("x"), MathTex("y"))
 
+        shift_s = ValueTracker(0.0)
+        shift_t = ValueTracker(0.0)
+
         input_image = self.create_input_image(resolution=360, span=6.5)
-        input_image.set_width(axes.width * 3.2).move_to(axes.get_center())
+        input_image.set_width(axes.width * 3.2)
         input_image.set_z_index(-2)
+        input_base = axes.get_center() - axes_shift
+
+        def update_input(mob):
+            offset = axes.c2p(shift_s.get_value(), shift_t.get_value()) - axes.c2p(0, 0)
+            mob.move_to(input_base + offset)
+
+        input_image.add_updater(update_input)
+        update_input(input_image)
 
         kernel_image = self.create_kernel_image(resolution=240, span=3.0)
-        kernel_image.set_width(axes.width * 0.95).move_to(axes.get_center())
+        kernel_image.set_width(axes.width * 0.95)
+        kernel_image.move_to(axes.c2p(1.2, 0.9) - axes_shift)
         kernel_image.set_z_index(-1)
 
         title = Text(
@@ -42,7 +57,19 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
         self.play(FadeIn(kernel_image, run_time=1.2))
         self.play(Create(axes), Write(axes_labels))
         self.play(Write(title))
+        self.play(
+            shift_s.animate.set_value(-1.8),
+            run_time=4,
+            rate_func=rate_functions.ease_in_out_sine,
+        )
+        self.play(
+            shift_t.animate.set_value(1.4),
+            run_time=4,
+            rate_func=rate_functions.ease_in_out_sine,
+        )
         self.wait(2)
+
+        input_image.clear_updaters()
 
     def create_input_image(self, resolution=320, span=6.0, num_centers=60):
         rng = np.random.default_rng(2024)
