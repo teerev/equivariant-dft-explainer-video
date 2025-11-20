@@ -1,7 +1,7 @@
 from manim import *
 import numpy as np
 
-class ConvIndexDiagram(Scene):
+class ConvIndexDiagramAnimation(Scene):
     def construct(self):
         cell = 0.4  # side length of each square
 
@@ -49,13 +49,13 @@ class ConvIndexDiagram(Scene):
         # Grid sizes: (cols, rows)
         white_size = (9, 8)
         green_size = (7, 4)
-        red_size   = (3, 5)
+        red_size = (3, 5)
 
         # Relative offsets (in grid cells)
         # green: 2 right, 1 up from white
         origin_green = origin_white + np.array([1 * cell, 2 * cell, 0.0])
-        # red: 1 left, 2 up from white
-        origin_red   = origin_white + np.array([2 * cell, 1 * cell, 0.0])
+        # red starts aligned with the input grid (bottom-left corners coincide)
+        origin_red = origin_white.copy()
 
         # ------------------------------------------------------------------
         # Make grids
@@ -69,21 +69,7 @@ class ConvIndexDiagram(Scene):
         red_grid = make_grid(*red_size, color=RED, stroke_width=4)
         red_grid.shift(origin_red)
 
-        # ------------------------------------------------------------------
-        # Highlight central cell inside the red grid (u=1, v=2)
-        # ------------------------------------------------------------------
-        center_square = Square(
-            side_length=cell,
-            stroke_width=0,
-            fill_color=TEAL,
-            fill_opacity=1.0,
-        )
-        center_x = origin_red[0] + (1 + 0.5) * cell   # u = 1
-        center_y = origin_red[1] + (2 + 0.5) * cell   # v = 2
-        center_square.move_to(np.array([center_x, center_y, 0.0]))
-
-        center_square_right = center_square.copy().shift(cell * RIGHT)
-        center_square_right_up = center_square_right.copy().shift(cell * UP)
+        red_group = VGroup(red_grid)
 
         # ------------------------------------------------------------------
         # Index labels
@@ -112,9 +98,10 @@ class ConvIndexDiagram(Scene):
         # v labels (red grid, vertical)
         v_labels = VGroup()
         x_v = origin_white[0] - 2.3 * cell
-        for v in range(red_size[1]):
-            y = origin_red[1] + (v + 0.5) * cell
-            lab = MathTex(rf"v={v}", color=RED)
+        v_values = np.arange(-(red_size[1] // 2), red_size[1] // 2 + 1)
+        for idx, v_val in enumerate(v_values):
+            y = origin_red[1] + (idx + 0.5) * cell
+            lab = MathTex(rf"v={v_val}", color=RED)
             lab.scale(0.4)
             lab.move_to(np.array([x_v, y, 0.0]))
             v_labels.add(lab)
@@ -122,9 +109,10 @@ class ConvIndexDiagram(Scene):
         # u labels (red grid, horizontal)
         u_labels = VGroup()
         y_u = y_i_base# - 0.7 * cell
-        for u in range(red_size[0]):
-            x = origin_red[0] + (u + 0.5) * cell
-            lab = MathTex(rf"u={u}", color=RED)
+        u_values = np.arange(-(red_size[0] // 2), red_size[0] // 2 + 1)
+        for idx, u_val in enumerate(u_values):
+            x = origin_red[0] + (idx + 0.5) * cell
+            lab = MathTex(rf"u={u_val}", color=RED)
             lab.scale(0.4)
             lab.rotate(90 * DEGREES)
             lab.move_to(np.array([x, y_u - 1.6 * cell, 0.0]))
@@ -133,40 +121,39 @@ class ConvIndexDiagram(Scene):
         # ------------------------------------------------------------------
         # Add everything to the scene (order matters for layering)
         # ------------------------------------------------------------------
+        teal_square = Square(
+            side_length=cell,
+            fill_color=TEAL,
+            fill_opacity=1.0,
+            stroke_width=0,
+        )
+        teal_center_x = origin_red[0] + (1 + 0.5) * cell
+        teal_center_y = origin_red[1] + (2 + 0.5) * cell
+        teal_square.move_to(np.array([teal_center_x, teal_center_y, 0.0]))
+
         self.add(
             green_grid,
             white_grid,
-            red_grid,
-            center_square,
+            red_group,
             j_labels,
             i_labels,
             v_labels,
             u_labels,
+            teal_square,
         )
 
-        self.wait(0.5)
+        move_sequence = [RIGHT, UP, RIGHT, UP, LEFT]
+        for direction in move_sequence:
+            shift_vec = cell * direction
+            self.play(FadeOut(teal_square), run_time=0.2)
 
-        shift_right = cell * RIGHT
-        self.play(
-            FadeOut(center_square),
-            red_grid.animate.shift(shift_right),
-            u_labels.animate.shift(shift_right),
-            run_time=2,
-            rate_func=smooth,
-        )
-
-        self.play(FadeIn(center_square_right), run_time=0.4)
-        self.wait(0.3)
-
-        shift_up = cell * UP
-        self.play(
-            FadeOut(center_square_right),
-            red_grid.animate.shift(shift_up),
-            v_labels.animate.shift(shift_up),
-            run_time=2,
-            rate_func=smooth,
-        )
-
-        self.play(FadeIn(center_square_right_up), run_time=0.4)
+            animations = [red_group.animate.shift(shift_vec)]
+            if np.array_equal(direction, RIGHT) or np.array_equal(direction, LEFT):
+                animations.append(u_labels.animate.shift(shift_vec))
+            if np.array_equal(direction, UP) or np.array_equal(direction, DOWN):
+                animations.append(v_labels.animate.shift(shift_vec))
+            self.play(*animations, run_time=2, rate_func=smooth)
+            teal_square.shift(shift_vec)
+            self.play(FadeIn(teal_square, run_time=0.2))
 
         self.wait(0.5)
