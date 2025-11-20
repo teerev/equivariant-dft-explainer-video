@@ -1,0 +1,387 @@
+\documentclass[12pt]{article}
+
+% Math and symbols
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{physics}   % for \dv, \pdv, \ket, \bra, etc.
+\usepackage{mathtools}
+\usepackage{xcolor}
+
+
+% Better formatting
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[margin=10mm]{geometry}
+\setlength{\parskip}{1em}
+\setlength{\parindent}{0pt}
+
+% Spacing for sections and subsections
+\makeatletter
+\renewcommand\section{\@startsection {section}{1}{\z@}%
+                                   {-2em \@plus -1ex \@minus -.2ex}%
+                                   {1em \@plus.2ex}%
+                                   {\normalfont\Large\bfseries}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+                                     {-1.5em \@plus -1ex \@minus -.2ex}%
+                                     {0.75em \@plus .2ex}%
+                                     {\normalfont\large\bfseries}}
+\makeatother
+
+
+% images
+\usepackage{graphicx}
+
+% Prevent page breaks in equations
+\allowdisplaybreaks[1]  % Allow breaks between aligned blocks if needed, but keep equations together
+\interdisplaylinepenalty=2500  % Penalty for breaking between lines in multi-line equations
+
+
+\title{Equivariant DFT Explainer Video: GNNs}
+\author{Trevor Hardcastle}
+
+\begin{document}
+%\maketitle
+
+\section{Introduction}
+
+
+\section{MLPs}
+
+Functions have behaviour, in that they take an input value, do something with it, and give an output value. Most functions are programmed or written manually. But for certain desired behaviours, this is too difficult, and it's better to \textit{learn} the function from examples. The multilayer perceptron (MLP) is the traditional neural network which, when combined with backpropagation, can learn such behaviours. In fact, an MLP with an arbitrarily large single hidden layer is a universal approximator, meaning it can, in principle, perform any function. MLPs haven't solved cancer yet though because there's no dataset or loss function in the world that could imbue such a basic architecture with such expressivity.
+
+Molecules are well represented by graphs. 
+
+
+
+
+\section{Convolutional nets}
+The defining ingredient of a convolutional network is a mapping between two function spaces. This mapping has become known as a convolutional layer, which is a bit of a misnomer because it's really a convolutional mapping between function spaces. The kernel is translated across the image pixel by pixel, and an elementwise product is performed to obtain a new array of the same dimensions as the kernel. These elements are then subjected to an aggregation rule - in this case a sum - and that sum is the resultant pixel value in the feature map.
+
+\textbf{video: ConvolutionalScan.mp4}
+
+Formalising it a bit, the convolutional layer depends on four functions $X$ (the input image), $F$ (the kernel), $Y$ (the feature map), and $f$, the function that keeps track of the indices between the input image and the feature map.
+
+% Function definitions
+\begin{equation}
+\label{eq:function-maps}
+\begin{aligned}
+	F & : \mathbb{Z}^2 \rightarrow \mathbb{R} \\
+	W & : \mathbb{Z}^2 \rightarrow \mathbb{R} \\
+	G & : \mathbb{Z}^2 \rightarrow \mathbb{R} \\
+	f & : \mathbb{Z}^2 \rightarrow \mathbb{Z}^2
+\end{aligned}
+\end{equation}
+
+Here, $\mathbb{Z}^2$ denotes the discrete spatial domain (integer pixel coordinates), while $\mathbb{R}$ denotes the codomain of pixel values (e.g., grayscale intensities). They're not integers because, in general, the pixel values are between 0 and 1 in typical training pipelines.
+
+To relate the feature map $Y$ to the input image $X$ and the kernel, or filter, $F$, it's helpful to draw a picture of a toy example. 
+
+\begin{figure}[h]                 % optional floating environment
+  \centering
+  \includegraphics[width=0.7\linewidth]{output.png}
+  \caption{CNN feature map, input image, and kernel indices.}
+  \label{fig:convnet_indices}
+\end{figure}
+
+For this 9x8 input image and 3x5 kernel, the feature map will be 7x4 as can be seen by sliding the kernel within the input image. 
+
+The kernel's coordinates u and v move with it. Imagine the kernel being aligned with the bottom left corner of the input image X. Then, u=i' and v=j'. If I slide the kernel along 2 pixels and up 1 as I've done here, then straight away you can see that u=i'-2 and v=j'-1.
+
+To calculate the value of the pixel in the feature map - indicated in cyan - we take the elementwise product of the kernel with the part of the input image it overlaps with - the receptive field - and then use an aggregation rule - in this case a sum over all the elements in the product - to get the value of the blue pixel. In this case, as depicted, 
+
+\begin{equation}
+  \label{eq:discrete-conv-image1}
+  Y_{2 1} = (X * F)_{2 1} =
+  \sum_{u = 0}^{2}
+  \sum_{v = 0}^{4}
+  X_{\,u+2,\ v+1}\, F_{u v}.
+  \end{equation}
+
+The +2 and +1 are there because the kernel is shifted across 2 pixels and up 1 pixel, and this corresponds directly to the position of the indices i and j in the feature map pointing to the output pixel, so we can identify the 2 and the 1 and i and j in the feature map coordinates:
+
+\begin{equation}
+  \label{eq:discrete-conv-image2}
+  Y_{i j} = (X * F)_{i j} =
+  \sum_{u = 0}^{2}
+  \sum_{v = 0}^{4}
+  X_{\,u+i,\ v+j}\, F_{u v}
+  \end{equation}
+
+The sums limits over the kernel reflect the kernel size in this example of 3x5.
+
+Generally, for an input image of size $M \times N$ and a kernel of size $K \times L$ (where K and L are both odd) the feature map will be of size $(M-K+1) \times (N-L+1)$.
+
+
+If $F$'s pixel indices run over $i'$ and $j'$ in the following ranges 
+
+% Image index ranges
+\begin{equation}
+\label{eq:image-index-range1}
+i' = \{0, 1, \ldots, M-1\}, \qquad
+j' = \{0, 1, \ldots, N-1\}
+\end{equation}
+
+the feature map that results from convolving $X$ with the kernel $F$ has indices $i$ and $j$ and run over these ranges:
+
+\begin{equation}
+  \label{eq:image-index-range2}
+  i = \{0, 1, \ldots, M-K\}, \qquad
+  j = \{0, 1, \ldots, N-L\}
+  \end{equation}
+
+and the general formula for the discrete convolution is 
+
+\begin{equation}
+  \label{eq:discrete-conv}
+  Y_{ij} = (X * F)_{ij} =
+  \sum_{u = 0}^{K-1}
+  \sum_{v = 0}^{L-1}
+  X_{\,u+i,\ v+j}\, F_{uv},
+  \qquad
+  \forall i \in \{0, 1, \ldots, M-K\},\ 
+  \forall j \in \{0, 1, \ldots, N-L\}.
+\end{equation}
+
+\subsection{ALL NEEDS REVISING FROM HERE: Translational equivariance: discrete case}
+
+If you translate the input image $F$ according to some translation $g$ and then perform the convolution $f$, the resulting feature map is the same as if you do the convolution $f$ first and then translate the feature map by the same translation $g$. Here, $g \in T(\mathbb{Z}^2)$, where $T(\mathbb{Z}^2)$ denotes the group of discrete translations on the pixel grid.
+
+Here is the proof:
+
+Let $g$ be a translation by $(a, b) \in \mathbb{Z}^2$, so that $(g F)(i', j') = F(i' - a, j' - b)$ for any $(i', j') \in \mathbb{Z}^2$.
+
+We need to show that $(g F) * W = g (F * W)$, i.e., that translating the input first and then convolving yields the same result as convolving first and then translating the feature map.
+
+Consider the left-hand side: applying translation first, then convolution. At feature map position $(i, j)$:
+
+\begin{equation}
+\label{eq:discrete-eq1}
+((g F) * W)_{i j} = \sum_{u = 0}^{L-1} \sum_{v = 0}^{K-1} (g F)_{\,i - u,\ j - v}\, W_{u v}
+\end{equation}
+
+Since $(g F)_{i - u, j - v} = F((i - u) - a, (j - v) - b) = F(i - u - a, j - v - b)$, we have:
+
+\begin{equation}
+\label{eq:discrete-eq2}
+((g F) * W)_{i j} = \sum_{u = 0}^{L-1} \sum_{v = 0}^{K-1} F_{\,i - u - a,\ j - v - b}\, W_{u v}
+\end{equation}
+
+Now applying convolution first, then translation gives:
+
+\begin{equation}
+\label{eq:discrete-eq3}
+(g (F * W))_{i j} = (F * W)_{i - a, j - b} = \sum_{u = 0}^{L-1} \sum_{v = 0}^{K-1} F_{\,i - a - u,\ j - b - v}\, W_{u v}
+\end{equation}
+
+And immediately we see that $((g F) * W)_{i j} = (g (F * W))_{i j}$ for all $(i, j)$, establishing translational equivariance.
+
+\subsection{Translational equivariance: continuous case}
+
+To pass from the discrete convolution used in CNNs to the continuous
+convolution formula, we reinterpret the pixel indices as samples of a
+continuous domain. As before, let the discrete feature map be $G[i,j]$ defined on a
+regular grid (with indices $i,j$) and let the input image be $F[i',j']$
+defined on the same grid spacings $\Delta x,\Delta y$.  
+
+We begin with the discrete convolution that we derived earlier,
+
+\begin{equation}
+\label{eq:discrete-grid-conv}
+G[i,j] \;=\; \sum_{u = 0}^{L-1}\sum_{v = 0}^{K-1} F[i - u,\; j - v]\, W_{uv}.
+\end{equation}
+
+Introduce continuous coordinates
+
+\begin{equation}
+\label{eq:coord-map}
+t = i\Delta x,\qquad s = j\Delta y,\qquad
+u = i'\Delta x,\qquad v = j'\Delta y,
+\end{equation}
+
+so that each index corresponds to a point in the plane.  For each kernel offset $(u, v)$ define continuous displacements
+
+\begin{equation}
+\label{eq:offset-map}
+\tau = u\,\Delta x,\qquad \sigma = v\,\Delta y.
+\end{equation}
+
+With these definitions the discrete convolution can be written as a Riemann sum
+
+\begin{equation}
+\label{eq:riemann-sum}
+G(s,t) \;\approx\; \sum_{u = 0}^{L-1}\sum_{v = 0}^{K-1}
+F(t - \tau,\; s - \sigma)\,W(\tau,\sigma)\,\Delta x\,\Delta y.
+\end{equation}
+
+Sending $\Delta x,\Delta y \to 0$ turns this Riemann sum into the continuous
+convolution written in the same “shift-the-input” form:
+
+\begin{equation}
+\label{eq:continuous-conv-shifted}
+G(s,t)
+\;=\;
+\int_{-\infty}^{\infty}
+\!\int_{-\infty}^{\infty}
+F(t-\tau,\;s-\sigma)\,W(\tau,\sigma)\,d\tau\,d\sigma.
+\end{equation}
+
+If we substitute $\tau = t-u$ and $\sigma = s-v$, we recover the perhaps more
+standard expression
+
+\begin{equation}
+\label{eq:continuous-conv-standard}
+G(s,t)
+\;=\;
+\int_{-\infty}^{\infty}
+\!\int_{-\infty}^{\infty}
+F(u,v)\,W(t-u,\;s-v)\,du\,dv,
+\end{equation}
+
+but retaining $F(t-\tau,s-\sigma)$ makes the parallel with the discrete
+definition in \eqref{eq:discrete-conv} explicit. Either way, the label shifts
+$i\mapsto t$, $j\mapsto s$, $i'\mapsto v$, $j'\mapsto u$ simply reflect the
+identification of discrete grid indices with continuous spatial coordinates in
+the Riemann–sum limit.
+
+Here is the proof of translational equivariance in the continuous case:
+
+Let $g$ be a translation by $(\Delta u, \Delta v) \in \mathbb{R}^2$, so that $(g F)(u, v) = F(u - \Delta u, v - \Delta v)$ for any $(u, v) \in \mathbb{R}^2$. We need to show that $(g F) * W = g (F * W)$.
+
+Consider the left-hand side: applying translation first, then convolution. At feature map position $(t, s)$:
+\begin{equation}
+\label{eq:cont-proof-1}
+((g F) * W)(t, s) = \int_{-\infty}^{\infty} \!\int_{-\infty}^{\infty} (g F)(u, v)\, W(t - u, s - v)\, du\, dv
+\end{equation}
+Since $(g F)(u, v) = F(u - \Delta u, v - \Delta v)$, we have:
+\begin{equation}
+\label{eq:cont-proof-2}
+((g F) * W)(t, s) = \int_{-\infty}^{\infty} \!\int_{-\infty}^{\infty} F(u - \Delta u, v - \Delta v)\, W(t - u, s - v)\, du\, dv
+\end{equation}
+
+Now make the substitution $u' = u - \Delta u$ and $v' = v - \Delta v$, so that $du = du'$ and $dv = dv'$, and the limits remain $(-\infty, \infty)$:
+\begin{equation}
+\label{eq:cont-proof-3}
+((g F) * W)(t, s) = \int_{-\infty}^{\infty} \!\int_{-\infty}^{\infty} F(u', v')\, W(t - (u' + \Delta u), s - (v' + \Delta v))\, du'\, dv'
+\end{equation}
+Simplifying the kernel arguments: $t - (u' + \Delta u) = (t - \Delta u) - u'$ and $s - (v' + \Delta v) = (s - \Delta v) - v'$, we obtain:
+\begin{equation}
+\label{eq:cont-proof-4}
+((g F) * W)(t, s) = \int_{-\infty}^{\infty} \!\int_{-\infty}^{\infty} F(u', v')\, W((t - \Delta u) - u', (s - \Delta v) - v')\, du'\, dv'
+\end{equation}
+
+Now make a second substitution: $t' = t - \Delta u$ and $s' = s - \Delta v$, so that:
+\begin{equation}
+\label{eq:cont-proof-5}
+((g F) * W)(t, s) = \int_{-\infty}^{\infty} \!\int_{-\infty}^{\infty} F(u', v')\, W(t' - u', s' - v')\, du'\, dv'
+\end{equation}
+
+This is exactly the continuous convolution $(F * W)(t', s')$ evaluated at $(t', s') = (t - \Delta u, s - \Delta v)$. Since $(g (F * W))(t, s) = (F * W)(t - \Delta u, s - \Delta v)$, we have:
+\begin{equation}
+\label{eq:cont-proof-6}
+((g F) * W)(t, s) = (F * W)(t - \Delta u, s - \Delta v) = (g (F * W))(t, s)
+\end{equation}
+
+Therefore, $((g F) * W)(t, s) = (g (F * W))(t, s)$ for all $(t, s) \in \mathbb{R}^2$, establishing translational equivariance in the continuous case. The shift in the feature map space is exactly equal to the shift in the image space: translating the input first and then convolving yields the same result as convolving first and then translating the feature map.
+
+
+
+We write the continuous 2D convolution as
+\begin{equation}
+\label{eq:continuous-2d}
+(F * W)(x)
+  \;=\;
+  \int_{\mathbb{R}^2} F(y)\,W(x-y)\,dy,
+  \qquad x\in\mathbb{R}^2.
+\end{equation}
+Let $R\in SO(2)$ be a rotation matrix and let its action on functions be
+\begin{equation}
+\label{eq:rotation-action}
+(RF)(x) := F(R^{-1}x),
+\end{equation}
+so that $RF$ is just $F$ viewed in a rotated coordinate system.  Rotation
+equivariance of the convolution would mean
+\begin{equation}
+\label{eq:rotation-equivariance}
+R(F*W) \;=\; (RF)*W
+\quad\text{for all }F\text{ and all rotations }R.
+\end{equation}
+
+Compute both sides explicitly.  On the one hand,
+\begin{equation}
+\label{eq:rotation-left}
+\bigl(R(F*W)\bigr)(x)
+  = (F*W)(R^{-1}x)
+  = \int_{\mathbb{R}^2} F(y)\,W(R^{-1}x - y)\,dy.
+\end{equation}
+On the other hand,
+\begin{equation}
+\label{eq:rotation-right}
+\bigl((RF)*W\bigr)(x)
+  = \int_{\mathbb{R}^2} (RF)(y)\,W(x-y)\,dy
+  = \int_{\mathbb{R}^2} F(R^{-1}y)\,W(x-y)\,dy.
+\end{equation}
+Set $y = Rz$ in the last integral (so $dy = dz$), to get
+\begin{equation}
+\label{eq:rotation-right-change}
+\bigl((RF)*W\bigr)(x)
+  = \int_{\mathbb{R}^2} F(z)\,W(x-Rz)\,dz.
+\end{equation}
+
+For rotation equivariance we would need, for all $F$ and $x$,
+\begin{equation}
+\label{eq:rotation-condition}
+\int_{\mathbb{R}^2} F(z)\,W(x-Rz)\,dz
+  \;=\;
+\int_{\mathbb{R}^2} F(z)\,W(R^{-1}x - z)\,dz.
+\end{equation}
+Since this must hold for every $F$, the integrands must agree almost
+everywhere:
+\begin{equation}
+\label{eq:rotation-integrand}
+W(x-Rz) = W(R^{-1}x - z)
+\quad\text{for all }x,z.
+\end{equation}
+Write $u := x-Rz$, so $x = u + Rz$.  Substituting into the right-hand
+side gives
+\begin{equation}
+\label{eq:kernel-rotation}
+W(u) = W\bigl(R^{-1}u\bigr)
+\quad\text{for all }u\in\mathbb{R}^2.
+\end{equation}
+Thus $W$ must be invariant under every rotation $R$, i.e.
+\begin{equation}
+\label{eq:kernel-invariance}
+W(Ru) = W(u)\quad\forall\,u,\,R\in SO(2),
+\end{equation}
+which means that $W$ is rotationally symmetric (radial, $W(u)=w(\|u\|)$).
+For a generic, anisotropic kernel (e.g.\ an oriented edge detector) this condition fails, so in general
+\begin{equation}
+\label{eq:rotation-failure}
+R(F*W) \neq (RF)*W.
+\end{equation}
+Therefore ordinary convolution is \emph{not} rotationally equivariant unless the kernel itself is rotationally symmetric.
+
+\section{Thatcher effect}
+
+There is perhaps some evidence that the human visual cortex does not have rotational equivariance for human faces, as made obvious by the Thatcher effect.
+
+\section{Graph convolutions}
+
+\subsection{From CNNs to graph convolutions}
+
+The images that are input to CNNs can be thought of as a set of points in 2D space, where the points happen to be regularly spaced on a grid. We can consider a more general scenario in which the points are not restricted to 2D, and are not restricted to a regular grid. Then, we have a point cloud
+
+, and where the points have more than simply scalar values associated with them.
+
+
+If the image is greyscale, then each of these points has a single value associated with it - a scalar. If the image is colour, each pixel has three values associated with it, which can be considered as a vector in the RGB colour space. It's no coincidence that the colour image which has vector values at each point is richer and contains more information, as your brain makes obvious to you when you look at it. However it's important to note that the each such vector exists in RGB space, not in the xyz space. When you rotate the point cloud in the xyz Cartesian space, the colours don't change, because the rotation happens in the xyz space, not the RGB space.
+
+
+
+
+
+
+lkjh
+\end{document}
+
+
+
