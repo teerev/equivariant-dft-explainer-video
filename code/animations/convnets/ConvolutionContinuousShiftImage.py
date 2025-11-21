@@ -1,4 +1,5 @@
 from manim import *
+from manim.utils.color import ManimColor
 import numpy as np
 import sys
 from pathlib import Path
@@ -38,15 +39,40 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
         kernel_image.move_to(kernel_start)
         kernel_image.set_z_index(-1)
 
+        bold_red = ManimColor("#ff4b3e")
         kernel_box = Rectangle(
-            width=kernel_image.width * 0.4,
-            height=kernel_image.height * 0.4,
-            stroke_color=RED_E,
+            width=kernel_image.width * 0.38,
+            height=kernel_image.height * 0.36,
+            stroke_color=bold_red,
             stroke_width=1.5,
         )
         kernel_box.move_to(kernel_image)
         kernel_box.set_z_index(-1.1)
-        kernel_group = Group(kernel_image, kernel_box) 
+        arrow_buff = 0.12
+        x_arrow = DoubleArrow(
+            kernel_box.get_corner(LEFT + UP) + UP * arrow_buff,
+            kernel_box.get_corner(RIGHT + UP) + UP * arrow_buff,
+            color=bold_red,
+            stroke_width=1.0,
+            buff=0,
+            max_tip_length_to_length_ratio=0.05,
+        )
+        x_label = MathTex("A", color=bold_red).scale(0.5).next_to(x_arrow, UP, buff=0.03)
+
+        y_arrow = DoubleArrow(
+            kernel_box.get_corner(RIGHT + DOWN) + RIGHT * arrow_buff,
+            kernel_box.get_corner(RIGHT + UP) + RIGHT * arrow_buff,
+            color=bold_red,
+            stroke_width=1.0,
+            buff=0,
+            max_tip_length_to_length_ratio=0.05,
+        )
+        y_label = MathTex("B", color=bold_red).scale(0.5).next_to(y_arrow, RIGHT, buff=0.03)
+
+        measurement_group = Group(x_arrow, x_label, y_arrow, y_label)
+        measurement_group.set_z_index(-1.05)
+
+        kernel_group = Group(kernel_image, kernel_box, measurement_group)
 
         title = Text(
             "Localized kernel intensity",
