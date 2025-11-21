@@ -6,7 +6,6 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 from base_scene import RightRegionScene
 
-
 class ConvolutionRotationalNonEquivariance(RightRegionScene):
     def construct(self):
         self.camera.background_color = BLACK
@@ -22,30 +21,32 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
                 "include_tip": False,
             },
         )
-        axes.shift(LEFT * 1.5 + DOWN * 1.5)   
+        axes.shift(LEFT * 1.5 + DOWN * 1.5)
         axes_shift = LEFT * 1.5 + DOWN * 1.0
         axes.shift(axes_shift)
         axes_labels = axes.get_axis_labels(MathTex("x"), MathTex("y"))
 
-        shift_s = ValueTracker(0.0)
-        shift_t = ValueTracker(0.0)
-
         input_image = self.create_input_image(resolution=360, span=6.5)
         input_image.set_width(axes.width * 3.2)
         input_image.set_z_index(-2)
-        input_base = axes.get_center() - axes_shift
+        input_image.move_to(axes.get_center() - axes_shift)
 
-        def update_input(mob):
-            offset = axes.c2p(shift_s.get_value(), shift_t.get_value()) - axes.c2p(0, 0)
-            mob.move_to(input_base + offset)
-
-        input_image.add_updater(update_input)
-        update_input(input_image)
-
-        kernel_image = self.create_kernel_image(resolution=240, span=3.0)
+        kernel_span = 3.0
+        kernel_image = self.create_kernel_image(resolution=240, span=kernel_span)
         kernel_image.set_width(axes.width * 0.95)
-        kernel_image.move_to(axes.c2p(1.2, 0.9) - axes_shift)
+        kernel_start = axes.c2p(-0.6, -0.4) - axes_shift
+        kernel_image.move_to(kernel_start)
         kernel_image.set_z_index(-1)
+
+        kernel_box = Rectangle(
+            width=kernel_image.width * 0.4,
+            height=kernel_image.height * 0.4,
+            stroke_color=RED_E,
+            stroke_width=1.5,
+        )
+        kernel_box.move_to(kernel_image)
+        kernel_box.set_z_index(-1.1)
+        kernel_group = Group(kernel_image, kernel_box) 
 
         title = Text(
             "Localized kernel intensity",
@@ -54,22 +55,24 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
         ).to_edge(UP)
 
         self.play(FadeIn(input_image, run_time=2.0))
-        self.play(FadeIn(kernel_image, run_time=1.2))
+        self.play(FadeIn(kernel_group, run_time=1.2))
         self.play(Create(axes), Write(axes_labels))
         self.play(Write(title))
+        right_target = axes.c2p(1.0, -0.4) - axes_shift
+        up_target = axes.c2p(1.0, 1.2) - axes_shift
+
         self.play(
-            shift_s.animate.set_value(-1.8),
+            kernel_group.animate.move_to(right_target),
             run_time=4,
             rate_func=rate_functions.ease_in_out_sine,
         )
         self.play(
-            shift_t.animate.set_value(1.4),
+            kernel_group.animate.move_to(up_target),
             run_time=4,
             rate_func=rate_functions.ease_in_out_sine,
         )
         self.wait(2)
 
-        input_image.clear_updaters()
 
     def create_input_image(self, resolution=320, span=6.0, num_centers=60):
         rng = np.random.default_rng(2024)
