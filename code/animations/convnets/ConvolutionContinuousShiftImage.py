@@ -25,24 +25,24 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
         axes.shift(LEFT * 1.5 + DOWN * 1.5)
         axes_shift = LEFT * 1.5 + DOWN * 1.0
         axes.shift(axes_shift)
-        axes_labels = axes.get_axis_labels(MathTex("x"), MathTex("y"))
+        axes_labels = axes.get_axis_labels(MathTex("s"), MathTex("t"))
 
         input_image = self.create_input_image(resolution=360, span=6.5)
         input_image.set_width(axes.width * 3.2)
         input_image.set_z_index(-2)
-        input_image.move_to(axes.get_center() - axes_shift)
+        input_image.move_to(axes.c2p(0, 0))
 
         kernel_span = 3.0
         kernel_image = self.create_kernel_image(resolution=240, span=kernel_span)
         kernel_image.set_width(axes.width * 0.95)
-        kernel_start = axes.c2p(-0.6, -0.4) - axes_shift
+        kernel_start = axes.c2p(0.2, 0.6)
         kernel_image.move_to(kernel_start)
         kernel_image.set_z_index(-1)
 
         bold_red = ManimColor("#ff4b3e")
         kernel_box = Rectangle(
             width=kernel_image.width * 0.38,
-            height=kernel_image.height * 0.36,
+            height=kernel_image.height * 0.38,
             stroke_color=bold_red,
             stroke_width=1.5,
         )
@@ -72,6 +72,69 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
         measurement_group = Group(x_arrow, x_label, y_arrow, y_label)
         measurement_group.set_z_index(-1.05)
 
+        origin_point = axes.c2p(0, 0)
+        vector_color = GREY_A
+
+        def global_vector_group():
+            target = kernel_box.get_center()
+            arrow = Arrow(
+                origin_point,
+                target,
+                buff=0,
+                color=vector_color,
+                stroke_width=2.5,
+                max_tip_length_to_length_ratio=0.06,
+            ).set_z_index(2)
+            label = (
+                MathTex(r"(s,t)", color=vector_color)
+                .scale(0.5)
+                .next_to(arrow, DOWN + LEFT * 0.2, buff=0.02)
+            )
+            return VGroup(arrow, label)
+
+        def offset_vector_group():
+            base = kernel_box.get_center()
+            offset = np.array(
+                [kernel_box.width * -0.48, kernel_box.height * 0.25, 0.0]
+            )
+            arrow = Arrow(
+                base,
+                base + offset,
+                buff=0,
+                color=YELLOW_E,
+                stroke_width=2.2,
+                max_tip_length_to_length_ratio=0.06,
+            ).set_z_index(2)
+            label = (
+                MathTex(r"(\sigma,\tau)", color=YELLOW_E)
+                .scale(0.5)
+                .next_to(base + offset, RIGHT, buff=0.02)
+            )
+            return VGroup(arrow, label)
+
+        def sample_vector_group():
+            tip = kernel_box.get_center() + np.array(
+                [kernel_box.width * 0.18, kernel_box.height * 0.25, 0.0]
+            )
+            arrow = Arrow(
+                origin_point,
+                tip,
+                buff=0,
+                color=GREY_D,
+                stroke_width=1.5,
+                max_tip_length_to_length_ratio=0.05,
+            ).set_z_index(1.8)
+            label = (
+                MathTex(r"(s+\sigma,\;t+\tau)", color=GREY_D)
+                .scale(0.45)
+                .next_to(tip, UP + RIGHT * 0.2, buff=0.01)
+            )
+            return VGroup(arrow, label)
+
+        global_vector = always_redraw(global_vector_group)
+        offset_vector = always_redraw(offset_vector_group)
+        sample_vector = always_redraw(sample_vector_group)
+
         kernel_group = Group(kernel_image, kernel_box, measurement_group)
 
         title = Text(
@@ -84,8 +147,13 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
         self.play(FadeIn(kernel_group, run_time=1.2))
         self.play(Create(axes), Write(axes_labels))
         self.play(Write(title))
-        right_target = axes.c2p(1.0, -0.4) - axes_shift
-        up_target = axes.c2p(1.0, 1.2) - axes_shift
+        self.play(
+            FadeIn(global_vector, run_time=0.8),
+            FadeIn(offset_vector, run_time=0.8),
+            FadeIn(sample_vector, run_time=0.8),
+        )
+        right_target = axes.c2p(1.2, 0.3)
+        up_target = axes.c2p(1.2, 1.9)
 
         self.play(
             kernel_group.animate.move_to(right_target),
