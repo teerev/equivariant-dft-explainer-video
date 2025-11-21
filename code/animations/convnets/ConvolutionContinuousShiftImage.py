@@ -112,28 +112,8 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
             )
             return VGroup(arrow, label)
 
-        def sample_vector_group():
-            tip = kernel_box.get_center() + np.array(
-                [kernel_box.width * 0.18, kernel_box.height * 0.25, 0.0]
-            )
-            arrow = Arrow(
-                origin_point,
-                tip,
-                buff=0,
-                color=GREY_D,
-                stroke_width=1.5,
-                max_tip_length_to_length_ratio=0.05,
-            ).set_z_index(1.8)
-            label = (
-                MathTex(r"(s+\sigma,\;t+\tau)", color=GREY_D)
-                .scale(0.45)
-                .next_to(tip, UP + RIGHT * 0.2, buff=0.01)
-            )
-            return VGroup(arrow, label)
-
         global_vector = always_redraw(global_vector_group)
         offset_vector = always_redraw(offset_vector_group)
-        sample_vector = always_redraw(sample_vector_group)
 
         kernel_group = Group(kernel_image, kernel_box, measurement_group)
 
@@ -150,10 +130,9 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
         self.play(
             FadeIn(global_vector, run_time=0.8),
             FadeIn(offset_vector, run_time=0.8),
-            FadeIn(sample_vector, run_time=0.8),
         )
-        right_target = axes.c2p(1.2, 0.3)
-        up_target = axes.c2p(1.2, 1.9)
+        right_target = axes.c2p(1.6, 0.6)
+        up_target = axes.c2p(1.6, 1.6)
 
         self.play(
             kernel_group.animate.move_to(right_target),
