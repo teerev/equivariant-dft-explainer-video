@@ -58,6 +58,8 @@ The defining ingredient of a convolutional network is a mapping between two func
 
 \textbf{video: ConvolutionalScan.mp4}
 
+\section{Discrete convolutional layer definition}
+
 Formalising it a bit, the convolutional layer depends on three functions $X$ (the input image), $F$ (the kernel), $Y$ (the feature map).
 
 % Function definitions
@@ -74,370 +76,383 @@ Here, $\mathbb{Z}^2$ denotes the discrete spatial domain (integer pixel coordina
 
 To relate the feature map $Y$ to the input image $X$ and the kernel, or filter, $F$, it's helpful to draw a picture of a toy example. 
 
-\begin{figure}[h]                 % optional floating environment
-  \centering
-  \includegraphics[width=0.7\linewidth]{output.png}
-  \caption{CNN feature map, input image, and kernel indices.}
-  \label{fig:convnet_indices}
-\end{figure}
-
 For this 9x8 input image and 3x5 kernel, the feature map will be 7x4 as can be seen by sliding the kernel within the input image. 
 
 The kernel's coordinates u and v move with it. Imagine the kernel being aligned with the bottom left corner of the input image X. Then, u=i' and v=j'. If I slide the kernel along 2 pixels and up 1 as I've done here, then straight away you can see that u=i'-2 and v=j'-1.
 
 To calculate the value of the pixel in the feature map - indicated in cyan - we take the elementwise product of the kernel with the part of the input image it overlaps with - the receptive field - and then use an aggregation rule - in this case a sum over all the elements in the product - to get the value of the blue pixel. In this case, as depicted, 
 
+In this position, you can see that we are considering the (i=2,j=4) coordinate since this is the pixel in the feature map being calculated. The corresponding x coordinate is always located at the pixel given by the central pixel - the output pixel in hte feature map - plus whatever offset is needed to get the relevant position in the kernel. Thus, the coordinate in the input image is always equal to the coordinate in the feature map plus whatever offset - denoted by u and v - inside the kernel footprint.
+
 \begin{equation}
   \label{eq:discrete-conv-image1}
-  Y_{2 1} = (X * F)_{2 1} =
-  \sum_{u = 0}^{2}
-  \sum_{v = 0}^{4}
-  X_{\,u+2,\ v+1}\, F_{u v}.
+  Y_{2 4} = (X * F)_{4 2} =
+  \sum_{u = -1}^{1}
+  \sum_{v = -2}^{2}
+  X_{\,2+u,\ 4+v}\, F_{u v}.
   \end{equation}
 
-The +2 and +1 are there because the kernel is shifted across 2 pixels and up 1 pixel, and this corresponds directly to the position of the indices i and j in the feature map pointing to the output pixel, so we can identify the 2 as the 1 and i and j in the feature map coordinates:
+The sum over u spans the width of the kernel and v spans its height, so for a general kernel of size KxL, the sum over u will run from -(K-1)/2 to (K-1)/2 and the sum over v will run from -(L-1)/2 to (L-1)/2. This is the general formula for the discrete convolution.
 
 \begin{equation}
   \label{eq:discrete-conv-image2}
   Y_{i j} = (X * F)_{i j} =
-  \sum_{u = 0}^{2}
-  \sum_{v = 0}^{4}
+  \sum_{u = -(K-1)/2}^{(K-1)/2}
+  \sum_{v = -(L-1)/2}^{(L-1)/2}
   X_{\,u+i,\ v+j}\, F_{u v}
   \end{equation}
 
-The sums limits over the kernel reflect the kernel size in this example of 3x5.
-
-Generally, for an input image of size $M \times N$ and a kernel of size $K \times L$ (where K and L are both odd) the feature map will be of size $(M-K+1) \times (N-L+1)$.
 
 
-If $F$'s pixel indices run over $i'$ and $j'$ in the following ranges 
 
-% Image index ranges
-\begin{equation}
-\label{eq:image-index-range1}
-i' = \{0, 1, \ldots, M-1\}, \qquad
-j' = \{0, 1, \ldots, N-1\}
-\end{equation}
+  \subsection{Translational equivariance: discrete case}
 
-the feature map that results from convolving $X$ with the kernel $F$ has indices $i$ and $j$ and run over these ranges:
-
-\begin{equation}
-  \label{eq:image-index-range2}
-  i = \{0, 1, \ldots, M-K\}, \qquad
-  j = \{0, 1, \ldots, N-L\}
+  We denote the convolution $X * F$ as $f(X;F)$, where $X$ is the input
+  image and $F$ is a fixed kernel (learned during training, but held fixed
+  for the present discussion).  For brevity we write $f(X)$, or just $f$,
+  when $F$ is understood.
+  
+  We work with the kernel--centred discrete convolution from
+  \eqref{eq:discrete-conv-image2}, assuming odd kernel sizes
+  $K = 2K_c + 1$ and $L = 2L_c + 1$:
+  \begin{equation}
+    \label{eq:discrete-conv-centred-again}
+    Y_{ij} = (X * F)_{ij}
+    =
+    \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
+    \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
+    X_{\,i+u,\; j+v}\, F_{uv}.
   \end{equation}
-
-and the general formula for the discrete convolution is 
-
-\begin{equation}
-  \label{eq:discrete-conv-general}
-  Y_{ij} = (X * F)_{ij} =
-  \sum_{u = 0}^{K-1}
-  \sum_{v = 0}^{L-1}
-  X_{\,u+i,\ v+j}\, F_{uv},
-  \qquad
-  \forall i \in \{0, 1, \ldots, M-K\},\ 
-  \forall j \in \{0, 1, \ldots, N-L\}.
-\end{equation}
-
-
-
-\subsection{Translational equivariance: discrete case}
-
-We can denote the convolution $X * F$ as $f(X; F)$, where X is the input variable and the filter, F, can be regarded as a fixed parameter. The kernel F is learned during training, but I'm just talking about performing a single convolution here, for which the kernel is fixed. The short hand notation we can use is $f(X)$, or just $f$.
-
-If you translate the input image $X$ according to some translation $g$ and then perform the convolution $f$, the resulting feature map is the same as if you do the convolution $f$ first and then translate the feature map by the same translation $g$. Here, $g \in T(\mathbb{Z}^2)$, where $T(\mathbb{Z}^2)$ denotes the group of discrete translations in either X or Y.
-
-Here is the proof:
-
-Let $g$ be a translation by $(a, b) \in \mathbb{Z}^2$, so that $(g X)(i, j) = X(i - a, j - b)$ for any $(i, j) \in \mathbb{Z}^2$.
-
-We need to show that $(g X) * F = g (X * F)$, i.e., translating the input first and then convolving yields the same feature map as convolving first and then translating the output.
-
-\textbf{Translate first, then convolve.} Plug the translated input into the convolution definition and immediately use the definition of $g$:
-\begin{align}
-\label{eq:discrete-eq1}
-((g X) * F)_{i j}
-  &= \sum_{u = 0}^{K-1} \sum_{v = 0}^{L-1} (g X)_{\,u+i,\ v+j}\, F_{u v}
-     &&\text{(definition of convolution)} \\
-\label{eq:discrete-eq2}
-  &= \sum_{u = 0}^{K-1} \sum_{v = 0}^{L-1} X_{\,(u+i)-a,\ (v+j)-b}\, F_{u v}
-     &&\text{(definition of translation)}.
-\end{align}
-
-\textbf{Convolve first, then translate.} Start with the feature map and evaluate it at the shifted index, then expand the convolution:
-\begin{align}
-\label{eq:discrete-eq3}
-(g (X * F))_{i j}
-  &= (X * F)_{i - a, j - b}
-     &&\text{(definition of translation)} \\
-\label{eq:discrete-eq4}
-  &= \sum_{u = 0}^{K-1} \sum_{v = 0}^{L-1} X_{\, (i-a)+u,\ (j-b)+v}\, F_{u v}
-     &&\text{(definition of convolution)} \\
-\label{eq:discrete-eq5}
-  &= \sum_{u = 0}^{K-1} \sum_{v = 0}^{L-1} X_{\,u+i-a,\ v+j-b}\, F_{u v}
-\end{align}
-
-The right-hand sides of \eqref{eq:discrete-eq2} and \eqref{eq:discrete-eq5} are identical, hence $((g X) * F)_{i j} = (g (X * F))_{i j}$ for all $(i, j)$, which establishes discrete translational equivariance.
-
-
-
-\subsection{Continuous convolution definition}
-
-We work with a bottom–left origin so that the discrete indices $(i,j)$ are
-aligned with Cartesian coordinates $(x,y)$: increasing $i$ moves to the right
-and increasing $j$ moves upwards.
-
-We begin with the discrete convolution derived earlier,
-\begin{equation}
-  \label{eq:discrete-conv}
-  Y_{ij} = (X * F)_{ij} =
-  \sum_{u = 0}^{K-1}
-  \sum_{v = 0}^{L-1}
-  X_{\,i+u,\; j+v}\, F_{uv},
-\end{equation}
-where $X_{ij}$ denotes the input image, $F_{uv}$ the kernel of size
-$K \times L$, and $Y_{ij}$ the resulting feature map.
-
-Introduce continuous coordinates
-\begin{equation}
-  \label{eq:coord-map}
-  s = i\,\Delta x,\qquad t = j\,\Delta y,
-\end{equation}
-so that each pixel index $(i,j)$ corresponds to the point $(s,t)$ in the plane.
-Similarly, for each kernel offset $(u,v)$ we define continuous displacements
-\begin{equation}
-  \label{eq:offset-map}
-  \sigma_u = u\,\Delta x,\qquad \tau_v = v\,\Delta y.
-\end{equation}
-
-We now regard the discrete arrays as samples of underlying continuous
-functions, i.e.
-\begin{equation}
-  X_{ij} \approx X(i\,\Delta x,\; j\,\Delta y) = X(s,t),\qquad
-  F_{uv} \approx F(u\,\Delta x,\; v\,\Delta y) = F(\sigma_u,\tau_v).
-\end{equation}
-Substituting these into \eqref{eq:discrete-conv} and using
-$s = i\,\Delta x$, $t = j\,\Delta y$ gives the Riemann–sum
-representation
-\begin{equation}
-  \label{eq:riemann-sum}
-  Y(s,t)
-  \;\approx\;
-  \sum_{u = 0}^{K-1}
-  \sum_{v = 0}^{L-1}
-  X\bigl(s + u\,\Delta x,\; t + v\,\Delta y\bigr)\,
-  F\bigl(u\,\Delta x,\; v\,\Delta y\bigr)\,
-  \Delta x\,\Delta y.
-\end{equation}
-
-In the continuum limit $\Delta x,\Delta y \to 0$ with
-$A = K\,\Delta x$ and $B = L\,\Delta y$ held fixed, the sums converge
-to a double integral over the kernel support $[0,A] \times [0,B]$:
-\begin{equation}
-  \label{eq:continuous-conv}
-  Y(s,t) = (X * F)(s,t)
-  \;=\;
-  \int_{0}^{A}\!\!\int_{0}^{B}
-  X(s + \sigma,\; t + \tau)\,
-  F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau.
-\end{equation}
-This is the continuous convolution (more precisely, the continuous analogue
-of the discrete operator in \eqref{eq:discrete-conv}) corresponding to the
-bottom–left–origin discrete setup above.
-
-
-
-\subsection{Translational equivariance: continuous case}
-
-
-
-
-
-
-
-
-
-
-
-We now consider the continuous analogue of the discrete convolution. As before,
-we regard the kernel $F$ as fixed and write the convolution of a continuous
-image $X$ with $F$ as a function $f(X; F)$, or simply $f(X)$, or just $f$ when
-the dependence on $X$ is clear. Ignoring boundary effects (or assuming that $X$
-and $F$ vanish outside a bounded region), we write the continuous convolution
-as
-\begin{equation}
-  \label{eq:continuous-conv}
-  (X * F)(s,t)
-  \;=\;
-  \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-  X(s + \sigma,\; t + \tau)\,
-  F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau.
-\end{equation}
-
-As in the discrete case, we want to show that translating the input image
-$X$ and then convolving gives the same result as convolving first and then
-translating the output. Let $g$ be a translation by $(a,b) \in \mathbb{R}^2$,
-so that for any $(s,t) \in \mathbb{R}^2$ we have
-\begin{equation}
-  (g X)(s,t) = X(s - a,\; t - b).
-\end{equation}
-We need to show that
-\[
-(g X) * F = g (X * F),
-\]
-i.e.\ translating the input first and then convolving yields the same function
-as convolving first and then translating the output.
-
-\textbf{Translate first, then convolve.}
-Plug the translated input into the convolution definition and immediately use
-the definition of $g$:
-\begin{align}
-\label{eq:continuous-eq1}
-((g X) * F)(s,t)
-  &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-     (g X)(s + \sigma,\; t + \tau)\,
-     F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
-     &&\text{(definition of convolution)} \\
-\label{eq:continuous-eq2}
-  &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-     X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
-     F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
-     &&\text{(definition of translation)}.
-\end{align}
-
-\textbf{Convolve first, then translate.}
-Start with the convolved output and evaluate it at the shifted coordinates,
-then expand the convolution:
-\begin{align}
-\label{eq:continuous-eq3}
-(g (X * F))(s,t)
-  &= (X * F)(s - a,\; t - b)
-     &&\text{(definition of translation)} \\
-\label{eq:continuous-eq4}
-  &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-     X\bigl((s - a) + \sigma,\; (t - b) + \tau\bigr)\,
-     F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
-     &&\text{(definition of convolution)} \\
-\label{eq:continuous-eq5}
-  &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-     X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
-     F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
-\end{align}
-
-The right-hand sides of \eqref{eq:continuous-eq2} and
-\eqref{eq:continuous-eq5} are identical, hence
-\[
-((g X) * F)(s,t) = (g (X * F))(s,t)
-\quad\text{for all } (s,t) \in \mathbb{R}^2,
-\]
-which establishes continuous translational equivariance:
-\begin{equation}
-  (g X) * F = g (X * F),
-\end{equation}
-in direct analogy with the discrete case.
-
-
-
-\subsection{Rotational non-equivariance: continuous case}
-
-We keep the same continuous convolution operator as in
-\eqref{eq:continuous-conv}, treating the kernel $F$ as fixed:
-\begin{equation}
-  \label{eq:continuous-conv-rot}
-  (X * F)(s,t)
-  \;=\;
-  \int_{\mathbb{R}^2}
-  X(s + \sigma,\; t + \tau)\,
-  F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau.
-\end{equation}
-It is convenient to write $x = (s,t)^\top$ and $y = (\sigma,\tau)^\top$,
-so this is equivalently
-\begin{equation}
-  (X * F)(x)
-  \;=\;
-  \int_{\mathbb{R}^2} X(x + y)\,F(y)\,\mathrm{d}y.
-\end{equation}
-
-Let $R \in SO(2)$ be a rotation matrix and define its action on functions by
-\begin{equation}
-  \label{eq:rotation-action}
-  (R X)(x) := X(R^{-1} x),
-\end{equation}
-so that $R X$ is just $X$ viewed in a rotated coordinate system. Rotation
-equivariance of the convolution would mean
-\begin{equation}
-  \label{eq:rotation-equivariance}
-  R(X * F) \;=\; (R X) * F
-  \quad\text{for all }X\text{ and all }R\in SO(2).
-\end{equation}
-
-As in the translational case, we compare the two sides explicitly.
-
-\textbf{Rotate first, then convolve.}
-Plug the rotated input into the convolution:
-\begin{align}
-  \label{eq:rot-eq1}
-  ((R X) * F)(x)
-    &= \int_{\mathbb{R}^2} (R X)(x + y)\,F(y)\,\mathrm{d}y
+  Here $(i,j)$ labels the \emph{centre} of the receptive field and
+  $(u,v)$ are symmetric offsets inside the kernel footprint.
+  
+  Let $g$ be a translation by $(a,b) \in \mathbb{Z}^2$, acting on images
+  by
+  \[
+    (gX)(i,j) := X(i-a,\,j-b)
+    \qquad\text{for all }(i,j)\in\mathbb{Z}^2.
+  \]
+  We wish to show that convolution is equivariant to translations:
+  \[
+    (gX) * F \;=\; g(X * F),
+  \]
+  i.e.\ translating the input and then convolving is the same as
+  convolving first and then translating the output by the same $(a,b)$.
+  
+  \textbf{Translate first, then convolve.}  Plug the translated input into
+  the definition \eqref{eq:discrete-conv-centred-again} and immediately
+  use the definition of $g$:
+  \begin{align}
+  \label{eq:discrete-eq1-centred}
+  ((g X) * F)_{ij}
+    &=
+    \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
+    \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
+    (g X)_{\,i+u,\; j+v}\, F_{uv}
        &&\text{(definition of convolution)} \\
-  \label{eq:rot-eq2}
-    &= \int_{\mathbb{R}^2} X(R^{-1}(x + y))\,F(y)\,\mathrm{d}y
-       &&\text{(definition of rotation action)}.
-\end{align}
+  \label{eq:discrete-eq2-centred}
+    &=
+    \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
+    \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
+    X_{\, (i+u)-a,\; (j+v)-b}\, F_{uv}
+       &&\text{(definition of translation).}
+  \end{align}
+  
+  \textbf{Convolve first, then translate.}  Start from the feature map and
+  evaluate it at the shifted index, then expand the convolution:
+  \begin{align}
+  \label{eq:discrete-eq3-centred}
+  (g (X * F))_{ij}
+    &= (X * F)_{i-a,\; j-b}
+       &&\text{(definition of translation)} \\
+  \label{eq:discrete-eq4-centred}
+    &=
+    \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
+    \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
+    X_{\, (i-a)+u,\; (j-b)+v}\, F_{uv}
+       &&\text{(definition of convolution)} \\
+  \label{eq:discrete-eq5-centred}
+    &=
+    \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
+    \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
+    X_{\, i+u-a,\; j+v-b}\, F_{uv}
+       &&\text{(rearranging inside the indices).}
+  \end{align}
+  
+  The right-hand sides of \eqref{eq:discrete-eq2-centred} and
+  \eqref{eq:discrete-eq5-centred} are identical, hence
+  \[
+  ((g X) * F)_{ij} = (g (X * F))_{ij}
+  \quad\text{for all }(i,j)\in\mathbb{Z}^2,
+  \]
+  which establishes discrete translational equivariance for the
+  kernel--centred convolution in \eqref{eq:discrete-conv-centred-again}.
+  
 
-\textbf{Convolve first, then rotate.}
-Now rotate the output of the convolution:
-\begin{align}
-  \label{eq:rot-eq3}
-  (R (X * F))(x)
-    &= (X * F)(R^{-1} x)
-       &&\text{(definition of rotation action)} \\
-  \label{eq:rot-eq4}
-    &= \int_{\mathbb{R}^2} X(R^{-1} x + y)\,F(y)\,\mathrm{d}y
-       &&\text{(definition of convolution)}.
-\end{align}
+  \subsection{Continuous convolution definition}
 
-To compare \eqref{eq:rot-eq2} and \eqref{eq:rot-eq4}, make a change of
-variables $y = R z$ in \eqref{eq:rot-eq2}. Since $R$ is orthogonal,
-$\mathrm{d}y = \mathrm{d}z$, and we obtain
-\begin{align}
-  \label{eq:rot-eq5}
-  ((R X) * F)(x)
-    &= \int_{\mathbb{R}^2} X\bigl(R^{-1} x + z\bigr)\,F(R z)\,\mathrm{d}z.
-\end{align}
-By contrast, \eqref{eq:rot-eq4} can be written (renaming $y$ to $z$) as
-\begin{align}
-  \label{eq:rot-eq6}
-  (R (X * F))(x)
-    &= \int_{\mathbb{R}^2} X\bigl(R^{-1} x + z\bigr)\,F(z)\,\mathrm{d}z.
-\end{align}
+  We work with a bottom–left origin so that the discrete indices $(i,j)$ are
+  aligned with Cartesian coordinates $(x,y)$: increasing $i$ moves to the right
+  and increasing $j$ moves upwards.
+  
+  We use the kernel–centred discrete convolution from
+  \eqref{eq:discrete-conv-image2}, assuming odd kernel sizes
+  $K = 2K_c + 1$ and $L = 2L_c + 1$:
+  \begin{equation}
+    \label{eq:discrete-conv-centred}
+    Y_{ij} = (X * F)_{ij}
+    =
+    \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
+    \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
+    X_{\,i+u,\; j+v}\, F_{uv},
+  \end{equation}
+  where $X_{ij}$ denotes the input image, $F_{uv}$ the kernel of size
+  $K \times L$, and $Y_{ij}$ the resulting feature map.  Here $(i,j)$ labels
+  the \emph{centre} of the receptive field and $(u,v)$ are symmetric offsets
+  within the kernel footprint.
+  
+  Introduce continuous coordinates for the image grid
+  \begin{equation}
+    \label{eq:coord-map-centred}
+    s = i\,\Delta x,\qquad t = j\,\Delta y,
+  \end{equation}
+  so that each pixel index $(i,j)$ corresponds to the point $(s,t)$ in the
+  plane.  Similarly, for each kernel offset $(u,v)$ we define continuous
+  displacements
+  \begin{equation}
+    \label{eq:offset-map-centred}
+    \sigma_u = u\,\Delta x,\qquad \tau_v = v\,\Delta y,
+  \end{equation}
+  with $u \in \{-K_c,\dots,K_c\}$ and $v \in \{-L_c,\dots,L_c\}$.
+  
+  We now regard the discrete arrays as samples of underlying continuous
+  functions, i.e.
+  \begin{equation}
+    X_{ij} \approx X(i\,\Delta x,\; j\,\Delta y) = X(s,t),\qquad
+    F_{uv} \approx F(u\,\Delta x,\; v\,\Delta y) = F(\sigma_u,\tau_v).
+  \end{equation}
+  Substituting these into \eqref{eq:discrete-conv-centred} and using
+  $s = i\,\Delta x$, $t = j\,\Delta y$ gives the Riemann–sum representation
+  \begin{equation}
+    \label{eq:riemann-sum-centred}
+    Y(s,t)
+    \;\approx\;
+    \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
+    \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
+    X\bigl(s + u\,\Delta x,\; t + v\,\Delta y\bigr)\,
+    F\bigl(u\,\Delta x,\; v\,\Delta y\bigr)\,
+    \Delta x\,\Delta y.
+  \end{equation}
+  
+  In the continuum limit $\Delta x,\Delta y \to 0$ with
+  $A = K\,\Delta x$ and $B = L\,\Delta y$ held fixed, the sums converge
+  to a double integral over the centred kernel support
+  $\bigl[-\tfrac{A}{2},\tfrac{A}{2}\bigr] \times
+   \bigl[-\tfrac{B}{2},\tfrac{B}{2}\bigr]$:
+  \begin{equation}
+    \label{eq:continuous-conv-centred}
+    Y(s,t) = (X * F)(s,t)
+    \;=\;
+    \int_{-A/2}^{A/2}\!\!\int_{-B/2}^{B/2}
+    X(s + \sigma,\; t + \tau)\,
+    F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau.
+  \end{equation}
+  In this parametrisation $(s,t)$ denotes the kernel centre in the
+  continuous plane, and $(\sigma,\tau)$ are continuous offsets within the
+  kernel footprint.  Equation \eqref{eq:continuous-conv-centred} is thus
+  the continuous analogue of the kernel–centred discrete operator in
+  \eqref{eq:discrete-conv-centred}.
+  
 
-For rotation equivariance \eqref{eq:rotation-equivariance} to hold, we would
-need \eqref{eq:rot-eq5} and \eqref{eq:rot-eq6} to be equal for all $X$ and
-all $x$. Since $X$ is arbitrary, the integrands must agree almost everywhere:
-\begin{equation}
-  \label{eq:rot-condition}
-  F(z) = F(R z)
-  \quad\text{for all }z\in\mathbb{R}^2\text{ and all }R\in SO(2).
-\end{equation}
-Thus $F$ must be invariant under every rotation, i.e.\ rotationally
-symmetric (radial, $F(z) = f(\|z\|)$). For a generic, anisotropic kernel
-(e.g.\ an oriented edge detector) this condition fails, so in general
-\begin{equation}
-  R(X * F) \;\neq\; (R X) * F.
-\end{equation}
-Therefore ordinary convolution is \emph{not} rotationally equivariant unless
-the kernel itself is rotationally symmetric, in sharp contrast to the
-translational case.
+
+  \subsection{Translational equivariance: continuous case}
+
+  We now consider the continuous analogue of the kernel--centred discrete
+  convolution in \eqref{eq:continuous-conv-centred}. As before, we regard the
+  kernel $F$ as fixed and write the convolution of a continuous image $X$ with
+  $F$ as a function $f(X; F)$, or simply $f(X)$, or just $f$ when the dependence
+  on $X$ is clear. Ignoring boundary effects (or assuming that $X$ and $F$ vanish
+  outside a bounded region), we write the continuous convolution as
+  \begin{equation}
+    \label{eq:continuous-conv-equiv}
+    (X * F)(s,t)
+    \;=\;
+    \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+    X(s + \sigma,\; t + \tau)\,
+    F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau,
+  \end{equation}
+  where $(s,t)$ denotes the evaluation point (kernel centre) and
+  $(\sigma,\tau)$ are continuous offsets within the kernel footprint.  If $F$
+  has compact support, the integral is effectively restricted to that support.
+  
+  As in the discrete case, we want to show that translating the input image $X$
+  and then convolving gives the same result as convolving first and then
+  translating the output. Let $g$ be a translation by $(a,b) \in \mathbb{R}^2$,
+  so that for any $(s,t) \in \mathbb{R}^2$ we have
+  \begin{equation}
+    (g X)(s,t) = X(s - a,\; t - b).
+  \end{equation}
+  We need to show that
+  \[
+  (g X) * F = g (X * F),
+  \]
+  i.e.\ translating the input first and then convolving yields the same function
+  as convolving first and then translating the output.
+  
+  \textbf{Translate first, then convolve.}
+  Plug the translated input into the convolution definition and immediately use
+  the definition of $g$:
+  \begin{align}
+  \label{eq:continuous-eq1}
+  ((g X) * F)(s,t)
+    &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+       (g X)(s + \sigma,\; t + \tau)\,
+       F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
+       &&\text{(definition of convolution)} \\
+  \label{eq:continuous-eq2}
+    &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+       X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
+       F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
+       &&\text{(definition of translation).}
+  \end{align}
+  
+  \textbf{Convolve first, then translate.}
+  Start with the convolved output and evaluate it at the shifted coordinates,
+  then expand the convolution:
+  \begin{align}
+  \label{eq:continuous-eq3}
+  (g (X * F))(s,t)
+    &= (X * F)(s - a,\; t - b)
+       &&\text{(definition of translation)} \\
+  \label{eq:continuous-eq4}
+    &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+       X\bigl((s - a) + \sigma,\; (t - b) + \tau\bigr)\,
+       F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
+       &&\text{(definition of convolution)} \\
+  \label{eq:continuous-eq5}
+    &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+       X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
+       F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau,
+  \end{align}
+  where in the last step we simply regrouped terms inside the arguments of $X$.
+  
+  The right-hand sides of \eqref{eq:continuous-eq2} and
+  \eqref{eq:continuous-eq5} are identical, hence
+  \[
+  ((g X) * F)(s,t) = (g (X * F))(s,t)
+  \quad\text{for all } (s,t) \in \mathbb{R}^2,
+  \]
+  which establishes continuous translational equivariance:
+  \begin{equation}
+    (g X) * F = g (X * F),
+  \end{equation}
+  in direct analogy with the kernel--centred discrete case.
+  
 
 
 
+  \subsection{Rotational non-equivariance: continuous case}
+
+  We keep the same continuous convolution operator as in
+  \eqref{eq:continuous-conv-equiv}, treating the kernel $F$ as fixed:
+  \begin{equation}
+    \label{eq:continuous-conv-rot}
+    (X * F)(s,t)
+    \;=\;
+    \int_{\mathbb{R}^2}
+    X(s + \sigma,\; t + \tau)\,
+    F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau.
+  \end{equation}
+  Here $(s,t)$ denotes the evaluation point (kernel centre) and
+  $(\sigma,\tau)$ are continuous offsets within the kernel footprint.
+  It is convenient to write $x = (s,t)^\top$ and $y = (\sigma,\tau)^\top$,
+  so this is equivalently
+  \begin{equation}
+    (X * F)(x)
+    \;=\;
+    \int_{\mathbb{R}^2} X(x + y)\,F(y)\,\mathrm{d}y.
+  \end{equation}
+  
+  Let $R \in SO(2)$ be a rotation matrix and define its action on functions by
+  \begin{equation}
+    \label{eq:rotation-action}
+    (R X)(x) := X(R^{-1} x),
+  \end{equation}
+  so that $R X$ is just $X$ viewed in a rotated coordinate system. Rotation
+  equivariance of the convolution would mean
+  \begin{equation}
+    \label{eq:rotation-equivariance}
+    R(X * F) \;=\; (R X) * F
+    \quad\text{for all }X\text{ and all }R\in SO(2).
+  \end{equation}
+  
+  As in the translational case, we compare the two sides explicitly.
+  
+  \textbf{Rotate first, then convolve.}
+  Plug the rotated input into the convolution:
+  \begin{align}
+    \label{eq:rot-eq1}
+    ((R X) * F)(x)
+      &= \int_{\mathbb{R}^2} (R X)(x + y)\,F(y)\,\mathrm{d}y
+         &&\text{(definition of convolution)} \\
+    \label{eq:rot-eq2}
+      &= \int_{\mathbb{R}^2} X(R^{-1}(x + y))\,F(y)\,\mathrm{d}y
+         &&\text{(definition of rotation action)}.
+  \end{align}
+  
+  \textbf{Convolve first, then rotate.}
+  Now rotate the output of the convolution:
+  \begin{align}
+    \label{eq:rot-eq3}
+    (R (X * F))(x)
+      &= (X * F)(R^{-1} x)
+         &&\text{(definition of rotation action)} \\
+    \label{eq:rot-eq4}
+      &= \int_{\mathbb{R}^2} X(R^{-1} x + y)\,F(y)\,\mathrm{d}y
+         &&\text{(definition of convolution)}.
+  \end{align}
+  
+  To compare \eqref{eq:rot-eq2} and \eqref{eq:rot-eq4}, make a change of
+  variables $y = R z$ in \eqref{eq:rot-eq2}. Since $R$ is orthogonal,
+  $\mathrm{d}y = \mathrm{d}z$, and we obtain
+  \begin{align}
+    \label{eq:rot-eq5}
+    ((R X) * F)(x)
+      &= \int_{\mathbb{R}^2} X\bigl(R^{-1} x + z\bigr)\,F(R z)\,\mathrm{d}z.
+  \end{align}
+  By contrast, \eqref{eq:rot-eq4} can be written (renaming $y$ to $z$) as
+  \begin{align}
+    \label{eq:rot-eq6}
+    (R (X * F))(x)
+      &= \int_{\mathbb{R}^2} X\bigl(R^{-1} x + z\bigr)\,F(z)\,\mathrm{d}z.
+  \end{align}
+  
+  For rotation equivariance \eqref{eq:rotation-equivariance} to hold, we would
+  need \eqref{eq:rot-eq5} and \eqref{eq:rot-eq6} to be equal for all $X$ and
+  all $x$. Since $X$ is arbitrary, the integrands must agree almost everywhere:
+  \begin{equation}
+    \label{eq:rot-condition}
+    F(z) = F(R z)
+    \quad\text{for all }z\in\mathbb{R}^2\text{ and all }R\in SO(2).
+  \end{equation}
+  Thus $F$ must be invariant under every rotation, i.e.\ rotationally
+  symmetric (radial, $F(z) = f(\|z\|)$). For a generic, anisotropic kernel
+  (e.g.\ an oriented edge detector) this condition fails, so in general
+  \begin{equation}
+    R(X * F) \;\neq\; (R X) * F.
+  \end{equation}
+  Therefore ordinary convolution is \emph{not} rotationally equivariant unless
+  the kernel itself is rotationally symmetric, in sharp contrast to the
+  translational case.
+  
 
 
-\section{Thatcher effect}
+
+\section{Demo of translational equivariance and rotational non-equivariance}
+\section{Demo: Thatcher effect}
 
 There is perhaps some evidence that the human visual cortex does not have rotational equivariance for human faces, as made obvious by the Thatcher effect.
+
 
 \section{Graph convolutions}
 
