@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 from base_scene import RightRegionScene
 
-class ConvolutionRotationalNonEquivariance(RightRegionScene):
+class ConvolutionCircularKernel(RightRegionScene):
     def construct(self):
         self.camera.background_color = BLACK
 
@@ -40,78 +40,66 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
         kernel_image.set_z_index(-1)
 
         bold_red = ManimColor("#ff4b3e")
-        kernel_box = Rectangle(
-            width=kernel_image.width * 0.38,
-            height=kernel_image.height * 0.38,
+        kernel_size = min(kernel_image.width, kernel_image.height) * 0.38
+        kernel_radius = kernel_size / 1.5
+        kernel_circle = Circle(
+            radius=kernel_radius,
             stroke_color=bold_red,
             stroke_width=1.5,
         )
-        kernel_box.move_to(kernel_image)
-        kernel_box.set_z_index(-1.1)
-        arrow_buff = 0.12
-        x_arrow = DoubleArrow(
-            kernel_box.get_corner(LEFT + UP) + UP * arrow_buff,
-            kernel_box.get_corner(RIGHT + UP) + UP * arrow_buff,
-            color=bold_red,
-            stroke_width=1.0,
-            buff=0,
-            max_tip_length_to_length_ratio=0.05,
-        )
-        x_label = MathTex("A", color=bold_red).scale(0.5).next_to(x_arrow, UP, buff=0.03)
-
-        y_arrow = DoubleArrow(
-            kernel_box.get_corner(RIGHT + DOWN) + RIGHT * arrow_buff,
-            kernel_box.get_corner(RIGHT + UP) + RIGHT * arrow_buff,
-            color=bold_red,
-            stroke_width=1.0,
-            buff=0,
-            max_tip_length_to_length_ratio=0.05,
-        )
-        y_label = MathTex("B", color=bold_red).scale(0.5).next_to(y_arrow, RIGHT, buff=0.03)
-
-        measurement_group = Group(x_arrow, x_label, y_arrow, y_label)
-        measurement_group.set_z_index(-1.05)
+        kernel_circle.move_to(kernel_image)
+        kernel_circle.set_z_index(-1.1)
+        circle_center = kernel_circle.get_center()
 
         origin_point = axes.c2p(0, 0)
         vector_color = GREY_A
 
+        def create_vector_label(tex, color, arrow, offset=0.08):
+            direction = arrow.get_end() - arrow.get_start()
+            norm = np.linalg.norm(direction)
+            if norm == 0:
+                norm = 1.0
+                direction = np.array([1.0, 0.0, 0.0])
+            unit_direction = direction / norm
+            label = MathTex(tex, color=color).scale(0.5)
+            label.move_to(arrow.get_end() + unit_direction * offset)
+            return label
+
         def global_vector_group():
-            target = kernel_box.get_center()
+            target = kernel_circle.get_center()
             arrow = Arrow(
                 origin_point,
                 target,
                 buff=0,
                 color=vector_color,
-                stroke_width=2.5,
+                stroke_width=2.2,
                 tip_length=0.08,
                 max_tip_length_to_length_ratio=1.0,
             ).set_z_index(2)
-            label = MathTex(r"(s,t)", color=vector_color).scale(0.5)
-            label.move_to(target + UP * 0.2)
+            label = create_vector_label(r"\mathbf{p}", vector_color, arrow)
             return VGroup(arrow, label)
 
         def offset_vector_group():
-            base = kernel_box.get_center()
+            base = kernel_circle.get_center()
             offset = np.array(
-                [kernel_box.width * -0.48, kernel_box.height * 0.25, 0.0]
-            )
+                [kernel_size * -0.48, kernel_size * 0.25, 0.0]
+            ) * 0.5
             arrow = Arrow(
                 base,
                 base + offset,
                 buff=0,
                 color=YELLOW_E,
                 stroke_width=2.2,
-                tip_length=0.22,
-                max_tip_length_to_length_ratio=0.06,
+                tip_length=0.08,
+                max_tip_length_to_length_ratio=1.0,
             ).set_z_index(2)
-            label = MathTex(r"(\sigma,\tau)", color=YELLOW_E).scale(0.5)
-            label.move_to(base + offset + UP * 0.2)
+            label = create_vector_label(r"\mathbf{p}'", YELLOW_E, arrow)
             return VGroup(arrow, label)
 
         global_vector = always_redraw(global_vector_group)
         offset_vector = always_redraw(offset_vector_group)
 
-        kernel_group = Group(kernel_image, kernel_box, measurement_group)
+        kernel_group = Group(kernel_image, kernel_circle)
 
         title = Text(
             "Localized kernel intensity",
@@ -204,16 +192,19 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
         radial_mask = np.exp(-((grid_x**2 + grid_y**2) / (2 * (span / 1.5) ** 2)))
         field *= radial_mask
 
+        circle_mask = (grid_x**2 + grid_y**2) <= span**2  # inscribed circle
+        field *= circle_mask.astype(float)
+
         field -= field.min()
         max_value = field.max() or 1.0
         field /= max_value
 
-        # Only keep the “hot” parts of the kernel
+        # Only keep the “hot” parts of the kernel but ensure the support stays circular.
         mask = field > cutoff
 
         rgba = np.zeros((resolution, resolution, 4), dtype=float)
         rgba[..., 0] = np.power(field, 0.9) * mask          # red channel
-        rgba[..., 3] = np.clip(field * 1.4, 0, 1) * mask    # alpha only where mask == True
+        rgba[..., 3] = np.clip(field * 1.4, 0, 1) * circle_mask
 
         kernel_image = ImageMobject(np.uint8(np.flipud(rgba) * 255))
         # ❌ DO NOT call kernel_image.set_opacity(...)
