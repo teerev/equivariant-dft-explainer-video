@@ -102,9 +102,6 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
   X_{\,u+i,\ v+j}\, F_{u v}
   \end{equation}
 
-
-
-
   \subsection{Translational equivariance: discrete case}
 
   We denote the convolution $X * F$ as $f(X;F)$, where $X$ is the input
@@ -357,26 +354,24 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
   \eqref{eq:continuous-conv-equiv}, treating the kernel $F$ as fixed:
   \begin{equation}
     \label{eq:continuous-conv-rot}
-    (X * F)(s,t)
+    (X * F)(p)
     \;=\;
     \int_{\mathbb{R}^2}
-    X(s + \sigma,\; t + \tau)\,
-    F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau.
+    X(p + p')\,
+    F(p')\,\mathrm{d}p'.
   \end{equation}
-  Here $(s,t)$ denotes the evaluation point (kernel centre) and
-  $(\sigma,\tau)$ are continuous offsets within the kernel footprint.
-  It is convenient to write $x = (s,t)^\top$ and $y = (\sigma,\tau)^\top$,
-  so this is equivalently
+
+  Here $p$ denotes the evaluation point (kernel centre) and $p'$ is an offset within the kernel footprint.  In vector form:
   \begin{equation}
-    (X * F)(x)
+    (X * F)(p)
     \;=\;
-    \int_{\mathbb{R}^2} X(x + y)\,F(y)\,\mathrm{d}y.
+    \int_{\mathbb{R}^2} X(p + p')\,F(p')\,\mathrm{d}p'.
   \end{equation}
   
   Let $R \in SO(2)$ be a rotation matrix and define its action on functions by
   \begin{equation}
     \label{eq:rotation-action}
-    (R X)(x) := X(R^{-1} x),
+    (R X)(p) := X(R^{-1} p),
   \end{equation}
   so that $R X$ is just $X$ viewed in a rotated coordinate system. Rotation
   equivariance of the convolution would mean
@@ -392,11 +387,11 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
   Plug the rotated input into the convolution:
   \begin{align}
     \label{eq:rot-eq1}
-    ((R X) * F)(x)
-      &= \int_{\mathbb{R}^2} (R X)(x + y)\,F(y)\,\mathrm{d}y
+    ((R X) * F)(p)
+      &= \int_{\mathbb{R}^2} (R X)(p + p')\,F(p')\,\mathrm{d}p'
          &&\text{(definition of convolution)} \\
     \label{eq:rot-eq2}
-      &= \int_{\mathbb{R}^2} X(R^{-1}(x + y))\,F(y)\,\mathrm{d}y
+      &= \int_{\mathbb{R}^2} X(R^{-1}(p + p'))\,F(p')\,\mathrm{d}p'
          &&\text{(definition of rotation action)}.
   \end{align}
   
@@ -404,32 +399,32 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
   Now rotate the output of the convolution:
   \begin{align}
     \label{eq:rot-eq3}
-    (R (X * F))(x)
-      &= (X * F)(R^{-1} x)
+    (R (X * F))(p)
+      &= (X * F)(R^{-1} p)
          &&\text{(definition of rotation action)} \\
     \label{eq:rot-eq4}
-      &= \int_{\mathbb{R}^2} X(R^{-1} x + y)\,F(y)\,\mathrm{d}y
+      &= \int_{\mathbb{R}^2} X(R^{-1} p + p')\,F(p')\,\mathrm{d}p'
          &&\text{(definition of convolution)}.
   \end{align}
   
   To compare \eqref{eq:rot-eq2} and \eqref{eq:rot-eq4}, make a change of
-  variables $y = R z$ in \eqref{eq:rot-eq2}. Since $R$ is orthogonal,
-  $\mathrm{d}y = \mathrm{d}z$, and we obtain
+  variables $p' = R z$ in \eqref{eq:rot-eq2}. Since $R$ is orthogonal,
+  $\mathrm{d}p' = \mathrm{d}z$, and we obtain
   \begin{align}
     \label{eq:rot-eq5}
-    ((R X) * F)(x)
-      &= \int_{\mathbb{R}^2} X\bigl(R^{-1} x + z\bigr)\,F(R z)\,\mathrm{d}z.
+    ((R X) * F)(p)
+      &= \int_{\mathbb{R}^2} X\bigl(R^{-1} p + z\bigr)\,F(R z)\,\mathrm{d}z.
   \end{align}
-  By contrast, \eqref{eq:rot-eq4} can be written (renaming $y$ to $z$) as
+  By contrast, \eqref{eq:rot-eq4} can be written (renaming $p'$ to $z$) as
   \begin{align}
     \label{eq:rot-eq6}
-    (R (X * F))(x)
-      &= \int_{\mathbb{R}^2} X\bigl(R^{-1} x + z\bigr)\,F(z)\,\mathrm{d}z.
+    (R (X * F))(p)
+      &= \int_{\mathbb{R}^2} X\bigl(R^{-1} p + z\bigr)\,F(z)\,\mathrm{d}z.
   \end{align}
   
   For rotation equivariance \eqref{eq:rotation-equivariance} to hold, we would
   need \eqref{eq:rot-eq5} and \eqref{eq:rot-eq6} to be equal for all $X$ and
-  all $x$. Since $X$ is arbitrary, the integrands must agree almost everywhere:
+  all $p$. Since $X$ is arbitrary, the integrands must agree almost everywhere:
   \begin{equation}
     \label{eq:rot-condition}
     F(z) = F(R z)
@@ -442,11 +437,8 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
     R(X * F) \;\neq\; (R X) * F.
   \end{equation}
   Therefore ordinary convolution is \emph{not} rotationally equivariant unless
-  the kernel itself is rotationally symmetric, in sharp contrast to the
-  translational case.
+  the kernel itself is rotationally symmetric.
   
-
-
 
 \section{Demo of translational equivariance and rotational non-equivariance}
 \section{Demo: Thatcher effect}
@@ -454,7 +446,932 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
 There is perhaps some evidence that the human visual cortex does not have rotational equivariance for human faces, as made obvious by the Thatcher effect.
 
 
-\section{Graph convolutions}
+\section{Harmonic networks}
+
+
+
+
+
+
+
+
+
+
+
+\section{Rotational equivariance from circular harmonic \texorpdfstring{$\times$}{x} radial kernels}
+\label{sec:harmonic-nets-equivariance}
+
+In this section we show how rotational equivariance can be restored by
+locally decomposing an image into angular and radial Fourier modes
+(circular harmonics with radial windows), and using these as the
+building blocks for convolutional kernels. Concretely, we consider a
+scalar image
+\[
+  X : \mathbb{R}^2 \to \mathbb{R}, \qquad
+  X(s,t) \equiv X(p), \quad
+  p = (s,t)^\top.
+\]
+As in the earlier sections, we describe convolution in terms of a
+kernel centred at spatial location $p$ and an offset variable
+\[
+  p' = (\sigma,\tau)^\top,
+\]
+so that the continuous convolution at $p$ reads
+\begin{equation}
+  \label{eq:conv-continuous}
+  (X * F)(s,t)
+  \;=\;
+  \int_{\mathbb{R}^2}
+  X(s + \sigma,\; t + \tau)\,
+  F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau.
+\end{equation}
+
+\subsection{Rotations of the input image}
+
+A rotation by angle $\alpha$ in the plane is represented by the matrix
+\begin{equation}
+  \label{eq:rotation-matrix}
+  \mathbf{Q}_\alpha
+  \;=\;
+  \begin{pmatrix}
+    \cos\alpha & -\sin\alpha \\
+    \sin\alpha & \cos\alpha
+  \end{pmatrix},
+\end{equation}
+acting on points $p \in \mathbb{R}^2$ by matrix multiplication:
+$\mathbf{Q}_\alpha p$.
+
+We describe the action of $\mathbf{Q}_\alpha$ on the image $X$ by
+\emph{pullback}:
+\begin{equation}
+  \label{eq:rotation-action-on-image}
+  (\mathbf{Q}_\alpha \cdot X)(p)
+  \;:=\;
+  X\bigl(\mathbf{Q}_{-\alpha}\,p\bigr),
+\end{equation}
+so that the rotated image evaluated at a point $p$ is obtained by
+sampling the original image at the inverse-rotated point
+$\mathbf{Q}_{-\alpha} p$. This is the standard way of implementing
+geometric transformations of scalar fields.
+
+For brevity, we will write
+\[
+  X^\alpha \;\equiv\; \mathbf{Q}_\alpha \cdot X
+\]
+for the rotated image.
+
+\subsection{Local polar coordinates and circular harmonic \texorpdfstring{$\times$}{x} radial kernels}
+
+Fix a spatial location $p = (s,t)^\top$, which we think of as the
+centre of a receptive field. Around this point we use a local offset
+coordinate $p' = (\sigma,\tau)^\top$ and write the argument of the
+image in the convolution as
+\[
+  p + p'
+  \;=\;
+  (s + \sigma,\, t + \tau)^\top.
+\]
+
+We now introduce polar coordinates for the offset $p'$:
+\begin{equation}
+  \label{eq:polar-coords}
+  p' = (\sigma,\tau)^\top
+  \;=\;
+  \bigl(r\cos\theta,\; r\sin\theta\bigr)^\top,
+  \qquad
+  r \ge 0,\ \theta \in [0,2\pi).
+\end{equation}
+The Jacobian of this change of variables is
+\[
+  \mathrm{d}\sigma\,\mathrm{d}\tau
+  \;=\;
+  r\,\mathrm{d}r\,\mathrm{d}\theta.
+\]
+
+For each fixed radius $r$, the functions
+\begin{equation}
+  \label{eq:circular-harmonics}
+  e^{\mathrm{i}m\theta}, \qquad m \in \mathbb{Z},
+\end{equation}
+are the standard circular harmonics: the Fourier modes on the circle.
+
+To localise the response radially, we introduce a family of real
+radial window functions
+\[
+  R_q : [0,\infty) \to \mathbb{R},
+  \qquad q = 1,\dots,Q.
+\]
+A typical \emph{circular harmonic $\times$ radial} kernel is then
+\begin{equation}
+  \label{eq:Fr-theta-definition}
+  F_{m,q}(r,\theta)
+  \;:=\;
+  R_q(r)\,e^{\mathrm{i}m\theta},
+  \qquad m \in \mathbb{Z},\quad q\in\{1,\dots,Q\}.
+\end{equation}
+Viewed back in Cartesian coordinates, this is a function
+\[
+  F_{m,q}(p')
+  \;=\;
+  F_{m,q}\bigl(r(p'), \theta(p')\bigr),
+\]
+where $r(p'),\theta(p')$ are defined by
+\eqref{eq:polar-coords}.
+
+\subsection{Local projection and complex feature maps}
+
+At each spatial location $p$, we now define the \emph{local projection}
+of the image $X$ onto the kernel $F_{m,q}$ over the receptive field.
+This is just the (complex) inner product between the patch
+$X(p + p')$ and the kernel $F_{m,q}(p')$:
+\begin{equation}
+  \label{eq:local-projection-definition}
+  Y_{m,q}(p)
+  \;:=\;
+  \int_{\mathbb{R}^2}
+    X(p + p')\,
+    \overline{F_{m,q}(p')}\,
+  \mathrm{d}p',
+\end{equation}
+where the overline denotes complex conjugation.
+
+\paragraph{Interpretation as a continuous ``output pixel''.}
+For each fixed pair $(m,q)$, the map
+\[
+  p \;\longmapsto\; Y_{m,q}(p)
+\]
+is a complex-valued feature map over the plane. The quantity
+$Y_{m,q}(p)$ is the continuous analogue of a single output pixel
+$Y_{m,q}[i,j]$ in a discrete CNN: the patch centred at $p$ is
+correlated with the kernel $F_{m,q}$, and the result is stored at
+location $p$ in channel $(m,q)$.
+
+\paragraph{Expanding the inner product in polar coordinates.}
+
+Using the polar coordinates \eqref{eq:polar-coords} and the definition
+\eqref{eq:Fr-theta-definition}, we can write
+\eqref{eq:local-projection-definition} explicitly as
+\begin{align}
+  Y_{m,q}(p)
+  \;&=\;
+  \int_0^\infty\!\int_0^{2\pi}
+    X\bigl(p + (r\cos\theta,\,r\sin\theta)^\top\bigr)\,
+    \overline{R_q(r)\,e^{\mathrm{i}m\theta}}\,
+    r\,\mathrm{d}\theta\,\mathrm{d}r
+  \label{eq:local-projection-polar-1}
+  \\
+  \;&=\;
+  \int_0^\infty\!\int_0^{2\pi}
+    X\bigl(p + (r\cos\theta,\,r\sin\theta)^\top\bigr)\,
+    R_q(r)\,e^{-\mathrm{i}m\theta}\,
+    r\,\mathrm{d}\theta\,\mathrm{d}r,
+  \label{eq:local-projection-polar-2}
+\end{align}
+since $R_q(r)$ is real-valued and
+\[
+  \overline{e^{\mathrm{i}m\theta}} = e^{-\mathrm{i}m\theta}.
+\]
+
+Thus the complex conjugate in the inner product simply flips the sign
+of the angular phase: the kernel contributes a factor
+$e^{-\mathrm{i}m\theta}$ inside the integral. This is the continuous
+analogue of complex correlation.
+
+
+\subsection{Rotating the input: equivariance of the coefficients}
+
+We now compute how the coefficients $Y_{m,q}(p)$ transform when we
+rotate the input image $X$ by an angle $\alpha$. Recall that the
+rotated image is
+\[
+  X^\alpha(p) = (\mathbf{Q}_\alpha \cdot X)(p) = X(\mathbf{Q}_{-\alpha}p).
+\]
+Define the coefficients of the rotated image by the same projection:
+\begin{equation}
+  \label{eq:rotated-coeff-definition}
+  Y^{\alpha}_{m,q}(p)
+  \;:=\;
+  \int_{\mathbb{R}^2}
+    X^\alpha(p + p')\,
+    \overline{F_{m,q}(p')}\,
+  \mathrm{d}p'.
+\end{equation}
+
+To express \emph{equivariance}, we want to compare the coefficients
+of the rotated image at a rotated spatial position
+$\mathbf{Q}_\alpha p$ with the original coefficients at $p$. That is,
+we examine $Y^{\alpha}_{m,q}(\mathbf{Q}_\alpha p)$.
+
+Starting from the definition
+\eqref{eq:rotated-coeff-definition} we therefore write
+\begin{align}
+  Y^{\alpha}_{m,q}(\mathbf{Q}_\alpha p)
+  \;&=\;
+  \int_{\mathbb{R}^2}
+    X^\alpha(\mathbf{Q}_\alpha p + p')\,
+    \overline{F_{m,q}(p')}\,
+  \mathrm{d}p'
+  \label{eq:Y-alpha-start}
+  \\
+  \;&=\;
+  \int_{\mathbb{R}^2}
+    X\bigl(\mathbf{Q}_{-\alpha}(\mathbf{Q}_\alpha p + p')\bigr)\,
+    \overline{F_{m,q}(p')}\,
+  \mathrm{d}p'
+  \label{eq:Y-alpha-pullback}
+  \\
+  \;&=\;
+  \int_{\mathbb{R}^2}
+    X\bigl(p + \mathbf{Q}_{-\alpha}p'\bigr)\,
+    \overline{F_{m,q}(p')}\,
+  \mathrm{d}p',
+  \label{eq:Y-alpha-simplify}
+\end{align}
+using $X^\alpha(u) = X(\mathbf{Q}_{-\alpha}u)$ and
+$\mathbf{Q}_{-\alpha}\mathbf{Q}_\alpha = I$.
+
+
+
+Now perform a change of integration variable
+\begin{equation}
+  \label{eq:rotation-change-of-variable}
+  p'' \;:=\; \mathbf{Q}_{-\alpha}p'.
+\end{equation}
+Because $\mathbf{Q}_{-\alpha}$ is a rotation, it preserves area, so
+$\mathrm{d}p'' = \mathrm{d}p'$. We also have
+$p' = \mathbf{Q}_{\alpha}p''$. Substituting into
+\eqref{eq:Y-alpha-simplify} gives
+\begin{align}
+  Y^{\alpha}_{m,q}(\mathbf{Q}_\alpha p)
+  \;&=\;
+  \int_{\mathbb{R}^2}
+    X\bigl(p + p''\bigr)\,
+    \overline{F_{m,q}(\mathbf{Q}_\alpha p'')}\,
+  \mathrm{d}p''
+  \label{eq:Y-alpha-after-change}
+\end{align}
+
+At this point the only place where the rotation appears is inside the
+kernel $F_{m,q}$. We now exploit its angular structure. Let
+$(r,\varphi)$ be the polar coordinates of $p''$:
+\[
+  p'' = (r\cos\varphi,\,r\sin\varphi)^\top.
+\]
+Then the rotated vector $p' = \mathbf{Q}_\alpha p''$ has the same
+radius $r$ and angle shifted by $\alpha$:
+\[
+  p' = \mathbf{Q}_\alpha p'' \quad\Longrightarrow\quad
+  p' = (r\cos(\varphi + \alpha),\,r\sin(\varphi + \alpha))^\top.
+\]
+Therefore, in polar coordinates,
+\[
+  F_{m,q}(\mathbf{Q}_\alpha p'')
+  \;=\;
+  R_q(r)\, e^{\mathrm{i}m(\varphi + \alpha)}.
+\]
+Taking the complex conjugate,
+\begin{equation}
+  \label{eq:F-rotate-conjugate}
+  \overline{F_{m,q}(\mathbf{Q}_\alpha p'')}
+  \;=\;
+  R_q(r)\, e^{-\mathrm{i}m(\varphi + \alpha)}
+  \;=\;
+  e^{-\mathrm{i}m\alpha}\,R_q(r)\,e^{-\mathrm{i}m\varphi}
+  \;=\;
+  e^{-\mathrm{i}m\alpha}\,\overline{F_{m,q}(p'')}.
+\end{equation}
+
+Substituting this identity into
+\eqref{eq:Y-alpha-after-change} gives
+\begin{align}
+  Y^{\alpha}_{m,q}(\mathbf{Q}_\alpha p)
+  \;&=\;
+  \int_{\mathbb{R}^2}
+    X\bigl(p + p''\bigr)\,
+    \overline{F_{m,q}(\mathbf{Q}_\alpha p'')}\,
+  \mathrm{d}p''
+  \\
+  \;&=\;
+  \int_{\mathbb{R}^2}
+    X\bigl(p + p''\bigr)\,
+    e^{-\mathrm{i}m\alpha}\,\overline{F_{m,q}(p'')}\,
+  \mathrm{d}p''
+  \label{eq:Y-alpha-factor-phase}
+  \\
+  \;&=\;
+  e^{-\mathrm{i}m\alpha}
+  \int_{\mathbb{R}^2}
+    X\bigl(p + p''\bigr)\,
+    \overline{F_{m,q}(p'')}\,
+  \mathrm{d}p''
+  \\
+  \;&=\;
+  e^{-\mathrm{i}m\alpha}\,
+  Y_{m,q}(p),
+  \label{eq:Y-alpha-equivariant}
+\end{align}
+where in the last step we recognised the integral
+\eqref{eq:local-projection-definition}.
+
+This is precisely the statement of rotational equivariance for the
+coefficients $Y_{m,q}$: under an input rotation $\mathbf{Q}_\alpha$ we have
+\begin{equation}
+  \label{eq:equivariance-statement}
+  Y^{\alpha}_{m,q}(\mathbf{Q}_\alpha p)
+  \;=\;
+  e^{-\mathrm{i}m\alpha}\,Y_{m,q}(p).
+\end{equation}
+In words:
+\begin{itemize}
+  \item the \emph{spatial} positions transform by the geometric
+    rotation $p \mapsto \mathbf{Q}_\alpha p$;
+  \item each \emph{channel} labelled by angular frequency $m$
+    transforms under the one-dimensional complex representation
+    \[
+      \rho_m(\alpha) = e^{-\mathrm{i}m\alpha},
+    \]
+    i.e.\ the channels pick up a phase factor whose angular speed is
+    proportional to $m$.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Harmonic networks as stacks of equivariant modes}
+
+A harmonic network layer collects all such coefficients over a range
+of angular frequencies $m$ (typically $m=0,\pm1,\pm2,\dots,\pm M$)
+and radial indices $q$. Writing
+\[
+  Y(p) =
+  \bigl(Y_{m,q}(p)\bigr)_{m,q}
+\]
+for the entire stack of channels, the transformation law
+\eqref{eq:equivariance-statement} can be written compactly as
+\begin{equation}
+  \label{eq:equivariance-matrix-form}
+  Y^\alpha(\mathbf{Q}_\alpha p)
+  \;=\;
+  D(\alpha)\,Y(p),
+\end{equation}
+where $D(\alpha)$ is a block-diagonal matrix whose entries on the
+block corresponding to angular frequency $m$ are the scalar phases
+$e^{-\mathrm{i}m\alpha}$. In other words, the layer is exactly
+$\mathrm{SO}(2)$-equivariant, with each $m$-channel transforming
+according to the complex irrep $e^{-\mathrm{i}m\alpha}$.
+
+In practice, harmonic networks use a finite range of angular
+frequencies $m$ and finitely many radial windows $R_q$. This gives a
+truncated but still \emph{exactly equivariant} representation: for
+any input $X$ and any rotation angle $\alpha$, the transformation law
+\eqref{eq:equivariance-statement} holds channel-wise. The usefulness
+of including a large range of $m$ values
+($m = 0,1,2,\dots,M_{\max}$ in practice) is that it allows the network
+to represent fine angular detail in the image; but the equivariance
+property itself is already guaranteed by the circular-harmonic
+structure of the kernels.
+
+
+
+
+
+
+\section{From scalar images to vector and tensor fields}
+\label{sec:vectors-tensors-small-m}
+
+The previous section showed that when we convolve a scalar image
+$X(p)$ with circular harmonic $\times$ radial kernels
+\[
+  F_{m,q}(r,\theta) = R_q(r)\,e^{\mathrm{i}m\theta},
+\]
+the resulting complex feature maps $Y_{m,q}(p)$ transform under a
+rotation $\mathbf{Q}_\alpha$ as
+\begin{equation}
+  \label{eq:scalar-m-equivariance}
+  Y^{\alpha}_{m,q}(\mathbf{Q}_\alpha p)
+  \;=\;
+  e^{-\mathrm{i}m\alpha}\,Y_{m,q}(p),
+\end{equation}
+i.e.\ each $m$-channel picks up a phase whose angular speed is
+proportional to $m$.
+
+We now explain how the \emph{same} circular harmonic machinery can
+describe not only scalar images, but also vector and tensor fields.
+Crucially, describing physical fields built from directions (like
+velocities) and anisotropies (like local stretch/shear) only requires
+the small set of angular frequencies
+\[
+  m \in \{-2,-1,0,1,2\}
+\]
+rather than a large range of $m$ values. This is the 2D analogue of
+using spherical harmonics with $\ell=0,1,2$ to describe scalars,
+vectors and rank-2 tensors.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Rotational behaviour of temperature, displacement and stress
+in a 2D elastic sheet}
+\label{sec:elastic-sheet-example}
+
+We consider an idealised, flat, two-dimensional elastic sheet lying in
+the $(s,t)$–plane. Each point $p = (s,t)^\top$ carries three physical
+quantities:
+\begin{itemize}
+  \item a temperature field $\Theta(p)$ (scalar),
+  \item a displacement field $\mathbf{u}(p)$ (vector),
+  \item a Cauchy stress tensor $\boldsymbol{\sigma}(p)$
+        (symmetric rank-2 tensor).
+\end{itemize}
+We examine how these fields appear when the sheet is rigidly rotated
+in its own plane, while the laboratory coordinate frame $(s,t)$ remains
+fixed.
+
+A rotation by angle $\alpha$ is represented by
+\begin{equation}
+  \label{eq:elastic-rotation-matrix}
+  \mathbf{Q}_\alpha
+  =
+  \begin{pmatrix}
+    \cos\alpha & -\sin\alpha\\
+    \sin\alpha & \cos\alpha
+  \end{pmatrix},
+\end{equation}
+acting on points by $p \mapsto \mathbf{Q}_\alpha p$.
+
+\subsection{Temperature: scalar field ($m=0$)}
+
+The temperature field is a function
+\[
+  \Theta : \mathbb{R}^2 \to \mathbb{R}.
+\]
+
+\paragraph{Derivation.}
+A material point originally at $p_0$ moves to $\mathbf{Q}_\alpha p_0$
+when the sheet is rotated. Its temperature is unchanged. Thus the
+rotated temperature field satisfies
+\[
+  \Theta^\alpha(\mathbf{Q}_\alpha p_0) = \Theta(p_0).
+\]
+Writing $p_0 = \mathbf{Q}_{-\alpha}p$ gives the standard pullback form
+\begin{equation}
+  \label{eq:temperature-rotation}
+  \Theta^\alpha(p) = \Theta(\mathbf{Q}_{-\alpha}p).
+\end{equation}
+This is the defining behaviour of a scalar field ($m=0$).
+
+\subsection{Displacement: vector field ($m=\pm1$)}
+
+The in-plane displacement is a vector field
+\[
+  \mathbf{u}(p)
+  =
+  \begin{pmatrix}
+    u_s(p)\\[3pt] u_t(p)
+  \end{pmatrix},
+\]
+expressed in the $(s,t)$ coordinate basis.
+
+\paragraph{Derivation.}
+Before rotation, a material point at $p_0$ occupies the physical
+position $p_0 + \mathbf{u}(p_0)$. After rotation, both $p_0$ and the
+attached displacement vector rotate rigidly:
+\[
+  p_0 \mapsto \mathbf{Q}_\alpha p_0,
+  \qquad
+  \mathbf{u}(p_0) \mapsto \mathbf{Q}_\alpha\mathbf{u}(p_0).
+\]
+Thus the new position of the same material point is
+\[
+  \mathbf{Q}_\alpha p_0 + \mathbf{Q}_\alpha\mathbf{u}(p_0)
+  = \mathbf{Q}_\alpha(p_0 + \mathbf{u}(p_0)).
+\]
+By definition of the rotated displacement field,
+\[
+  \mathbf{Q}_\alpha p_0 + \mathbf{u}^\alpha(\mathbf{Q}_\alpha p_0)
+  = \mathbf{Q}_\alpha(p_0 + \mathbf{u}(p_0)),
+\]
+so
+\begin{equation}
+  \label{eq:displacement-rotation-at-Qp}
+  \mathbf{u}^\alpha(\mathbf{Q}_\alpha p_0)
+  = \mathbf{Q}_\alpha\mathbf{u}(p_0).
+\end{equation}
+Writing $p_0 = \mathbf{Q}_{-\alpha}p$ yields
+\begin{equation}
+  \label{eq:displacement-rotation}
+  \mathbf{u}^\alpha(p)
+  = \mathbf{Q}_\alpha\mathbf{u}(\mathbf{Q}_{-\alpha}p).
+\end{equation}
+
+\paragraph{Complex spin components.}
+Define the complex combinations
+\begin{equation}
+  u^{(+1)}(p) := u_s(p) + i\,u_t(p),
+  \qquad
+  u^{(-1)}(p) := u_s(p) - i\,u_t(p).
+\end{equation}
+These simply repackage the two Cartesian components into
+eigenfunctions of rotation. Inserting
+\eqref{eq:displacement-rotation-at-Qp} gives
+\[
+  u^{(+1)\,\alpha}(\mathbf{Q}_\alpha p_0)
+  = e^{i\alpha}\,u^{(+1)}(p_0),
+\qquad
+  u^{(-1)\,\alpha}(\mathbf{Q}_\alpha p_0)
+  = e^{-i\alpha}\,u^{(-1)}(p_0).
+\]
+Thus displacement carries angular frequencies $m=\pm1$.
+
+\subsection{Stress: rank-2 tensor field ($m=0,\pm2$)}
+
+The Cauchy stress tensor is written in the $(s,t)$ coordinate basis as
+\[
+  \boldsymbol{\sigma}(p)
+  =
+  \begin{pmatrix}
+    \sigma_{ss}(p) & \sigma_{st}(p) \\
+    \sigma_{st}(p) & \sigma_{tt}(p)
+  \end{pmatrix}.
+\]
+
+\paragraph{Derivation via traction.}
+Let $\mathbf{n}(p_0)$ be a unit normal to a material line element, and
+$\mathbf{t}(p_0)=\boldsymbol{\sigma}(p_0)\mathbf{n}(p_0)$ the traction.
+After rotating the sheet:
+
+- $p_0\mapsto \mathbf{Q}_\alpha p_0$,
+- $\mathbf{n}\mapsto \mathbf{Q}_\alpha\mathbf{n}$,
+- $\mathbf{t}\mapsto \mathbf{Q}_\alpha\mathbf{t}$.
+
+The definition of the rotated stress tensor is  
+\[
+  \mathbf{t}^\alpha(\mathbf{Q}_\alpha p_0)
+  = \boldsymbol{\sigma}^\alpha(\mathbf{Q}_\alpha p_0)\,
+    \mathbf{n}^\alpha(\mathbf{Q}_\alpha p_0).
+\]
+Substituting yields
+\[
+  \mathbf{Q}_\alpha \boldsymbol{\sigma}(p_0)\mathbf{n}(p_0)
+  =
+  \boldsymbol{\sigma}^\alpha(\mathbf{Q}_\alpha p_0)
+  \mathbf{Q}_\alpha\mathbf{n}(p_0)
+\]
+for all $\mathbf{n}$, hence
+\begin{equation}
+  \label{eq:stress-rotation-at-Qp}
+  \boldsymbol{\sigma}^\alpha(\mathbf{Q}_\alpha p_0)
+  = \mathbf{Q}_\alpha\,\boldsymbol{\sigma}(p_0)\,\mathbf{Q}_\alpha^\top.
+\end{equation}
+Thus,
+\begin{equation}
+  \label{eq:stress-rotation}
+  \boldsymbol{\sigma}^\alpha(p)
+  = \mathbf{Q}_\alpha\,\boldsymbol{\sigma}(\mathbf{Q}_{-\alpha}p)\,
+    \mathbf{Q}_\alpha^\top.
+\end{equation}
+
+\paragraph{Isotropic and shear components.}
+Define
+\[
+  \sigma^{(0)}(p) := \tfrac12(\sigma_{ss}(p)+\sigma_{tt}(p)),
+\]
+and the traceless shear components
+\[
+  S_{ss}=\sigma_{ss}-\sigma^{(0)},\quad
+  S_{tt}=\sigma_{tt}-\sigma^{(0)},\quad
+  S_{st}=\sigma_{st}.
+\]
+
+The scalar (pressure-like) part is invariant:
+\[
+  \sigma^{(0)\,\alpha}(\mathbf{Q}_\alpha p_0)
+  = \sigma^{(0)}(p_0)
+  \qquad (m=0).
+\]
+
+Define the complex shear modes
+\[
+  \sigma^{(+2)} := S_{ss}-S_{tt} - 2iS_{st},
+  \qquad
+  \sigma^{(-2)} := S_{ss}-S_{tt} + 2iS_{st}.
+\]
+Using \eqref{eq:stress-rotation-at-Qp} and the standard stress
+transformation formulas gives
+\[
+  \sigma^{(+2)\,\alpha}(\mathbf{Q}_\alpha p_0)
+  = e^{-2i\alpha}\,\sigma^{(+2)}(p_0),
+\qquad
+  \sigma^{(-2)\,\alpha}(\mathbf{Q}_\alpha p_0)
+  = e^{+2i\alpha}\,\sigma^{(-2)}(p_0).
+\]
+
+\subsection{Summary}
+
+Using only the geometric idea of a rigidly rotated sheet, we have:
+
+\[
+\begin{array}{ccl}
+\text{Temperature} &:& m=0 \\
+\text{Displacement} &:& m=\pm 1 \\
+\text{Shear stress} &:& m=\pm 2 \\
+\text{Isotropic stress} &:& m=0
+\end{array}
+\]
+
+These are exactly the scalar, vector, and rank-2 tensor behaviours of
+$\mathrm{SO}(2)$, derived directly in $(s,t)$ coordinates without
+invoking any abstract group representation theory.
+
+
+
+
+
+
+
+
+
+
+\section{Convolution of scalar, vector and tensor fields on the elastic sheet}
+\label{sec:elastic-sheet-convolution}
+
+We now explain how to convolve the temperature, displacement and
+stress fields on the elastic sheet with circular harmonic $\times$
+radial kernels. The key idea is that once we have decomposed the
+vector and tensor fields into complex scalar ``spin'' channels (as in
+Section~\ref{sec:elastic-sheet-example}), \emph{every channel is
+processed by exactly the same scalar convolution operation}. The only
+difference is how these channels transform under rotation.
+
+Throughout, we use the same convolution geometry as before:
+\begin{itemize}
+  \item $p \in \mathbb{R}^2$ is the centre of the kernel
+        (the ``output pixel location''),
+  \item $p' \in \mathbb{R}^2$ is the local offset inside the receptive
+        field,
+  \item the field is sampled at $p+p'$ under the kernel footprint,
+  \item the kernel is a fixed function of $p'$.
+\end{itemize}
+
+\subsection{Recap: scalar convolution with circular harmonic $\times$ radial kernels}
+
+Let $X(p)$ be any scalar field on the sheet (for example the
+temperature $\Theta(p)$). A circular harmonic $\times$ radial kernel is
+\[
+  F_{m,q}(p')
+  = F_{m,q}\bigl(r(p'),\theta(p')\bigr)
+  = R_q\bigl(r(p')\bigr)\,e^{\mathrm{i}m\theta(p')},
+\]
+with $m\in\mathbb{Z}$ and $q$ indexing radial windows. The local
+projection (continuous convolution) at $p$ is
+\begin{equation}
+  \label{eq:scalar-conv-def}
+  Y_{m,q}(p)
+  :=
+  \int_{\mathbb{R}^2}
+    X(p+p')\,\overline{F_{m,q}(p')}\,\mathrm{d}p'.
+\end{equation}
+Here $\overline{F_{m,q}}$ is the complex conjugate of the kernel; this
+is just the standard complex inner product between the patch
+$X(p+p')$ and the kernel $F_{m,q}(p')$.
+
+\paragraph{Visualisation.}
+To visualise \eqref{eq:scalar-conv-def} at a given $p$:
+
+\begin{enumerate}
+  \item Draw the scalar field $X$ as a grayscale ``image'' on the
+        $(s,t)$ plane.
+  \item Draw the kernel footprint centred at $p$ (a small disk or
+        square around $p$).
+  \item Within that footprint, sample $X(p+p')$ and the kernel
+        values $\overline{F_{m,q}(p')}$.
+  \item Multiply them pointwise over $p'$ and integrate/sum.
+\end{enumerate}
+
+In discrete form this is exactly your usual cartoon of ``sliding a
+kernel over an image'': the only difference is that the kernel entries
+are complex and you use the complex conjugate. The output
+$Y_{m,q}(p)$ is a complex number, which you can visualise by its
+magnitude and phase, or by its real/imaginary parts as two scalar
+images.
+
+\subsection{Vector displacement: convolving two scalar channels}
+
+Recall that the displacement field is
+\[
+  \mathbf{u}(p)
+  =
+  \begin{pmatrix}
+    u_s(p)\\[3pt]u_t(p)
+  \end{pmatrix},
+\]
+and we introduced the complex combinations
+\begin{equation}
+  u^{(+1)}(p) := u_s(p) + \mathrm{i}u_t(p),
+  \qquad
+  u^{(-1)}(p) := u_s(p) - \mathrm{i}u_t(p).
+\end{equation}
+Each of $u^{(+1)}$ and $u^{(-1)}$ is just a complex-valued scalar
+field defined over the sheet. This means we can convolve them with
+exactly the same scalar rule as in \eqref{eq:scalar-conv-def}.
+
+\paragraph{Componentwise view.}
+Conceptually, you can convolve the vector field by convolving each
+real component with the same kernel:
+\begin{align}
+  Y^{(s)}_{m,q}(p)
+  &:=
+  \int_{\mathbb{R}^2}
+    u_s(p+p')\,\overline{F_{m,q}(p')}\,\mathrm{d}p',
+  \\
+  Y^{(t)}_{m,q}(p)
+  &:=
+  \int_{\mathbb{R}^2}
+    u_t(p+p')\,\overline{F_{m,q}(p')}\,\mathrm{d}p'.
+\end{align}
+This is literally ``do the same scalar convolution twice'': once for
+the $s$-component image, once for the $t$-component image.
+
+\paragraph{Spin-$\pm1$ view.}
+Equivalently, we can convolve the complex fields $u^{(\pm1)}$ directly:
+\begin{align}
+  U^{(+1)}_{m,q}(p)
+  &:=
+  \int_{\mathbb{R}^2}
+    u^{(+1)}(p+p')\,\overline{F_{m,q}(p')}\,\mathrm{d}p',
+  \label{eq:vector-spin-plus-conv}
+  \\
+  U^{(-1)}_{m,q}(p)
+  &:=
+  \int_{\mathbb{R}^2}
+    u^{(-1)}(p+p')\,\overline{F_{m,q}(p')}\,\mathrm{d}p'.
+  \label{eq:vector-spin-minus-conv}
+\end{align}
+Using the definition of $u^{(\pm1)}$, you can check that
+\eqref{eq:vector-spin-plus-conv} is just
+\[
+  U^{(+1)}_{m,q}(p)
+  = Y^{(s)}_{m,q}(p) + \mathrm{i}Y^{(t)}_{m,q}(p),
+\]
+and similarly for $U^{(-1)}_{m,q}$. So no new machinery is required:
+we are simply recombining the two scalar convolutions into a complex
+spin-$\pm1$ channel.
+
+\paragraph{Visualisation.}
+There are two very direct ways to visualise these operations:
+
+\begin{itemize}
+  \item \emph{Per-component view:} Draw $u_s$ and $u_t$ as two
+        separate grayscale images. Place the same kernel
+        $\overline{F_{m,q}}$ over each image in turn, multiply and
+        sum. This reuses exactly your existing convolution cartoons:
+        you just have two parallel copies, one per component.
+  \item \emph{Spin view:} Draw $u^{(+1)}$ as a complex-valued image,
+        for example:
+        \begin{itemize}
+          \item magnitude $|u^{(+1)}(p)|$ as intensity,
+          \item phase $\arg u^{(+1)}(p)$ as hue.
+        \end{itemize}
+        Then the convolution in \eqref{eq:vector-spin-plus-conv} is
+        visually identical to the scalar case: a complex kernel
+        sliding over a complex ``image''.
+\end{itemize}
+
+The important conceptual point is that a vector field does not require
+a fundamentally new type of convolution: it is just two coupled scalar
+fields, which we can repackage as spin-$\pm1$ complex channels.
+
+\subsection{Stress tensor: convolving scalar and spin-2 channels}
+
+For the stress tensor we already decomposed
+\[
+  \boldsymbol{\sigma}(p)
+  =
+  \begin{pmatrix}
+    \sigma_{ss} & \sigma_{st} \\
+    \sigma_{st} & \sigma_{tt}
+  \end{pmatrix}
+\]
+into
+\begin{itemize}
+  \item an isotropic scalar part
+    $\sigma^{(0)}(p) = \tfrac12(\sigma_{ss}(p)+\sigma_{tt}(p))$,
+  \item a traceless shear part encoded in
+    \[
+      \sigma^{(+2)}(p)
+      := S_{ss}(p)-S_{tt}(p)-2\mathrm{i}S_{st}(p),
+      \qquad
+      \sigma^{(-2)}(p)
+      := S_{ss}(p)-S_{tt}(p)+2\mathrm{i}S_{st}(p),
+    \]
+    with $S_{ss},S_{tt},S_{st}$ defined as in
+    Section~\ref{sec:elastic-sheet-example}.
+\end{itemize}
+Thus we again have one real scalar channel and two complex scalar
+channels.
+
+\paragraph{Isotropic stress: scalar convolution.}
+The isotropic part $\sigma^{(0)}(p)$ is just a scalar field, so we can
+convolve it with any (real or complex) kernel $G_q(p')$:
+\begin{equation}
+  \label{eq:isotropic-stress-conv}
+  \Sigma^{(0)}_q(p)
+  :=
+  \int_{\mathbb{R}^2}
+    \sigma^{(0)}(p+p')\,\overline{G_q(p')}\,\mathrm{d}p'.
+\end{equation}
+For harmonic networks one often chooses $G_q$ to have $m=0$
+(circularly symmetric) so that the output remains a scalar channel.
+
+\paragraph{Shear stress: spin-2 scalar convolution.}
+The shear modes $\sigma^{(\pm2)}(p)$ are complex scalar fields, so we
+can again convolve them exactly as in the scalar case:
+\begin{align}
+  \Sigma^{(+2)}_{m,q}(p)
+  &:=
+  \int_{\mathbb{R}^2}
+    \sigma^{(+2)}(p+p')\,\overline{F_{m,q}(p')}\,\mathrm{d}p',
+  \label{eq:shear-plus-conv}
+  \\
+  \Sigma^{(-2)}_{m,q}(p)
+  &:=
+  \int_{\mathbb{R}^2}
+    \sigma^{(-2)}(p+p')\,\overline{F_{m,q}(p')}\,\mathrm{d}p'.
+  \label{eq:shear-minus-conv}
+\end{align}
+Again, these are just complex inner products between a patch of the
+spin-2 field and the complex kernel. If $F_{m,q}$ carries a definite
+angular frequency $m$, then the outputs
+$\Sigma^{(\pm2)}_{m,q}(p)$ will transform with predictable angular
+frequencies determined by the combination of the input spin ($\pm2$)
+and the kernel spin ($m$).
+
+\paragraph{Visualisation.}
+Practically, you can visualise the shear stress convolutions by
+working with real scalar images:
+\begin{itemize}
+  \item plot $\Re\sigma^{(+2)}(p)$ and $\Im\sigma^{(+2)}(p)$ as two
+        separate grayscale images,
+  \item convolve each of them with the real and imaginary parts of
+        $\overline{F_{m,q}}$ exactly as in the scalar case,
+  \item recombine the resulting real and imaginary parts into the
+        complex output $\Sigma^{(+2)}_{m,q}(p)$.
+\end{itemize}
+Conceptually, this is no different from convolving a colour image
+channel-by-channel: you simply have more than one scalar field living
+over the same spatial domain, and the kernel is applied to each in a
+linear way.
+
+\subsection{Summary: all fields reduce to scalar convolutions}
+
+The crucial takeaway is that once a field has been decomposed into
+scalar and complex spin channels:
+\[
+  \Theta,\quad
+  u^{(\pm1)},\quad
+  \sigma^{(0)},\quad
+  \sigma^{(\pm2)},
+\]
+\emph{every channel is convolved by the same geometric operation}:
+\[
+  \text{(complex) inner product between a patch of the field and a
+        fixed kernel centred at }p.
+\]
+The difference between scalars, vectors and tensors appears in how
+these channels transform under rotation (the $e^{\mathrm{i}m\alpha}$
+factors), not in the basic convolution mechanics. This makes it very
+natural to visualise convolutions of vector and tensor fields using
+exactly the same overlapping-kernel cartoons as for ordinary scalar
+images: you simply draw more channels, and remember that some of them
+are complex-valued.
+
+
+
+
+
+
+
+
+
 
 \subsection{From CNNs to graph convolutions}
 
@@ -466,11 +1383,23 @@ The images that are input to CNNs can be thought of as a set of points in 2D spa
 If the image is greyscale, then each of these points has a single value associated with it - a scalar. If the image is colour, each pixel has three values associated with it, which can be considered as a vector in the RGB colour space. It's no coincidence that the colour image which has vector values at each point is richer and contains more information, as your brain makes obvious to you when you look at it. However it's important to note that the each such vector exists in RGB space, not in the xyz space. When you rotate the point cloud in the xyz Cartesian space, the colours don't change, because the rotation happens in the xyz space, not the RGB space.
 
 
+\subsection{Motivating examples for tensor field networks}
+
+Molecular dynamics and complicated QM ground states. Fixed charge Coulomb MD models are not realistic.
+
+\subsection{Tensor field networks}
+
+The setup is a point cloud in 3D space, and associated with each point is a set of quantities that describes something physically real. We want the point cloud and all of the quantities attached to each point to transform equivariantly with rotations and translations like we saw for the convolutional network, but now we're in 3D. Rotations are not commutative in 3D, so the algebra becomes more challenging. 
+
+The setup is as follows. We have a set of points where each point is indexed by $a$, and each point $a$ has a vector pointing to it $\vec{r}_a$ from the global origin. Each point has a set of features associated with, denoted by a vector $\vec{x}_a$. For each point, the Cartesian position vector and feature vector are concatenated to form
+
+\[
+\mathcal{L},\quad \mathcal{X},\quad \mathcal{Y}
+\]
 
 
 
 
-lkjh
 \end{document}
 
 
