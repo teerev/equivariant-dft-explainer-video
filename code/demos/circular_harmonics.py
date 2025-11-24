@@ -12,8 +12,8 @@ The script performs the following steps:
 4. Project the radial profiles onto a truncated set of Bessel radial basis
    functions (Fourier-Bessel expansion).
 5. Reconstruct the contribution of each (m, n) component on the Cartesian grid,
-   save the strongest components as RGBA images (alpha set by |coefficient|),
-   and report reconstruction error statistics.
+   save the strongest components as grayscale layers, emit a basis gallery
+   (radial, angular, and product views), and report reconstruction statistics.
 
 Only the decomposition is implemented; animating the components is intentionally
 left out so that the generated assets can be consumed by a separate animation
@@ -28,6 +28,7 @@ Example usage:
         --num-angles 512 \
         --num-radii 256 \
         --output-dir ../../artifacts/circular_harmonics \
+        --gallery-dir ./basis_gallery \
         --save-top 24
 """
 from __future__ import annotations
@@ -45,6 +46,7 @@ from scipy.interpolate import RegularGridInterpolator
 from scipy.special import jn_zeros, jv
 
 ArrayLike = np.ndarray
+SCRIPT_DIR = Path(__file__).resolve().parent
 
 
 def parse_args() -> argparse.Namespace:
@@ -86,7 +88,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--radial-modes",
         type=int,
-        default=12,
+        default=6,
         help="Number of radial Bessel modes per order to project onto.",
     )
     parser.add_argument(
@@ -98,14 +100,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--save-top",
         type=int,
-        default=24,
-        help="Number of strongest components to export as RGBA images.",
+        default=168,
+        help="Number of strongest components to export (<=0 means save all).",
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("./circular_harmonics_output"),
         help="Directory where reconstructions, components, and metadata are stored.",
+    )
+    parser.add_argument(
+        "--gallery-dir",
+        type=Path,
+        default=SCRIPT_DIR / "basis_gallery",
+        help=(
+            "Directory (relative or absolute) where the radial/angular/product basis gallery "
+            "images will be written."
+        ),
     )
     parser.add_argument(
         "--no-center-crop",
@@ -269,23 +280,23 @@ def evaluate_component(
     return np.where(mask, real_field, 0.0)
 
 
-def normalize_for_rgba(field: ArrayLike, alpha: float, mask: ArrayLike) -> ArrayLike:
-    cropped = np.where(mask, field, 0.0)
-    span = cropped.max() - cropped.min()
-    if span < 1e-9:
-        scaled = np.zeros_like(cropped) + 0.5
+def normalize_to_uint8(field: ArrayLike, mask: ArrayLike | None = None) -> ArrayLike:
+    if mask is not None:
+        data = np.where(mask, field, 0.0)
     else:
-        scaled = (cropped - cropped.min()) / span
-    rgba = np.zeros((*field.shape, 4), dtype=np.float32)
-    for ch in range(3):
-        rgba[..., ch] = scaled
-    rgba[..., 3] = alpha * mask.astype(np.float32)
-    return np.clip(rgba * 255.0, 0, 255).astype(np.uint8)
+        data = field
+    span = data.max() - data.min()
+    if span < 1e-9:
+        scaled = np.zeros_like(data)
+    else:
+        scaled = (data - data.min()) / span
+    return np.clip(scaled * 255.0, 0, 255).astype(np.uint8)
 
 
-def save_component_image(path: Path, rgba_array: ArrayLike) -> None:
+def save_grayscale_image(path: Path, field: ArrayLike, mask: ArrayLike | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    Image.fromarray(rgba_array, mode="RGBA").save(path)
+    image = normalize_to_uint8(field, mask)
+    Image.fromarray(image, mode="L").save(path)
 
 
 def summarize_components(components: Iterable[HarmonicComponent]) -> List[Dict[str, float]]:
@@ -304,6 +315,68 @@ def summarize_components(components: Iterable[HarmonicComponent]) -> List[Dict[s
             }
         )
     return summary
+
+
+def export_basis_gallery(
+    gallery_root: Path,
+    radial_basis_cache: Dict[int, BesselRadialBasis],
+    max_order: int,
+    r_norm_grid: ArrayLike,
+    theta_grid: ArrayLike,
+    disk_mask: ArrayLike,
+) -> None:
+    radial_dir = gallery_root / "radial"
+    angular_dir = gallery_root / "angular"
+    product_dir = gallery_root / "products"
+    for directory in (radial_dir, angular_dir, product_dir):
+        directory.mkdir(parents=True, exist_ok=True)
+
+    # Radial basis functions
+    for order, basis in sorted(radial_basis_cache.items()):
+        for mode_idx in range(basis.samples.shape[0]):
+            radial_field = basis.evaluate_on_grid(r_norm_grid, mode_idx)
+            save_grayscale_image(
+                radial_dir / f"radial_order{order:02d}_mode{mode_idx + 1:02d}.png",
+                radial_field,
+                disk_mask,
+            )
+
+    # Angular circular harmonics (cosine and sine parts)
+    angular_components: Dict[Tuple[int, str], ArrayLike] = {}
+    for m in range(0, max_order + 1):
+        cos_field = np.where(disk_mask, np.cos(m * theta_grid), 0.0)
+        angular_components[(m, "cos")] = cos_field
+        save_grayscale_image(
+            angular_dir / f"circular_m{m:02d}_cos.png", cos_field, disk_mask
+        )
+        if m > 0:
+            sin_field = np.where(disk_mask, np.sin(m * theta_grid), 0.0)
+            angular_components[(m, "sin")] = sin_field
+            save_grayscale_image(
+                angular_dir / f"circular_m{m:02d}_sin.png", sin_field, disk_mask
+            )
+
+    # Products of radial and angular functions (use cosine and sine when available)
+    for m in range(0, max_order + 1):
+        basis = radial_basis_cache.get(m)
+        if basis is None:
+            continue
+        cos_field = angular_components.get((m, "cos"))
+        sin_field = angular_components.get((m, "sin"))
+        for mode_idx in range(basis.samples.shape[0]):
+            radial_field = basis.evaluate_on_grid(r_norm_grid, mode_idx)
+            if cos_field is not None:
+                save_grayscale_image(
+                    product_dir / f"product_m{m:02d}_mode{mode_idx + 1:02d}_cos.png",
+                    radial_field * cos_field,
+                    disk_mask,
+                )
+            if sin_field is not None:
+                save_grayscale_image(
+                    product_dir / f"product_m{m:02d}_mode{mode_idx + 1:02d}_sin.png",
+                    radial_field * sin_field,
+                    disk_mask,
+                )
 
 
 def main() -> None:
@@ -353,11 +426,23 @@ def main() -> None:
     components_sorted = sorted(
         components, key=lambda c: float(np.abs(c.coefficient)), reverse=True
     )
-    top_k = args.save_top if args.save_top is not None else len(components_sorted)
+    if args.save_top is None or args.save_top <= 0:
+        top_k = len(components_sorted)
+    else:
+        top_k = min(args.save_top, len(components_sorted))
     selected_ids = {comp.index for comp in components_sorted[:top_k]}
 
     r_norm_grid, theta_grid, mask = cartesian_grids(
         image.shape, center, max_radius, args.no_center_crop
+    )
+    disk_mask = r_norm_grid <= 1.0
+    export_basis_gallery(
+        args.gallery_dir,
+        radial_basis_cache,
+        args.max_order,
+        r_norm_grid,
+        theta_grid,
+        disk_mask,
     )
     target_image = image if args.no_center_crop else np.where(mask, image, 0.0)
 
@@ -378,12 +463,8 @@ def main() -> None:
         reconstruction += contribution
 
         if comp.index in selected_ids:
-            alpha = 0.0 if max_coeff < 1e-12 else min(
-                float(np.abs(comp.coefficient)) / max_coeff, 1.0
-            )
-            rgba = normalize_for_rgba(contribution, alpha, mask)
             filename = f"component_m{comp.m:+d}_n{comp.mode + 1:02d}.png"
-            save_component_image(component_dir / filename, rgba)
+            save_grayscale_image(component_dir / filename, contribution, mask)
 
     residual = target_image - reconstruction
     rmse = float(np.sqrt(np.mean(residual**2)))
