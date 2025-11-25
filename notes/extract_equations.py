@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import re
 import sys
+import shutil
+import tempfile
 import subprocess
 from pathlib import Path
 
@@ -118,14 +120,27 @@ def build_tex_for_equation(eq_src: str) -> str:
 \end{{document}}
 """
 
-def run_pdflatex(tex_file: Path):
-    subprocess.run(
-        ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", tex_file.name],
-        cwd=tex_file.parent,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=True,
-    )
+def run_pdflatex(tex_source: str, jobname: str):
+    """
+    Compile LaTeX source via a temporary work directory so no .tex artifacts end
+    up in OUTPUT_DIR. Only the final PDF is moved into place.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir)
+        tex_path = tmpdir_path / f"{jobname}.tex"
+        tex_path.write_text(tex_source, encoding="utf-8")
+
+        subprocess.run(
+            ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", tex_path.name],
+            cwd=tmpdir_path,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
+
+        pdf_path = tmpdir_path / f"{jobname}.pdf"
+        dest_pdf = OUTPUT_DIR / f"{jobname}.pdf"
+        shutil.move(pdf_path, dest_pdf)
 
 def main():
     if len(sys.argv) < 2:
@@ -142,21 +157,15 @@ def main():
 
     for i, eq in enumerate(equations, start=1):
         idx = f"{i:03d}"
-        tex_path = OUTPUT_DIR / f"eq_{idx}.tex"
         cleaned_eq = disable_numbering(eq)
-        tex_path.write_text(build_tex_for_equation(cleaned_eq), encoding="utf-8")
+        tex_source = build_tex_for_equation(cleaned_eq)
 
+        jobname = f"eq_{idx}"
         try:
-            run_pdflatex(tex_path)
+            run_pdflatex(tex_source, jobname)
         except subprocess.CalledProcessError:
             print(f"Failed to compile eq_{idx}")
             continue
-
-        # delete aux/log
-        for ext in (".aux", ".log"):
-            p = OUTPUT_DIR / f"eq_{idx}{ext}"
-            if p.exists():
-                p.unlink()
 
     print("Done. PDFs are in ./equations")
 
