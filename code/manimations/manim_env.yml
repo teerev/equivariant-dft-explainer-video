@@ -1,0 +1,17 @@
+name: manim-env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - cairo
+  - ffmpeg
+  - numpy
+  - scipy
+  - pillow
+  - tqdm
+  - pydantic
+  - click
+  - pycairo
+  - pip:
+      - manim==0.18.1
