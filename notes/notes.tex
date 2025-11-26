@@ -266,7 +266,7 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
   displacements
   \begin{equation}
     \label{eq:offset-map-centred}
-    \sigma_u = u\,\Delta x,\qquad \tau_v = v\,\Delta y
+    \sigma = u\,\Delta x,\qquad \tau = v\,\Delta y
   \end{equation}
   with $u \in \{-K_c,\dots,K_c\}$ and $v \in \{-L_c,\dots,L_c\}$
   
@@ -274,7 +274,7 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
   functions, i.e.
   \begin{equation}
     X_{ij} \approx X(i\,\Delta x,\; j\,\Delta y) = X(s,t),\qquad
-    F_{uv} \approx F(u\,\Delta x,\; v\,\Delta y) = F(\sigma_u,\tau_v)
+    F_{uv} \approx F(u\,\Delta x,\; v\,\Delta y) = F(\sigma,\tau)
   \end{equation}
   Substituting these into \eqref{eq:discrete-conv-centred} and using
   $s = i\,\Delta x$, $t = j\,\Delta y$ gives the Riemann–sum representation
