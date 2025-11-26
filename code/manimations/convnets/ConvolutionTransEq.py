@@ -32,13 +32,13 @@ class ConvolutionTransEq(RightRegionScene):
         X_shape = self.create_mnist_image(input_image_path)
         X_shape.move_to(left_plane.get_corner(UL) + RIGHT * 0.8 + DOWN * 0.8)
         X_label = MathTex("X", font_size=32)
-        X_label.next_to(X_shape, LEFT, buff=0.15)
+        X_label.next_to(X_shape, LEFT, buff=0.25)
 
         # Shape gX in bottom-left of left plane (translated version, still clear)
         gX_shape = self.create_mnist_image(input_image_path)
         gX_shape.move_to(left_plane.get_corner(DL) + RIGHT * 0.8 + UP * 0.8)
         gX_label = MathTex("gX", font_size=32)
-        gX_label.next_to(gX_shape, LEFT, buff=0.15)
+        gX_label.next_to(gX_shape, LEFT, buff=0.25)
         
         # Arrow g pointing down in left plane (adjusted to avoid label)
         g_arrow_left = Arrow(
@@ -60,7 +60,7 @@ class ConvolutionTransEq(RightRegionScene):
         # Shape at bottom-right (final result - also fuzzy)
         final_shape = self.create_mnist_image(conv_image_path)
         final_shape.move_to(right_plane.get_corner(DR) + LEFT * 0.8 + UP * 0.8)
-        final_label = MathTex(r"gf(X)", font_size=32)
+        final_label = MathTex(r"gf(X)=fg(X)", font_size=32)
         final_label.next_to(final_shape, RIGHT, buff=0.25)
         
         # Arrow g pointing down in right plane (adjusted to avoid label)
@@ -74,7 +74,7 @@ class ConvolutionTransEq(RightRegionScene):
         g_label_right = MathTex("g", font_size=32, color=WHITE)
         g_label_right.move_to(right_plane.get_right() + LEFT * 0.25).move_to([g_label_right.get_x(), g_arrow_right.get_center()[1], 0])
 
-        fgX_label = MathTex("gf(X)", font_size=28, color=WHITE)
+        fgX_label = MathTex("gf(X)=fg(X)", font_size=28, color=WHITE)
         fgX_label.next_to(final_shape, RIGHT, buff=0.25)
         
         # Horizontal arrow f from X to f(X) (top path) - curved to avoid overlap
