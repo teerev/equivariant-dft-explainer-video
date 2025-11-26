@@ -4,6 +4,8 @@ import numpy as np
 import sys
 from pathlib import Path
 
+SCARLET = ManimColor("#F20000")
+
 sys.path.append(str(Path(__file__).parent.parent))
 from base_scene import RightRegionScene
 
@@ -41,7 +43,7 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         kernel_image.move_to(kernel_start)
         kernel_image.set_z_index(-1)
 
-        bold_red = ManimColor("#ff4b3e")
+        bold_red = SCARLET
         kernel_box = Rectangle(
             width=kernel_image.width * 0.4,
             height=kernel_image.height * 0.4,
@@ -113,13 +115,14 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
                 base,
                 base + offset,
                 buff=0,
-                color=RED_E,
+            color=SCARLET,
                 stroke_width=2.2,
                 tip_length=0.22,
                 max_tip_length_to_length_ratio=0.06,
             ).set_z_index(2)
-            label = MathTex(r"(\sigma,\tau)", color=RED_E).scale(0.5)
+            label = MathTex(r"(\sigma,\tau)", color=SCARLET).scale(0.5)
             label.move_to(base + offset + UP * 0.2)
+            
             return VGroup(arrow, label)
 
         global_vector = always_redraw(global_vector_group)
@@ -258,8 +261,6 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
 
         input_image = ImageMobject(np.uint8(np.flipud(rgba) * 255))
         return input_image
-
-
 
     # -----------    # ------------------------------------------------------------------
     # Kernel in bright cyan/orange with smooth fade,
