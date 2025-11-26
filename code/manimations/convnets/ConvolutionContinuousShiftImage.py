@@ -7,7 +7,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 from base_scene import RightRegionScene
 
-class ConvolutionRotationalNonEquivariance(RightRegionScene):
+
+class ConvolutionContinuousShiftImage(RightRegionScene):
     def construct(self):
         self.camera.background_color = BLACK
 
@@ -22,16 +23,17 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
                 "include_tip": False,
             },
         )
-        axes.shift(LEFT * 1.5 + DOWN * 1.5)
         axes_shift = LEFT * 1.5 + DOWN * 1.0
         axes.shift(axes_shift)
         axes_labels = axes.get_axis_labels(MathTex("s"), MathTex("t"))
 
+        # --- background image: richer signed field in bright cyan/orange ---
         input_image = self.create_input_image(resolution=360, span=6.5)
         input_image.set_width(axes.width * 3.2)
         input_image.set_z_index(-2)
         input_image.move_to(axes.c2p(0, 0))
 
+        # --- kernel: bright cyan/orange, smaller + boxed ---
         kernel_span = 3.0
         kernel_image = self.create_kernel_image(resolution=240, span=kernel_span)
         kernel_image.set_width(axes.width * 0.95)
@@ -41,13 +43,14 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
 
         bold_red = ManimColor("#ff4b3e")
         kernel_box = Rectangle(
-            width=kernel_image.width * 0.38,
-            height=kernel_image.height * 0.38,
+            width=kernel_image.width * 0.4,
+            height=kernel_image.height * 0.4,
             stroke_color=bold_red,
             stroke_width=1.5,
         )
         kernel_box.move_to(kernel_image)
         kernel_box.set_z_index(-1.1)
+
         arrow_buff = 0.12
         x_arrow = DoubleArrow(
             kernel_box.get_corner(LEFT + UP) + UP * arrow_buff,
@@ -99,12 +102,12 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
                 base,
                 base + offset,
                 buff=0,
-                color=YELLOW_E,
+                color=RED_E,
                 stroke_width=2.2,
                 tip_length=0.22,
                 max_tip_length_to_length_ratio=0.06,
             ).set_z_index(2)
-            label = MathTex(r"(\sigma,\tau)", color=YELLOW_E).scale(0.5)
+            label = MathTex(r"(\sigma,\tau)", color=RED_E).scale(0.5)
             label.move_to(base + offset + UP * 0.2)
             return VGroup(arrow, label)
 
@@ -127,6 +130,7 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
             FadeIn(global_vector, run_time=0.8),
             FadeIn(offset_vector, run_time=0.8),
         )
+
         right_target = axes.c2p(1.6, 0.6)
         up_target = axes.c2p(1.6, 1.6)
 
@@ -142,79 +146,167 @@ class ConvolutionRotationalNonEquivariance(RightRegionScene):
         )
         self.wait(2)
 
+    # ------------------------------------------------------------------
+    # Rich, high-structure background field in bright cyan/orange
+    # (deterministic, then multiplied by -1 to swap colours)
+    # ------------------------------------------------------------------
+    def create_input_image(self, resolution=320, span=6.0,
+                           num_large=8, num_small=18):
+        rng = np.random.default_rng(2025)
 
-    def create_input_image(self, resolution=320, span=6.0, num_centers=60):
-        rng = np.random.default_rng(2024)
         xs = np.linspace(-span, span, resolution)
         ys = np.linspace(-span, span, resolution)
-        grid_x, grid_y = np.meshgrid(xs, ys)
-        field = np.zeros_like(grid_x)
+        X, Y = np.meshgrid(xs, ys)
 
-        for _ in range(num_centers):
-            weight = rng.uniform(0.6, 1.4)
-            center_x = rng.uniform(-span * 0.4, span * 0.4)
-            center_y = rng.uniform(-span * 0.4, span * 0.4)
-            beta = rng.uniform(0.15, 0.5)
+        field = np.zeros_like(X)
 
-            radial_distance = np.sqrt((grid_x - center_x) ** 2 + (grid_y - center_y) ** 2)
-            gumbel = np.exp(-(radial_distance / beta + np.exp(-radial_distance / beta)))
-            field += weight * gumbel
+        # large-scale blobs
+        for _ in range(num_large):
+            amp = rng.uniform(-1.0, 1.0)
+            cx = rng.uniform(-span * 0.4, span * 0.4)
+            cy = rng.uniform(-span * 0.4, span * 0.4)
+            sx = rng.uniform(1.0, 2.0)
+            sy = rng.uniform(1.0, 2.0)
+            theta = rng.uniform(0, np.pi)
 
-        envelope = np.exp(-((grid_x**2 + grid_y**2) / (2 * (span * 0.6) ** 2)))
+            cos_t, sin_t = np.cos(theta), np.sin(theta)
+            Xc = X - cx
+            Yc = Y - cy
+            xr = cos_t * Xc + sin_t * Yc
+            yr = -sin_t * Xc + cos_t * Yc
+
+            gauss = np.exp(-0.5 * ((xr / sx) ** 2 + (yr / sy) ** 2))
+            field += amp * gauss
+
+        # small/medium-scale blobs
+        for _ in range(num_small):
+            amp = rng.uniform(-0.7, 0.7)
+            cx = rng.uniform(-span * 0.6, span * 0.6)
+            cy = rng.uniform(-span * 0.6, span * 0.6)
+            sx = rng.uniform(0.3, 0.9)
+            sy = rng.uniform(0.3, 0.9)
+            theta = rng.uniform(0, np.pi)
+
+            cos_t, sin_t = np.cos(theta), np.sin(theta)
+            Xc = X - cx
+            Yc = Y - cy
+            xr = cos_t * Xc + sin_t * Yc
+            yr = -sin_t * Xc + cos_t * Yc
+
+            gauss = np.exp(-0.5 * ((xr / sx) ** 2 + (yr / sy) ** 2))
+            field += amp * gauss
+
+        # sinusoidal modulation
+        k1x, k1y = 0.8, 0.5
+        k2x, k2y = 1.3, -0.9
+        sinusoidal = (
+            0.25 * np.sin(k1x * X + k1y * Y)
+            + 0.18 * np.cos(k2x * X + k2y * Y)
+        )
+        field += sinusoidal
+
+        # broad envelope
+        env_sigma = span * 2.0
+        envelope = np.exp(-(X**2 + Y**2) / (2.0 * env_sigma**2))
         field *= envelope
 
-        field -= field.min()
-        max_value = field.max() or 1.0
-        field /= max_value
+        # remove DC, stretch to [-1,1], then flip sign to swap colours
+        field -= field.mean()
+        max_abs = np.max(np.abs(field)) or 1.0
+        v = field / max_abs
+        v = -v  # swap cyan/orange globally
 
-        rgba = np.zeros((resolution, resolution, 4))
-        rgba[..., 2] = field
-        rgba[..., 3] = np.clip(field * 1.05, 0, 1)
+        neg_rgb = np.array(ManimColor("#00D5FF").to_rgb())  # cyan
+        pos_rgb = np.array(ManimColor("#F26D00").to_rgb())  # orange
+        zero_rgb = np.array([0.0, 0.0, 0.0])                # black
+
+        v = np.clip(v, -1.0, 1.0)
+        rgba = np.zeros((resolution, resolution, 4), dtype=float)
+
+        pos_mask = v > 0
+        neg_mask = v < 0
+
+        if np.any(pos_mask):
+            t = v[pos_mask]
+            rgba[pos_mask, :3] = (1 - t)[:, None] * zero_rgb + t[:, None] * pos_rgb
+
+        if np.any(neg_mask):
+            t = -v[neg_mask]
+            rgba[neg_mask, :3] = (1 - t)[:, None] * zero_rgb + t[:, None] * neg_rgb
+
+        gamma = 0.7
+        alpha = 0.2 + 0.8 * np.power(np.abs(v), gamma)
+        rgba[..., 3] = np.clip(alpha, 0.0, 1.0)
 
         input_image = ImageMobject(np.uint8(np.flipud(rgba) * 255))
-        # ❌ DO NOT call input_image.set_opacity(...)
         return input_image
 
+    # ------------------------------------------------------------------
+    # Kernel in bright cyan/orange with smooth fade, no hard boundaries
+    # ------------------------------------------------------------------
+    def create_kernel_image(self, resolution=220, span=3.0, cutoff=None):
+        np.random.seed(10)
 
-    def create_kernel_image(self, resolution=220, span=3.0, cutoff=0.15):
-        np.random.seed(7)
         xs = np.linspace(-span, span, resolution)
         ys = np.linspace(-span, span, resolution)
-        grid_x, grid_y = np.meshgrid(xs, ys)
-        field = np.zeros_like(grid_x)
+        X, Y = np.meshgrid(xs, ys)
+        field = np.zeros_like(X)
 
-        num_blobs = 21
+        num_blobs = 50
         for _ in range(num_blobs):
-            amplitude = np.random.uniform(0.6, 1.0)
+            amplitude = np.random.uniform(-1.0, 1.0)  # allow ± blobs
             center_x = np.random.uniform(-1.0, 1.0)
             center_y = np.random.uniform(-1.0, 1.0)
-            sigma_x = np.random.uniform(0.08, 0.25)
-            sigma_y = np.random.uniform(0.08, 0.25)
+            sigma_x = np.random.uniform(0.08, 0.1)
+            sigma_y = np.random.uniform(0.08, 0.1)
             theta = np.random.uniform(0, np.pi)
 
             cos_t, sin_t = np.cos(theta), np.sin(theta)
-            rotated_x = cos_t * (grid_x - center_x) + sin_t * (grid_y - center_y)
-            rotated_y = -sin_t * (grid_x - center_x) + cos_t * (grid_y - center_y)
+            Xc = X - center_x
+            Yc = Y - center_y
+            rotated_x = cos_t * Xc + sin_t * Yc
+            rotated_y = -sin_t * Xc + cos_t * Yc
 
-            blob = amplitude * np.exp(
+            blob = np.exp(
                 -0.5 * ((rotated_x / sigma_x) ** 2 + (rotated_y / sigma_y) ** 2)
             )
-            field += blob
+            field += amplitude * blob
 
-        radial_mask = np.exp(-((grid_x**2 + grid_y**2) / (2 * (span / 1.5) ** 2)))
+        # smooth radial damping (Gaussian), no hard thresholding
+        radial_mask = np.exp(-((X**2 + Y**2) / (2 * (span / 1.5) ** 2)))
         field *= radial_mask
 
-        field -= field.min()
-        max_value = field.max() or 1.0
-        field /= max_value
+        # center and linear stretch to [-1, 1]
+        field -= field.mean()
+        max_abs = np.max(np.abs(field)) or 1.0
+        v = field / max_abs
+        v = np.clip(v, -1.0, 1.0)
 
-        # Only keep the “hot” parts of the kernel
-        mask = field > cutoff
+        # --- contrast hack: push mid-values toward the extremes ---
+        contrast_gamma = 0.6  # < 1 brightens; >1 would flatten
+        v = np.sign(v) * np.power(np.abs(v), contrast_gamma)
+
+        neg_rgb = np.array(ManimColor("#00D5FF").to_rgb())  # cyan
+        pos_rgb = np.array(ManimColor("#F26D00").to_rgb())  # orange
+        zero_rgb = np.array([0.0, 0.0, 0.0])
 
         rgba = np.zeros((resolution, resolution, 4), dtype=float)
-        rgba[..., 0] = np.power(field, 0.9) * mask          # red channel
-        rgba[..., 3] = np.clip(field * 1.4, 0, 1) * mask    # alpha only where mask == True
+
+        pos_mask = v > 0
+        neg_mask = v < 0
+
+        if np.any(pos_mask):
+            t = v[pos_mask]
+            rgba[pos_mask, :3] = (1 - t)[:, None] * zero_rgb + t[:, None] * pos_rgb
+
+        if np.any(neg_mask):
+            t = -v[neg_mask]
+            rgba[neg_mask, :3] = (1 - t)[:, None] * zero_rgb + t[:, None] * neg_rgb
+
+        # smooth fade everywhere: alpha = |v|^gamma, no cutoff mask
+        alpha_gamma = 0.7
+        alpha = np.power(np.abs(v), alpha_gamma)
+        rgba[..., 3] = np.clip(alpha, 0.0, 1.0)
 
         kernel_image = ImageMobject(np.uint8(np.flipud(rgba) * 255))
-        # ❌ DO NOT call kernel_image.set_opacity(...)
         return kernel_image
