@@ -93,10 +93,21 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
             label.move_to(target + UP * 0.2)
             return VGroup(arrow, label)
 
+        base_offset = np.array(
+            [kernel_box.width * -0.48, kernel_box.height * 0.25, 0.0]
+        ) * 0.8
+        angle_tracker = ValueTracker(0.0)
+
         def offset_vector_group():
             base = kernel_box.get_center()
+            angle = angle_tracker.get_value()
+            cos_a, sin_a = np.cos(angle), np.sin(angle)
             offset = np.array(
-                [kernel_box.width * -0.48, kernel_box.height * 0.25, 0.0]
+                [
+                    base_offset[0] * cos_a - base_offset[1] * sin_a,
+                    base_offset[0] * sin_a + base_offset[1] * cos_a,
+                    base_offset[2],
+                ]
             )
             arrow = Arrow(
                 base,
@@ -144,6 +155,13 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
             run_time=4,
             rate_func=rate_functions.ease_in_out_sine,
         )
+        wiggle_angles = [-0.4, 0.35, -0.25, 0.2, 0.0]
+        for angle in wiggle_angles:
+            self.play(
+                angle_tracker.animate.set_value(angle),
+                run_time=0.35,
+                rate_func=rate_functions.ease_in_out_sine,
+            )
         self.wait(2)
 
     # ------------------------------------------------------------------
@@ -241,8 +259,11 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         input_image = ImageMobject(np.uint8(np.flipud(rgba) * 255))
         return input_image
 
-    # ------------------------------------------------------------------
-    # Kernel in bright cyan/orange with smooth fade, no hard boundaries
+
+
+    # -----------    # ------------------------------------------------------------------
+    # Kernel in bright cyan/orange with smooth fade,
+    # square support aligned with the red kernel box
     # ------------------------------------------------------------------
     def create_kernel_image(self, resolution=220, span=3.0, cutoff=None):
         np.random.seed(10)
@@ -272,28 +293,44 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
             )
             field += amplitude * blob
 
-        # smooth radial damping (Gaussian), no hard thresholding
+        # Optional gentle radial damping for aesthetics (doesn't define support)
         radial_mask = np.exp(-((X**2 + Y**2) / (2 * (span / 1.5) ** 2)))
         field *= radial_mask
 
-        # center and linear stretch to [-1, 1]
+        # Center and linear stretch to [-1, 1]
         field -= field.mean()
         max_abs = np.max(np.abs(field)) or 1.0
         v = field / max_abs
         v = np.clip(v, -1.0, 1.0)
 
-        # --- contrast hack: push mid-values toward the extremes ---
-        contrast_gamma = 0.6  # < 1 brightens; >1 would flatten
+        # Contrast hack: push mid-values toward extremes
+        contrast_gamma = 0.6  # < 1 brightens mid-values
         v = np.sign(v) * np.power(np.abs(v), contrast_gamma)
+
+        # ----- define square support matching the red kernel box -----
+        # kernel_box.width = kernel_image.width * 0.4
+        # → make support square be 40% of texture side length.
+        h, w = v.shape
+        cy, cx = h // 2, w // 2
+        support_ratio = 0.4
+        half_side_y = int((h * support_ratio) / 2)
+        half_side_x = int((w * support_ratio) / 2)
+
+        yy = np.arange(h)[:, None]
+        xx = np.arange(w)[None, :]
+        support_mask = (
+            (np.abs(yy - cy) <= half_side_y) &
+            (np.abs(xx - cx) <= half_side_x)
+        )
 
         neg_rgb = np.array(ManimColor("#00D5FF").to_rgb())  # cyan
         pos_rgb = np.array(ManimColor("#F26D00").to_rgb())  # orange
         zero_rgb = np.array([0.0, 0.0, 0.0])
 
-        rgba = np.zeros((resolution, resolution, 4), dtype=float)
+        rgba = np.zeros((h, w, 4), dtype=float)
 
-        pos_mask = v > 0
-        neg_mask = v < 0
+        pos_mask = (v > 0) & support_mask
+        neg_mask = (v < 0) & support_mask
 
         if np.any(pos_mask):
             t = v[pos_mask]
@@ -303,9 +340,13 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
             t = -v[neg_mask]
             rgba[neg_mask, :3] = (1 - t)[:, None] * zero_rgb + t[:, None] * neg_rgb
 
-        # smooth fade everywhere: alpha = |v|^gamma, no cutoff mask
+        # Alpha: smooth fade INSIDE the support, zero outside
         alpha_gamma = 0.7
-        alpha = np.power(np.abs(v), alpha_gamma)
+        alpha = np.zeros_like(v)
+        alpha[support_mask] = np.power(np.abs(v[support_mask]), alpha_gamma)
+
+        # kill tiny alpha so edges are clean
+        alpha[alpha < 0.02] = 0.0
         rgba[..., 3] = np.clip(alpha, 0.0, 1.0)
 
         kernel_image = ImageMobject(np.uint8(np.flipud(rgba) * 255))
