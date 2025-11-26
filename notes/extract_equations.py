@@ -4,6 +4,7 @@ import sys
 import shutil
 import tempfile
 import subprocess
+import argparse
 from pathlib import Path
 
 OUTPUT_DIR = Path("./equations")
@@ -39,13 +40,18 @@ PREAMBLE_TEMPLATE = r"""
 \usepackage{xcolor}
 \usepackage{pagecolor}
 \usepackage{anyfontsize}
-\pagecolor{black}   % slide background colour
-\color{white}       % equation colour
 """
 
-PREAMBLE = (
-    PREAMBLE_TEMPLATE.replace("__WIDTH__", PAPER_WIDTH).replace("__HEIGHT__", PAPER_HEIGHT)
-)
+def get_preamble(transparent=False):
+    base = PREAMBLE_TEMPLATE.replace("__WIDTH__", PAPER_WIDTH).replace("__HEIGHT__", PAPER_HEIGHT)
+    if transparent:
+        # White text, transparent background (default pagecolor is none/transparent)
+        # We use \nopagecolor to ensure no background color is painted if pagecolor package set one.
+        colors = r"\nopagecolor\color{white}"
+    else:
+        # White text, black background
+        colors = r"\pagecolor{black}\color{white}"
+    return base + "\n" + colors
 
 def read_file(path: Path) -> str:
     return path.read_text(encoding="utf-8")
@@ -110,10 +116,10 @@ def disable_numbering(eq_src: str) -> str:
 
     return eq_src
 
-def build_tex_for_equation(eq_src: str) -> str:
+def build_tex_for_equation(eq_src: str, preamble: str) -> str:
     # 12pt base font, varwidth shrinks page to natural width of the content.
     return rf"""\documentclass[12pt,varwidth,border={BORDER_PT}pt]{{standalone}}
-{PREAMBLE}
+{preamble}
 \begin{{document}}
 {SIZE_CMD}
 {eq_src}
@@ -143,26 +149,32 @@ def run_pdflatex(tex_source: str, jobname: str):
         shutil.move(pdf_path, dest_pdf)
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python extract_equations_standalone.py input.tex")
+    parser = argparse.ArgumentParser(description="Extract LaTeX equations to PDF.")
+    parser.add_argument("input_tex", type=Path, help="Input .tex file")
+    parser.add_argument("--transparent", action="store_true", help="Output white-on-transparent PDF")
+    args = parser.parse_args()
+
+    if not args.input_tex.exists():
+        print(f"Error: File {args.input_tex} not found.")
         sys.exit(1)
 
-    input_tex = Path(sys.argv[1])
-    tex_source = read_file(input_tex)
+    tex_source = read_file(args.input_tex)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     equations = find_equations(tex_source)
     print(f"Found {len(equations)} equations.")
 
+    preamble = get_preamble(transparent=args.transparent)
+
     for i, eq in enumerate(equations, start=1):
         idx = f"{i:03d}"
         cleaned_eq = disable_numbering(eq)
-        tex_source = build_tex_for_equation(cleaned_eq)
+        tex_source_eq = build_tex_for_equation(cleaned_eq, preamble)
 
         jobname = f"eq_{idx}"
         try:
-            run_pdflatex(tex_source, jobname)
+            run_pdflatex(tex_source_eq, jobname)
         except subprocess.CalledProcessError:
             print(f"Failed to compile eq_{idx}")
             continue
