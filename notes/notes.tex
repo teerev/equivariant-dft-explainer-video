@@ -249,7 +249,7 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
     =
     \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
     \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
-    X_{\,i+u,\; j+v}\, F_{uv},
+    X_{\,i+u,\; j+v}\, F_{uv}
   \end{equation}
   where $X_{ij}$ denotes the input image, $F_{uv}$ the kernel of size
   $K \times L$, and $Y_{ij}$ the resulting feature map.  Here $(i,j)$ labels
@@ -259,22 +259,22 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
   Introduce continuous coordinates for the image grid
   \begin{equation}
     \label{eq:coord-map-centred}
-    s = i\,\Delta x,\qquad t = j\,\Delta y,
+    s = i\,\Delta x,\qquad t = j\,\Delta y
   \end{equation}
   so that each pixel index $(i,j)$ corresponds to the point $(s,t)$ in the
   plane.  Similarly, for each kernel offset $(u,v)$ we define continuous
   displacements
   \begin{equation}
     \label{eq:offset-map-centred}
-    \sigma_u = u\,\Delta x,\qquad \tau_v = v\,\Delta y,
+    \sigma_u = u\,\Delta x,\qquad \tau_v = v\,\Delta y
   \end{equation}
-  with $u \in \{-K_c,\dots,K_c\}$ and $v \in \{-L_c,\dots,L_c\}$.
+  with $u \in \{-K_c,\dots,K_c\}$ and $v \in \{-L_c,\dots,L_c\}$
   
   We now regard the discrete arrays as samples of underlying continuous
   functions, i.e.
   \begin{equation}
     X_{ij} \approx X(i\,\Delta x,\; j\,\Delta y) = X(s,t),\qquad
-    F_{uv} \approx F(u\,\Delta x,\; v\,\Delta y) = F(\sigma_u,\tau_v).
+    F_{uv} \approx F(u\,\Delta x,\; v\,\Delta y) = F(\sigma_u,\tau_v)
   \end{equation}
   Substituting these into \eqref{eq:discrete-conv-centred} and using
   $s = i\,\Delta x$, $t = j\,\Delta y$ gives the Riemann–sum representation
@@ -286,7 +286,7 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
     \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
     X\bigl(s + u\,\Delta x,\; t + v\,\Delta y\bigr)\,
     F\bigl(u\,\Delta x,\; v\,\Delta y\bigr)\,
-    \Delta x\,\Delta y.
+    \Delta x\,\Delta y
   \end{equation}
   
   In the continuum limit $\Delta x,\Delta y \to 0$ with
@@ -299,8 +299,8 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
     Y(s,t) = (X * F)(s,t)
     \;=\;
     \int_{-A/2}^{A/2}\!\!\int_{-B/2}^{B/2}
-    X(s + \sigma,\; t + \tau)\,
-    F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau.
+    X(s + \sigma,\; t + \tau)\
+    F(\sigma,\tau)\,\mathrm{d}\sigma\mathrm{d}\tau
   \end{equation}
   In this parametrisation $(s,t)$ denotes the kernel centre in the
   continuous plane, and $(\sigma,\tau)$ are continuous offsets within the
@@ -308,6 +308,17 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
   the continuous analogue of the kernel–centred discrete operator in
   \eqref{eq:discrete-conv-centred}.
   
+And the continuous convolution without the integral limits:
+
+\begin{equation}
+  \label{eq:continuous-conv-centred-no-limits}
+  Y(s,t)
+  \;=\;
+  \int_{-\infty}^{\infty} \!\! \int_{-\infty}^{\infty}
+  X(s + \sigma,\; t + \tau)\,
+  F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
+\end{equation}
+
 
 
   \subsection{Translational equivariance: continuous case}
