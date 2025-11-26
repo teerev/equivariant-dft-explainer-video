@@ -130,16 +130,10 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
 
         kernel_group = Group(kernel_image, kernel_box, measurement_group)
 
-        title = Text(
-            "Localized kernel intensity",
-            font_size=30,
-            color=GREY_B,
-        ).to_edge(UP)
 
         self.play(FadeIn(input_image, run_time=2.0))
         self.play(FadeIn(kernel_group, run_time=1.2))
         self.play(Create(axes), Write(axes_labels))
-        self.play(Write(title))
         self.play(
             FadeIn(global_vector, run_time=0.8),
             FadeIn(offset_vector, run_time=0.8),
