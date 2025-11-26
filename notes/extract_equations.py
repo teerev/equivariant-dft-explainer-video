@@ -167,6 +167,10 @@ def main():
 
     preamble = get_preamble(transparent=args.transparent)
 
+    total = len(equations)
+    sys.stdout.write(f"\r[{'-'*40}] 0/{total}")
+    sys.stdout.flush()
+
     for i, eq in enumerate(equations, start=1):
         idx = f"{i:03d}"
         cleaned_eq = disable_numbering(eq)
@@ -176,9 +180,16 @@ def main():
         try:
             run_pdflatex(tex_source_eq, jobname)
         except subprocess.CalledProcessError:
+            sys.stdout.write("\n")
             print(f"Failed to compile eq_{idx}")
-            continue
+        
+        bar_len = 40
+        filled_len = int(bar_len * i // total)
+        bar = '=' * filled_len + '-' * (bar_len - filled_len)
+        sys.stdout.write(f"\r[{bar}] {i}/{total}")
+        sys.stdout.flush()
 
+    print()
     print("Done. PDFs are in ./equations")
 
 if __name__ == "__main__":
