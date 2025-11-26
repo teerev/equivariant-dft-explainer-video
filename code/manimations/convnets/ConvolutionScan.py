@@ -60,7 +60,7 @@ class ConvolutionScan(RightRegionScene):
             row = VGroup()
             for j in range(output_size):
                 square = Square(side_length=cell_size)
-                square.set_stroke(color=BLUE_D, width=2)
+                square.set_stroke(color=GREEN_C, width=2)
                 square.move_to(np.array([j*cell_size, -i*cell_size, 0]))
                 row.add(square)
             output_grid.add(row)
@@ -119,14 +119,15 @@ class ConvolutionScan(RightRegionScene):
             return display
 
         patch_display = create_matrix_display(np.zeros((kernel_size, kernel_size)), stroke_color=WHITE)
-        product_display = create_matrix_display(np.zeros((kernel_size, kernel_size)), stroke_color=GREEN, text_color=GREEN)
+        product_display = create_matrix_display(np.zeros((kernel_size, kernel_size)), stroke_color=WHITE, text_color=WHITE)
         kernel_reference_display = create_matrix_display(kernel_values, stroke_color=RED, text_color=RED_E)
 
         patch_column = VGroup(Text("Input patch").scale(0.35), patch_display).arrange(DOWN, buff=0.08)
         kernel_column = VGroup(Text("Kernel").scale(0.35), kernel_reference_display).arrange(DOWN, buff=0.08)
+
         product_column = VGroup(Text("Elementwise product").scale(0.35), product_display).arrange(DOWN, buff=0.08)
 
-        multiply_symbol = MathTex("\\odot").scale(0.6)
+        multiply_symbol = MathTex("*").scale(0.6)
         equals_symbol = MathTex("=").scale(0.6)
 
         elementwise_panel = VGroup(
@@ -185,7 +186,7 @@ class ConvolutionScan(RightRegionScene):
                 # Highlight the active output square
                 active_square = output_grid[out_i][out_j]
                 highlight = active_square.copy()
-                highlight.set_fill(color=GREEN, opacity=0.6)
+                highlight.set_fill(color=TEAL, opacity=0.6)
 
                 # Compute the convolution result for this position (keep float precision)
                 output_value = float(np.sum(product_vals))

@@ -72,6 +72,20 @@ Formalising it a bit, the convolutional layer depends on three functions $X$ (th
 \end{aligned}
 \end{equation}
 
+
+\[
+g \in \mathbb{Z}^2
+\]
+
+
+\[
+\textcolor{white}{X}\; *\; \textcolor{red}{F}
+\;=\;
+\textcolor{green}{Y}
+\]
+
+
+
 Here, $\mathbb{Z}^2$ denotes the discrete spatial domain (integer pixel coordinates), while $\mathbb{R}$ denotes the codomain of pixel values (e.g., grayscale intensities). They're not integers because, in general, the pixel values are between 0 and 1 in typical training pipelines.
 
 To relate the feature map $Y$ to the input image $X$ and the kernel, or filter, $F$, it's helpful to draw a picture of a toy example. 
@@ -89,7 +103,7 @@ In this position, you can see that we are considering the (i=2,j=4) coordinate s
   Y_{2 4} = (X * F)_{4 2} =
   \sum_{u = -1}^{1}
   \sum_{v = -2}^{2}
-  X_{\,2+u,\ 4+v}\, F_{u v}.
+  X_{\,2+u,\ 4+v}\, F_{u v}
   \end{equation}
 
 The sum over u spans the width of the kernel and v spans its height, so for a general kernel of size KxL, the sum over u will run from -(K-1)/2 to (K-1)/2 and the sum over v will run from -(L-1)/2 to (L-1)/2. This is the general formula for the discrete convolution.
@@ -127,11 +141,11 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
   by
   \[
     (gX)(i,j) := X(i-a,\,j-b)
-    \qquad\text{for all }(i,j)\in\mathbb{Z}^2.
+    \qquad\text{for all }(i,j)\in\mathbb{Z}^2
   \]
   We wish to show that convolution is equivariant to translations:
   \[
-    (gX) * F \;=\; g(X * F),
+    (gX) * F \;=\; g(X * F)
   \]
   i.e.\ translating the input and then convolving is the same as
   convolving first and then translating the output by the same $(a,b)$.
@@ -139,42 +153,37 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
   \textbf{Translate first, then convolve.}  Plug the translated input into
   the definition \eqref{eq:discrete-conv-centred-again} and immediately
   use the definition of $g$:
-  \begin{align}
-  \label{eq:discrete-eq1-centred}
-  ((g X) * F)_{ij}
-    &=
-    \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
-    \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
-    (g X)_{\,i+u,\; j+v}\, F_{uv}
-       &&\text{(definition of convolution)} \\
-  \label{eq:discrete-eq2-centred}
-    &=
-    \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
-    \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
-    X_{\, (i+u)-a,\; (j+v)-b}\, F_{uv}
-       &&\text{(definition of translation).}
-  \end{align}
+\begin{align}
+\label{eq:discrete-eq1-centred}
+((g X) * F)_{ij}
+  &=
+  \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
+  \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
+  (g X)_{\,i+u,\; j+v}\, F_{uv}, \\
+\label{eq:discrete-eq2-centred}
+  &=
+  \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
+  \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
+  X_{\, (i+u)-a,\; (j+v)-b}\, F_{uv}.
+\end{align}
   
   \textbf{Convolve first, then translate.}  Start from the feature map and
   evaluate it at the shifted index, then expand the convolution:
-  \begin{align}
-  \label{eq:discrete-eq3-centred}
-  (g (X * F))_{ij}
-    &= (X * F)_{i-a,\; j-b}
-       &&\text{(definition of translation)} \\
-  \label{eq:discrete-eq4-centred}
-    &=
-    \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
-    \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
-    X_{\, (i-a)+u,\; (j-b)+v}\, F_{uv}
-       &&\text{(definition of convolution)} \\
-  \label{eq:discrete-eq5-centred}
-    &=
-    \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
-    \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
-    X_{\, i+u-a,\; j+v-b}\, F_{uv}
-       &&\text{(rearranging inside the indices).}
-  \end{align}
+\begin{align}
+\label{eq:discrete-eq3-centred}
+(g (X * F))_{ij}
+  &= (X * F)_{i-a,\; j-b}, \\
+\label{eq:discrete-eq4-centred}
+  &=
+  \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
+  \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
+  X_{\, (i-a)+u,\; (j-b)+v}\, F_{uv}, \\
+\label{eq:discrete-eq5-centred}
+  &=
+  \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
+  \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
+  X_{\, i+u-a,\; j+v-b}\, F_{uv}.
+\end{align}
   
   The right-hand sides of \eqref{eq:discrete-eq2-centred} and
   \eqref{eq:discrete-eq5-centred} are identical, hence
@@ -299,38 +308,34 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
   \textbf{Translate first, then convolve.}
   Plug the translated input into the convolution definition and immediately use
   the definition of $g$:
-  \begin{align}
-  \label{eq:continuous-eq1}
-  ((g X) * F)(s,t)
-    &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-       (g X)(s + \sigma,\; t + \tau)\,
-       F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
-       &&\text{(definition of convolution)} \\
-  \label{eq:continuous-eq2}
-    &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-       X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
-       F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
-       &&\text{(definition of translation).}
-  \end{align}
+\begin{align}
+\label{eq:continuous-eq1}
+((g X) * F)(s,t)
+  &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+     (g X)(s + \sigma,\; t + \tau)\,
+     F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau, \\
+\label{eq:continuous-eq2}
+  &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+     X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
+     F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
+\end{align}
   
   \textbf{Convolve first, then translate.}
   Start with the convolved output and evaluate it at the shifted coordinates,
   then expand the convolution:
-  \begin{align}
-  \label{eq:continuous-eq3}
-  (g (X * F))(s,t)
-    &= (X * F)(s - a,\; t - b)
-       &&\text{(definition of translation)} \\
-  \label{eq:continuous-eq4}
-    &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-       X\bigl((s - a) + \sigma,\; (t - b) + \tau\bigr)\,
-       F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
-       &&\text{(definition of convolution)} \\
-  \label{eq:continuous-eq5}
-    &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-       X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
-       F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau,
-  \end{align}
+\begin{align}
+\label{eq:continuous-eq3}
+(g (X * F))(s,t)
+  &= (X * F)(s - a,\; t - b), \\
+\label{eq:continuous-eq4}
+  &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+     X\bigl((s - a) + \sigma,\; (t - b) + \tau\bigr)\,
+     F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau, \\
+\label{eq:continuous-eq5}
+  &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+     X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
+     F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau.
+\end{align}
   where in the last step we simply regrouped terms inside the arguments of $X$.
   
   The right-hand sides of \eqref{eq:continuous-eq2} and
@@ -358,7 +363,7 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
     \;=\;
     \int_{\mathbb{R}^2}
     X(p + p')\,
-    F(p')\,\mathrm{d}p'.
+    F(p')\,\mathrm{d}p'
   \end{equation}
 
   Here $p$ denotes the evaluation point (kernel centre) and $p'$ is an offset within the kernel footprint.  In vector form:
@@ -389,10 +394,10 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
     \label{eq:rot-eq1}
     ((R X) * F)(p)
       &= \int_{\mathbb{R}^2} (R X)(p + p')\,F(p')\,\mathrm{d}p'
-         &&\text{(definition of convolution)} \\
+          \\
     \label{eq:rot-eq2}
       &= \int_{\mathbb{R}^2} X(R^{-1}(p + p'))\,F(p')\,\mathrm{d}p'
-         &&\text{(definition of rotation action)}.
+         .
   \end{align}
   
   \textbf{Convolve first, then rotate.}
@@ -401,10 +406,10 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
     \label{eq:rot-eq3}
     (R (X * F))(p)
       &= (X * F)(R^{-1} p)
-         &&\text{(definition of rotation action)} \\
+          \\
     \label{eq:rot-eq4}
       &= \int_{\mathbb{R}^2} X(R^{-1} p + p')\,F(p')\,\mathrm{d}p'
-         &&\text{(definition of convolution)}.
+         .
   \end{align}
   
   To compare \eqref{eq:rot-eq2} and \eqref{eq:rot-eq4}, make a change of
