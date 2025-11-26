@@ -105,6 +105,26 @@ To calculate the value of the pixel in the feature map - indicated in cyan - we 
 
 In this position, you can see that we are considering the (i=2,j=4) coordinate since this is the pixel in the feature map being calculated. The corresponding x coordinate is always located at the pixel given by the central pixel - the output pixel in hte feature map - plus whatever offset is needed to get the relevant position in the kernel. Thus, the coordinate in the input image is always equal to the coordinate in the feature map plus whatever offset - denoted by u and v - inside the kernel footprint.
 
+
+% Function definitions: continuous case
+\begin{equation}
+  \label{eq:function-maps-cont}
+  \begin{aligned}
+      X   &: \mathbb{R}^2 \rightarrow \mathbb{R} \\
+      F   &: \mathbb{R}^2 \rightarrow \mathbb{R} \\
+      Y   &: \mathbb{R}^2 \rightarrow \mathbb{R} \\
+      T_g &: \mathbb{R}^2 \rightarrow \mathbb{R}^2
+  \end{aligned}
+\end{equation}
+
+\[
+g = (u,v) \in \mathbb{R}^2,
+\qquad
+T_g(x,y) = (x+u,\, y+v).
+\]
+
+
+
 \begin{equation}
   \label{eq:discrete-conv-image1}
   Y_{2 4} = (X * F)_{4 2} =
