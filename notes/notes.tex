@@ -321,6 +321,22 @@ And the continuous convolution without the integral limits:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   \subsection{Translational equivariance: continuous case}
 
   We now consider the continuous analogue of the kernel--centred discrete
@@ -335,7 +351,7 @@ And the continuous convolution without the integral limits:
     \;=\;
     \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
     X(s + \sigma,\; t + \tau)\,
-    F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau,
+    F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
   \end{equation}
   where $(s,t)$ denotes the evaluation point (kernel centre) and
   $(\sigma,\tau)$ are continuous offsets within the kernel footprint.  If $F$
@@ -346,11 +362,11 @@ And the continuous convolution without the integral limits:
   translating the output. Let $g$ be a translation by $(a,b) \in \mathbb{R}^2$,
   so that for any $(s,t) \in \mathbb{R}^2$ we have
   \begin{equation}
-    (g X)(s,t) = X(s - a,\; t - b).
+    (g X)(s,t) = X(s - a,\; t - b)
   \end{equation}
   We need to show that
   \[
-  (g X) * F = g (X * F),
+  (g X) * F = g (X * F)
   \]
   i.e.\ translating the input first and then convolving yields the same function
   as convolving first and then translating the output.
@@ -358,49 +374,68 @@ And the continuous convolution without the integral limits:
   \textbf{Translate first, then convolve.}
   Plug the translated input into the convolution definition and immediately use
   the definition of $g$:
-\begin{align}
-\label{eq:continuous-eq1}
-((g X) * F)(s,t)
-  &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-     (g X)(s + \sigma,\; t + \tau)\,
-     F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau, \\
-\label{eq:continuous-eq2}
-  &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-     X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
-     F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
-\end{align}
-  
+  \begin{equation}
+    \label{eq:continuous-eq1}
+    ((g X) * F)(s,t)
+      = \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+         (g X)(s + \sigma,\; t + \tau)\,
+         F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
+    \end{equation}
+    
+    \begin{equation}
+    \label{eq:continuous-eq2}
+    \phantom{((g X) * F)(s,t)}
+      = \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+         X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
+         F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
+    \end{equation}
+    
+
   \textbf{Convolve first, then translate.}
   Start with the convolved output and evaluate it at the shifted coordinates,
   then expand the convolution:
-\begin{align}
-\label{eq:continuous-eq3}
-(g (X * F))(s,t)
-  &= (X * F)(s - a,\; t - b), \\
-\label{eq:continuous-eq4}
-  &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-     X\bigl((s - a) + \sigma,\; (t - b) + \tau\bigr)\,
-     F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau, \\
-\label{eq:continuous-eq5}
-  &= \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
-     X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
-     F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau.
-\end{align}
+  \begin{equation}
+    \label{eq:continuous-eq3}
+    (g (X * F))(s,t)
+      = (X * F)(s - a,\; t - b)
+    \end{equation}
+    
+    \begin{equation}
+    \label{eq:continuous-eq4}
+    \phantom{(g (X * F))(s,t)}
+      = \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+         X\bigl((s - a) + \sigma,\; (t - b) + \tau\bigr)\,
+         F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
+    \end{equation}
+    
+    \begin{equation}
+    \label{eq:continuous-eq5}
+    \phantom{(g (X * F))(s,t)}
+      = \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty}
+         X\bigl((s + \sigma) - a,\; (t + \tau) - b\bigr)\,
+         F(\sigma,\tau)\,\mathrm{d}\sigma\,\mathrm{d}\tau
+    \end{equation}
+    
   where in the last step we simply regrouped terms inside the arguments of $X$.
   
   The right-hand sides of \eqref{eq:continuous-eq2} and
   \eqref{eq:continuous-eq5} are identical, hence
   \[
   ((g X) * F)(s,t) = (g (X * F))(s,t)
-  \quad\text{for all } (s,t) \in \mathbb{R}^2,
+  \quad\text{for all } (s,t) \in \mathbb{R}^2
   \]
   which establishes continuous translational equivariance:
   \begin{equation}
-    (g X) * F = g (X * F),
+    (g X) * F = g (X * F)
   \end{equation}
   in direct analogy with the kernel--centred discrete case.
   
 
+
+
+
+
+  
 
 
   \subsection{Rotational non-equivariance: continuous case}
