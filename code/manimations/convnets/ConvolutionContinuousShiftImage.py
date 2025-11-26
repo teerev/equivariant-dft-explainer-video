@@ -5,6 +5,13 @@ import sys
 from pathlib import Path
 
 SCARLET = ManimColor("#F20000")
+IMAGE_NEG_HEX = "#00D5FF"
+IMAGE_POS_HEX = "#F26D00"
+IMAGE_NEG_COLOR = ManimColor(IMAGE_NEG_HEX)
+IMAGE_POS_COLOR = ManimColor(IMAGE_POS_HEX)
+IMAGE_NEG_RGB = np.array(IMAGE_NEG_COLOR.to_rgb())
+IMAGE_POS_RGB = np.array(IMAGE_POS_COLOR.to_rgb())
+ZERO_RGB = np.array([0.0, 0.0, 0.0])
 
 sys.path.append(str(Path(__file__).parent.parent))
 from base_scene import RightRegionScene
@@ -35,7 +42,7 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         input_image.set_z_index(-2)
         input_image.move_to(axes.c2p(0, 0))
 
-        # --- kernel: bright cyan/orange, smaller + boxed ---
+        # --- kernel: bright cyan/orange, smaller ---
         kernel_span = 3.0
         kernel_image = self.create_kernel_image(resolution=240, span=kernel_span)
         kernel_image.set_width(axes.width * 0.95)
@@ -43,39 +50,45 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         kernel_image.move_to(kernel_start)
         kernel_image.set_z_index(-1)
 
-        bold_red = SCARLET
+        # Visible kernel box
         kernel_box = Rectangle(
             width=kernel_image.width * 0.4,
             height=kernel_image.height * 0.4,
-            stroke_color=bold_red,
-            stroke_width=1.5,
+            stroke_color=SCARLET,
+            stroke_width=2.0,
         )
         kernel_box.move_to(kernel_image)
-        kernel_box.set_z_index(-1.1)
+        
+        # --- Kernel Axes (sigma, tau) moving with kernel ---
+        def get_kernel_axes():
+            center = kernel_box.get_center()
+            k_axes = Axes(
+                x_range=[0, 1.5, 1],
+                y_range=[0, 1.5, 1],
+                x_length=kernel_box.width * 0.6,
+                y_length=kernel_box.height * 0.6,
+                axis_config={
+                    "color": SCARLET,
+                    "stroke_width": 2,
+                    "include_tip": False,
+                    "include_ticks": False,
+                },
+            )
+            k_axes.move_to(center, aligned_edge=DL)
+            
+            sigma_tick = Line(UP * 0.08, DOWN * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.x_axis.get_end())
+            tau_tick = Line(LEFT * 0.08, RIGHT * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.y_axis.get_end())
 
-        arrow_buff = 0.12
-        x_arrow = DoubleArrow(
-            kernel_box.get_corner(LEFT + UP) + UP * arrow_buff,
-            kernel_box.get_corner(RIGHT + UP) + UP * arrow_buff,
-            color=bold_red,
-            stroke_width=1.0,
-            buff=0,
-            max_tip_length_to_length_ratio=0.05,
-        )
-        x_label = MathTex("A", color=bold_red).scale(0.5).next_to(x_arrow, UP, buff=0.03)
-
-        y_arrow = DoubleArrow(
-            kernel_box.get_corner(RIGHT + DOWN) + RIGHT * arrow_buff,
-            kernel_box.get_corner(RIGHT + UP) + RIGHT * arrow_buff,
-            color=bold_red,
-            stroke_width=1.0,
-            buff=0,
-            max_tip_length_to_length_ratio=0.05,
-        )
-        y_label = MathTex("B", color=bold_red).scale(0.5).next_to(y_arrow, RIGHT, buff=0.03)
-
-        measurement_group = Group(x_arrow, x_label, y_arrow, y_label)
-        measurement_group.set_z_index(-1.05)
+            sigma_label = MathTex(r"\sigma", color=SCARLET).scale(0.6)
+            sigma_label.next_to(sigma_tick, RIGHT, buff=0.05)
+            
+            tau_label = MathTex(r"\tau", color=SCARLET).scale(0.6)
+            tau_label.next_to(tau_tick, UP, buff=0.05)
+            
+            return VGroup(k_axes, sigma_tick, tau_tick, sigma_label, tau_label)
+            
+        kernel_axes_group = always_redraw(get_kernel_axes)
+        kernel_axes_group.set_z_index(0)
 
         origin_point = axes.c2p(0, 0)
         vector_color = GREY_A
@@ -115,7 +128,7 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
                 base,
                 base + offset,
                 buff=0,
-            color=SCARLET,
+                color=SCARLET,
                 stroke_width=2.2,
                 tip_length=0.22,
                 max_tip_length_to_length_ratio=0.06,
@@ -128,16 +141,52 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         global_vector = always_redraw(global_vector_group)
         offset_vector = always_redraw(offset_vector_group)
 
-        kernel_group = Group(kernel_image, kernel_box, measurement_group)
+        kernel_group = Group(kernel_image, kernel_box) 
 
+        # --- Colorbar Legend ---
+        colorbar = Rectangle(
+            width=0.35,
+            height=2.2,
+            stroke_color=GREY_B,
+            stroke_width=1.2,
+        )
+        colorbar.set_fill(
+            color=[IMAGE_NEG_COLOR, BLACK, IMAGE_POS_COLOR],
+            opacity=1.0,
+        )
+        
+        # Position relative to camera frame UL to ensure visibility
+        # self.camera.frame_center already shifted in RightRegionScene
+        frame_ul = self.camera.frame_center + (LEFT * config.frame_width / 2) + (UP * config.frame_height / 2)
+        colorbar.move_to(frame_ul + RIGHT * 0.8 + DOWN * 1.5)
+
+        neg_label = MathTex("-1", color=GREY_B).scale(0.5)
+        neg_label.next_to(colorbar, LEFT, buff=0.1)
+        neg_label.align_to(colorbar, DOWN)
+
+        zero_label = MathTex("0", color=GREY_B).scale(0.5)
+        zero_label.next_to(colorbar, LEFT, buff=0.1)
+        zero_label.move_to(colorbar.get_center() + LEFT * 0.3)
+
+        pos_label = MathTex("1", color=GREY_B).scale(0.5)
+        pos_label.next_to(colorbar, LEFT, buff=0.1)
+        pos_label.align_to(colorbar, UP)
+
+        colorbar_group = VGroup(colorbar, neg_label, zero_label, pos_label)
+        colorbar_group.set_z_index(10) # Ensure on top
 
         self.play(FadeIn(input_image, run_time=2.0))
         self.play(FadeIn(kernel_group, run_time=1.2))
         self.play(Create(axes), Write(axes_labels))
+        
+        # Animate kernel axes appearing with the kernel
+        self.play(Create(kernel_axes_group))
+        
         self.play(
             FadeIn(global_vector, run_time=0.8),
             FadeIn(offset_vector, run_time=0.8),
         )
+        self.play(FadeIn(colorbar_group, run_time=0.8))
 
         right_target = axes.c2p(1.6, 0.6)
         up_target = axes.c2p(1.6, 1.6)
@@ -231,8 +280,8 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         v = field / max_abs
         v = -v  # swap cyan/orange globally
 
-        neg_rgb = np.array(ManimColor("#00D5FF").to_rgb())  # cyan
-        pos_rgb = np.array(ManimColor("#F26D00").to_rgb())  # orange
+        neg_rgb = np.array(ManimColor(IMAGE_NEG_HEX).to_rgb())  # cyan
+        pos_rgb = np.array(ManimColor(IMAGE_POS_HEX).to_rgb())  # orange
         zero_rgb = np.array([0.0, 0.0, 0.0])                # black
 
         v = np.clip(v, -1.0, 1.0)
@@ -256,7 +305,7 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         input_image = ImageMobject(np.uint8(np.flipud(rgba) * 255))
         return input_image
 
-    # -----------    # ------------------------------------------------------------------
+    # ------------------------------------------------------------------
     # Kernel in bright cyan/orange with smooth fade,
     # square support aligned with the red kernel box
     # ------------------------------------------------------------------
@@ -318,8 +367,8 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
             (np.abs(xx - cx) <= half_side_x)
         )
 
-        neg_rgb = np.array(ManimColor("#00D5FF").to_rgb())  # cyan
-        pos_rgb = np.array(ManimColor("#F26D00").to_rgb())  # orange
+        neg_rgb = np.array(ManimColor(IMAGE_NEG_HEX).to_rgb())  # cyan
+        pos_rgb = np.array(ManimColor(IMAGE_POS_HEX).to_rgb())  # orange
         zero_rgb = np.array([0.0, 0.0, 0.0])
 
         rgba = np.zeros((h, w, 4), dtype=float)
