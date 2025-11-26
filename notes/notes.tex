@@ -64,13 +64,20 @@ Formalising it a bit, the convolutional layer depends on three functions $X$ (th
 
 % Function definitions
 \begin{equation}
-\label{eq:function-maps}
-\begin{aligned}
-	F & : \mathbb{Z}^2 \rightarrow \mathbb{R} \\
-	W & : \mathbb{Z}^2 \rightarrow \mathbb{R} \\
-	G & : \mathbb{Z}^2 \rightarrow \mathbb{R} \\
-\end{aligned}
-\end{equation}
+  \label{eq:function-maps}
+  \begin{aligned}
+      X   &: \mathbb{Z}^2 \rightarrow \mathbb{R} \\
+      F   &: \mathbb{Z}^2 \rightarrow \mathbb{R} \\
+      Y   &: \mathbb{Z}^2 \rightarrow \mathbb{R} \\
+      T_g &: \mathbb{Z}^2 \rightarrow \mathbb{Z}^2
+  \end{aligned}
+  \end{equation}
+  
+\[
+g = (u,v) \in \mathbb{Z}^2,
+\qquad
+T_g(i,j) = (i+u,\, j+v)
+\]
 
 
 \[
@@ -153,43 +160,55 @@ The sum over u spans the width of the kernel and v spans its height, so for a ge
   \textbf{Translate first, then convolve.}  Plug the translated input into
   the definition \eqref{eq:discrete-conv-centred-again} and immediately
   use the definition of $g$:
-\begin{align}
+\begin{equation}
 \label{eq:discrete-eq1-centred}
 ((g X) * F)_{ij}
-  &=
+  =
   \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
   \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
-  (g X)_{\,i+u,\; j+v}\, F_{uv}, \\
+  (g X)_{\,i+u,\; j+v}\, F_{uv}.
+\end{equation}
+
+\begin{equation}
 \label{eq:discrete-eq2-centred}
-  &=
+\phantom{((g X) * F)_{ij}}
+  =
   \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
   \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
   X_{\, (i+u)-a,\; (j+v)-b}\, F_{uv}.
-\end{align}
+\end{equation}
   
   \textbf{Convolve first, then translate.}  Start from the feature map and
   evaluate it at the shifted index, then expand the convolution:
-\begin{align}
+\begin{equation}
 \label{eq:discrete-eq3-centred}
 (g (X * F))_{ij}
-  &= (X * F)_{i-a,\; j-b}, \\
+  = (X * F)_{i-a,\; j-b}.
+\end{equation}
+
+\begin{equation}
 \label{eq:discrete-eq4-centred}
-  &=
+\phantom{(g (X * F))_{ij}}
+  =
   \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
   \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
-  X_{\, (i-a)+u,\; (j-b)+v}\, F_{uv}, \\
+  X_{\, (i-a)+u,\; (j-b)+v}\, F_{uv}.
+\end{equation}
+
+\begin{equation}
 \label{eq:discrete-eq5-centred}
-  &=
+\phantom{(g (X * F))_{ij}}
+  =
   \sum_{u = -\frac{K-1}{2}}^{\frac{K-1}{2}}
   \sum_{v = -\frac{L-1}{2}}^{\frac{L-1}{2}}
   X_{\, i+u-a,\; j+v-b}\, F_{uv}.
-\end{align}
+\end{equation}
   
   The right-hand sides of \eqref{eq:discrete-eq2-centred} and
   \eqref{eq:discrete-eq5-centred} are identical, hence
   \[
   ((g X) * F)_{ij} = (g (X * F))_{ij}
-  \quad\text{for all }(i,j)\in\mathbb{Z}^2,
+  \quad\text{for all }(i,j)\in\mathbb{Z}^2
   \]
   which establishes discrete translational equivariance for the
   kernel--centred convolution in \eqref{eq:discrete-conv-centred-again}.
