@@ -17,7 +17,15 @@ sys.path.append(str(Path(__file__).parent.parent))
 from base_scene import RightRegionScene
 
 
-class ConvolutionPullback(RightRegionScene):
+class ConvolutionPullback(MovingCameraScene):
+    def setup(self):
+        super().setup()
+        # RightRegionScene logic adapted for MovingCameraScene
+        RIGHT_MARGIN_PX = 180
+        px_to_coord = self.camera.frame_width / self.camera.pixel_width
+        shift = (RIGHT_MARGIN_PX / 2) * px_to_coord
+        self.camera.frame.shift(RIGHT * shift)
+
     def construct(self):
         self.camera.background_color = BLACK
 
@@ -50,35 +58,62 @@ class ConvolutionPullback(RightRegionScene):
             
         input_image = always_redraw(get_input_image)
 
+        # --- Coordinate System Rotation Tracker ---
+        coord_alpha_tracker = ValueTracker(0.0)
+
         # --- kernel setup ---
         kernel_span = 3.0
         
         # Start with CIRCLE kernel (final state of previous animation)
-        kernel_image = self.create_kernel_image(resolution=240, span=kernel_span, shape="circle")
-        kernel_image.set_width(axes.width * 0.95)
+        # Using analytical rotation + always_redraw for smooth motion
+        initial_kernel_center = axes.c2p(1.6, 1.6)
+        target_kernel_width = axes.width * 0.95
         
-        # Position at the "final" location from the previous scene
-        final_pos = axes.c2p(1.6, 1.6)
-        kernel_image.move_to(final_pos)
-        kernel_image.set_z_index(-1)
+        def get_kernel_image():
+            angle = coord_alpha_tracker.get_value()
+            
+            # 1. Create kernel image with internal rotation (to align with local axes)
+            # Resolution bumped for quality
+            img = self.create_kernel_image(
+                resolution=400, 
+                span=kernel_span, 
+                shape="circle",
+                rotation_angle=angle
+            )
+            img.set_width(target_kernel_width)
+            
+            # 2. Calculate position: The kernel is "attached" to the rotating coordinate system.
+            # Its position (1.6, 1.6) in the coordinate system rotates about the global origin (0,0).
+            # If coord system rotates by `angle` (counter-clockwise relative to initial),
+            # the point (1.6, 1.6) rotates by `angle`.
+            
+            # Get vector from origin to initial center
+            origin = axes.c2p(0, 0)
+            vec = initial_kernel_center - origin
+            
+            # Rotate vector by angle
+            c, s = np.cos(angle), np.sin(angle)
+            rx = vec[0] * c - vec[1] * s
+            ry = vec[0] * s + vec[1] * c
+            rotated_vec = np.array([rx, ry, 0])
+            
+            new_pos = origin + rotated_vec
+            
+            img.move_to(new_pos)
+            img.set_z_index(-1)
+            return img
 
+        kernel_image = always_redraw(get_kernel_image)
+        
         # Visible kernel outline (circle)
         kernel_outline = Circle(
-            radius=kernel_image.width * 0.4 / 2, # width is 0.95*axes.width. previous box was width*0.4. circle radius is width/2
-            color=SCARLET,
-            stroke_width=2.0,
-        )
-        # Recalculate radius to match the box width/height logic from previous scene
-        # Box width was kernel_image.width * 0.4. Circle diameter should be similar?
-        # In previous scene: 
-        # kernel_box = Rectangle(width=kernel_image.width * 0.4, ...)
-        # circle_outline = Circle(radius=kernel_box.width / 2, ...)
-        kernel_outline = Circle(
-            radius=(kernel_image.width * 0.4) / 2,
+            radius=(target_kernel_width * 0.4) / 2,
             color=SCARLET,
             stroke_width=2.0
         )
-        kernel_outline.move_to(kernel_image)
+        # We need to position the outline manually initially for get_kernel_axes, 
+        # but it will be updated by updater later.
+        kernel_outline.move_to(initial_kernel_center)
         kernel_outline.set_z_index(-0.9)
         kernel_box = kernel_outline # For compatibility with helper functions if needed
 
@@ -112,7 +147,21 @@ class ConvolutionPullback(RightRegionScene):
             tau_label = MathTex(r"\tau", color=SCARLET).scale(0.6)
             tau_label.next_to(tau_tick, UP, buff=0.05)
             
-            return VGroup(k_axes, sigma_tick, tau_tick, sigma_label, tau_label)
+            g = VGroup(k_axes, sigma_tick, tau_tick, sigma_label, tau_label)
+            
+            # Rotate local axes to match global coordinate rotation
+            # Rotate about the kernel center (which is the center of this local system approx)
+            # Actually k_axes.move_to(center, aligned_edge=DL) puts origin at DL.
+            # We want to rotate the whole group around the mobject center? 
+            # No, the "up" direction of the axes should tilt.
+            # So rotating around the group's center or the axes origin?
+            # Usually we want the text to stay upright? 
+            # User said "rotate along with the (s,t) coordinate system".
+            # If (s,t) rotates, the whole paper rotates. Text usually rotates with the paper.
+            # So rotate the whole group.
+            g.rotate(coord_alpha_tracker.get_value(), about_point=center)
+            
+            return g
             
         kernel_axes_group = always_redraw(get_kernel_axes)
         kernel_axes_group.set_z_index(0)
@@ -163,9 +212,11 @@ class ConvolutionPullback(RightRegionScene):
         def offset_vector_group():
             base = kernel_outline.get_center()
             angle = angle_tracker.get_value()
+            coord_angle = coord_alpha_tracker.get_value()
+            total_angle = angle + coord_angle
             scale = vector_length_tracker.get_value()
-            
-            cos_a, sin_a = np.cos(angle), np.sin(angle)
+
+            cos_a, sin_a = np.cos(total_angle), np.sin(total_angle)
             
             # Rotate base offset
             rotated_offset = np.array([
@@ -211,9 +262,13 @@ class ConvolutionPullback(RightRegionScene):
             color=[IMAGE_NEG_COLOR, BLACK, IMAGE_POS_COLOR],
             opacity=1.0,
         )
-        frame_ul = self.camera.frame_center + (LEFT * config.frame_width / 2) + (UP * config.frame_height / 2)
-        colorbar.move_to(frame_ul + RIGHT * 0.8 + DOWN * 1.5)
-
+        
+        # Position relative to frame for fixed_in_frame behavior
+        # Original logic: frame_ul + RIGHT * 0.8 + DOWN * 1.5
+        # We can simulate this by placing it initially relative to the camera frame
+        # and then adding it as a fixed mobject.
+        # However, to_corner(UL) works relative to the frame width/height.
+        
         neg_label = MathTex("-1", color=GREY_B).scale(0.5)
         neg_label.next_to(colorbar, LEFT, buff=0.1)
         neg_label.align_to(colorbar, DOWN)
@@ -228,28 +283,103 @@ class ConvolutionPullback(RightRegionScene):
 
         colorbar_group = VGroup(colorbar, neg_label, zero_label, pos_label)
         colorbar_group.set_z_index(10)
-
+        
+        # Position in top-left corner with offset
+        colorbar_group.to_corner(UL, buff=0.5).shift(DOWN * 1.0)
+        
         # --- Add everything to scene ---
         self.add(input_image)
         self.add(kernel_image)
         self.add(kernel_outline)
-        self.add(axes, axes_labels)
+        
+        # Group axes and labels for easier rotation later
+        axes_group = VGroup(axes, axes_labels)
+        self.add(axes_group)
+        
         self.add(kernel_axes_group)
         self.add(global_vector)
         self.add(offset_vector)
+        
+        # Add colorbar as fixed in frame so it doesn't rotate with the camera/scene
+        # RightRegionScene inherits from Scene, so we don't have add_fixed_in_frame_mobjects.
+        # However, Scene has `add_fixed_in_frame_mobjects` ONLY if it's a ThreeDScene or we treat it specially?
+        # Standard Scene (v0.18.1) does NOT have `add_fixed_in_frame_mobjects`.
+        # However, since we switched to MovingCameraScene, we can add it to the camera frame!
+        # But `self.camera.frame` is a mobject. We can attach the colorbar to it.
+        # Or better: `self.add_fixed_in_frame_mobjects(colorbar_group)` DOES exist in MovingCameraScene?
+        # Actually, MovingCameraScene inherits from Scene.
+        # Let's just add it to the scene and manually correct rotation if needed.
+        # Wait, if we are NOT rotating the camera frame in Stage 4 anymore, but resetting coordinate rotation,
+        # then the "camera frame" stays fixed. So simple `self.add()` works perfectly!
+        # The colorbar will stay upright because the camera doesn't rotate.
         self.add(colorbar_group)
         
         self.wait(1)
 
-        # --- Animation: Rotate background image ---
+        # --- Stage 1: Rotate background image (Active Rotation) ---
         # Rotate 20 degrees counter-clockwise about the global origin (axes origin)
         rotation_angle = 20 * DEGREES
         
         self.play(
             theta_tracker.animate.set_value(rotation_angle),
-            run_time=3.0,
+            run_time=2.0,
             rate_func=smooth
         )
+        
+        self.wait(1)
+        
+        # --- Stage 2: Rotate back to start ---
+        self.play(
+            theta_tracker.animate.set_value(0.0),
+            run_time=1.5,
+            rate_func=smooth
+        )
+        
+        self.wait(1)
+        
+        # --- Stage 3: Rotate Coordinate System (Passive Transformation) ---
+        # Rotate axes, kernel, and kernel axes by -alpha (clockwise) around global origin.
+        # Background stays fixed (theta=0).
+        # We need to rotate: axes_group, kernel_outline.
+        # kernel_image, kernel_axes_group, global_vector, offset_vector update automatically via always_redraw.
+        
+        # Define objects to rotate
+        objects_to_rotate = [axes_group, kernel_outline]
+        for mob in objects_to_rotate:
+            mob.save_state()
+            
+        def rotate_coords_updater(mob):
+            mob.restore()
+            mob.rotate(
+                coord_alpha_tracker.get_value(),
+                about_point=axes.c2p(0, 0)
+            )
+
+        # Attach updaters
+        for mob in objects_to_rotate:
+            mob.add_updater(rotate_coords_updater)
+
+        self.play(
+            coord_alpha_tracker.animate.set_value(-rotation_angle),
+            run_time=2.0,
+            rate_func=smooth
+        )
+        
+        self.wait(1)
+        
+        # --- Stage 4: Reset Coordinate System ---
+        # Rotate coordinates back to 0.
+        # "Just change the final stage to just rotating the coordinate system back to where it was"
+        
+        self.play(
+            coord_alpha_tracker.animate.set_value(0.0),
+            run_time=2.0,
+            rate_func=smooth
+        )
+        
+        # Clean up updaters
+        for mob in objects_to_rotate:
+            mob.remove_updater(rotate_coords_updater)
         
         self.wait(2)
 
@@ -350,12 +480,20 @@ class ConvolutionPullback(RightRegionScene):
         input_image = ImageMobject(np.uint8(np.flipud(rgba) * 255))
         return input_image
 
-    def create_kernel_image(self, resolution=220, span=3.0, cutoff=None, shape="square"):
+    def create_kernel_image(self, resolution=220, span=3.0, cutoff=None, shape="square", rotation_angle=0.0):
         np.random.seed(10)
 
         xs = np.linspace(-span, span, resolution)
         ys = np.linspace(-span, span, resolution)
         X, Y = np.meshgrid(xs, ys)
+        
+        # Apply rotation
+        if rotation_angle != 0:
+            c, s = np.cos(-rotation_angle), np.sin(-rotation_angle)
+            X_rot = c * X - s * Y
+            Y_rot = s * X + c * Y
+            X, Y = X_rot, Y_rot
+            
         field = np.zeros_like(X)
 
         num_blobs = 50
