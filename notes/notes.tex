@@ -498,27 +498,31 @@ And the continuous convolution without the integral limits:
   
   As in the translational case, we compare the two sides explicitly.
   
-  \textbf{Rotate first, then convolve.}
-  Plug the rotated input into the convolution:
-  \begin{align}
-    \label{eq:rot-eq1}
-    ((Q_\alpha X) * F)(p)
-      &= \int_{\mathbb{R}^2} (Q_\alpha X)(p + p')\,F(p')\,\mathrm{d}p'
-          \\
-    \label{eq:rot-eq2}
-      &= \int_{\mathbb{R}^2} X(Q_\alpha^{-1}(p + p'))\,F(p')\,\mathrm{d}p'
-  \end{align}
-  
-  \textbf{Convolve first, then rotate.}
-  Now rotate the output of the convolution:
-  \begin{align}
-    \label{eq:rot-eq3}
-    (Q_\alpha (X * F))(p)
-      &= (X * F)(Q_\alpha^{-1} p)
-          \\
-    \label{eq:rot-eq4}
-      &= \int_{\mathbb{R}^2} X(Q_\alpha^{-1} p + p')\,F(p')\,\mathrm{d}p'
-  \end{align}
+ \textbf{Rotate first, then convolve.}
+ Plug the rotated input into the convolution:
+ \begin{equation}
+   \label{eq:rot-eq1}
+   ((Q_\alpha X) * F)(p)
+     = \int_{\mathbb{R}^2} (Q_\alpha X)(p + p')\,F(p')\,\mathrm{d}p'
+ \end{equation}
+ \begin{equation}
+   \label{eq:rot-eq2}
+   \phantom{((Q_\alpha X) * F)(p)}
+     = \int_{\mathbb{R}^2} X(Q_\alpha^{-1}(p + p'))\,F(p')\,\mathrm{d}p'
+ \end{equation}
+ 
+ \textbf{Convolve first, then rotate.}
+ Now rotate the output of the convolution:
+ \begin{equation}
+   \label{eq:rot-eq3}
+   (Q_\alpha (X * F))(p)
+     = (X * F)(Q_\alpha^{-1} p)
+ \end{equation}
+ \begin{equation}
+   \label{eq:rot-eq4}
+   \phantom{(Q_\alpha (X * F))(p)}
+     = \int_{\mathbb{R}^2} X(Q_\alpha^{-1} p + p')\,F(p')\,\mathrm{d}p'
+ \end{equation}
   
   To compare \eqref{eq:rot-eq2} and \eqref{eq:rot-eq4}, make a change of
   variables $p' = Q_\alpha z$ in \eqref{eq:rot-eq2}. Since $Q_\alpha$ is orthogonal,
@@ -585,9 +589,16 @@ scalar image
 \]
 As in the earlier sections, we describe convolution in terms of a
 kernel centred at spatial location $p$ and an offset variable
+
 \[
-  p' = (\sigma,\tau)^\top,
+  p' = (\sigma,\tau)^\top
 \]
+
+\[
+  p = (s,t)^\top
+\]
+
+
 so that the continuous convolution at $p$ reads
 \begin{equation}
   \label{eq:conv-continuous}
@@ -1030,7 +1041,7 @@ A rotation by angle $\alpha$ is represented by
 \end{equation}
 acting on points by $p \mapsto \mathbf{Q}_\alpha p$.
 
-\subsection{Temperature: scalar field ($m=0$)}
+\subsection{Temperature: scalar field (\texorpdfstring{$m=0$}{m=0})}
 
 The temperature field is a function
 \[
@@ -1051,7 +1062,7 @@ Writing $p_0 = \mathbf{Q}_{-\alpha}p$ gives the standard pullback form
 \end{equation}
 This is the defining behaviour of a scalar field ($m=0$).
 
-\subsection{Displacement: vector field ($m=\pm1$)}
+\subsection{Displacement: vector field (\texorpdfstring{$m=\pm1$}{m=\textpm 1})}
 
 The in-plane displacement is a vector field
 \[
@@ -1114,7 +1125,7 @@ eigenfunctions of rotation. Inserting
 \]
 Thus displacement carries angular frequencies $m=\pm1$.
 
-\subsection{Stress: rank-2 tensor field ($m=0,\pm2$)}
+\subsection{Stress: rank-2 tensor field (\texorpdfstring{$m=0,\pm2$}{m=0, \textpm 2})}
 
 The Cauchy stress tensor is written in the $(s,t)$ coordinate basis as
 \[
@@ -1244,7 +1255,7 @@ Throughout, we use the same convolution geometry as before:
   \item the kernel is a fixed function of $p'$.
 \end{itemize}
 
-\subsection{Recap: scalar convolution with circular harmonic $\times$ radial kernels}
+\subsection{Recap: scalar convolution with circular harmonic \texorpdfstring{$\times$}{x} radial kernels}
 
 Let $X(p)$ be any scalar field on the sheet (for example the
 temperature $\Theta(p)$). A circular harmonic $\times$ radial kernel is
