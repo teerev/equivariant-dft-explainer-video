@@ -21,6 +21,18 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
     def construct(self):
         self.camera.background_color = BLACK
 
+        # Create convolution equation at top of frame (finite limits initially)
+        equation_finite = MathTex(
+            r"Y(s,t) = (X * F)(s,t) = \int_{-A/2}^{A/2}\!\!\int_{-B/2}^{B/2} X(s + \sigma,\; t + \tau) F(\sigma,\tau)\,\mathrm{d}\sigma\mathrm{d}\tau",
+            color=WHITE
+        ).scale(0.7).to_edge(UP, buff=0.5)
+
+        # Create equation with infinite limits for morphing
+        equation_infinite = MathTex(
+            r"Y(s,t) = (X * F)(s,t) = \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty} X(s + \sigma,\; t + \tau) F(\sigma,\tau)\,\mathrm{d}\sigma\mathrm{d}\tau",
+            color=WHITE
+        ).scale(0.7).to_edge(UP, buff=0.5)
+
         axes = Axes(
             x_range=[-3, 3, 1],
             y_range=[-3, 3, 1],
@@ -32,7 +44,7 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
                 "include_tip": False,
             },
         )
-        axes_shift = LEFT * 1.5 + DOWN * 1.0
+        axes_shift = LEFT * 5.2 + DOWN * 3.5
         axes.shift(axes_shift)
         axes_labels = axes.get_axis_labels(MathTex("s"), MathTex("t"))
 
@@ -40,13 +52,13 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         input_image = self.create_input_image(resolution=360, span=6.5)
         input_image.set_width(axes.width * 3.2)
         input_image.set_z_index(-2)
-        input_image.move_to(axes.c2p(0, 0))
+        input_image.move_to(self.camera.frame_center)  # Position at screen center, not axes origin
 
         # --- kernel: bright cyan/orange, smaller ---
         kernel_span = 3.0
         kernel_image = self.create_kernel_image(resolution=240, span=kernel_span)
         kernel_image.set_width(axes.width * 0.95)
-        kernel_start = axes.c2p(0.2, 0.6)
+        kernel_start = axes.c2p(1.2, 1.2)  # Start at current ending position
         kernel_image.move_to(kernel_start)
         kernel_image.set_z_index(-1)
 
@@ -175,6 +187,9 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         colorbar_group = VGroup(colorbar, neg_label, zero_label, pos_label)
         colorbar_group.set_z_index(10) # Ensure on top
 
+        # Add equation at the very beginning (it's already created above)
+        self.add(equation_finite)
+
         self.play(FadeIn(input_image, run_time=2.0))
         self.play(FadeIn(kernel_group, run_time=1.2))
         self.play(Create(axes), Write(axes_labels))
@@ -188,19 +203,37 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         )
         self.play(FadeIn(colorbar_group, run_time=0.8))
 
-        right_target = axes.c2p(1.6, 0.6)
-        up_target = axes.c2p(1.6, 1.6)
+        # Define wiggle positions relative to kernel_start (1.2, 1.2)
+        # Pure cardinal directions - only change one coordinate at a time
+        up_pos = axes.c2p(1.2, 1.6)      # 0.4 units up (x=1.2, y=1.6)
+        down_pos = axes.c2p(1.2, 0.8)    # 0.4 units down (x=1.2, y=0.8)
+        right_pos = axes.c2p(1.6, 1.2)   # 0.4 units right (x=1.6, y=1.2)
+        left_pos = axes.c2p(0.8, 1.2)    # 0.4 units left (x=0.8, y=1.2)
 
+        # Up-down wiggle (up, down, up, down)
+        wiggle_positions_ud = [up_pos, down_pos, up_pos, down_pos]
+        for pos in wiggle_positions_ud:
+            self.play(
+                kernel_group.animate.move_to(pos),
+                run_time=0.35,
+                rate_func=rate_functions.ease_in_out_sine,
+            )
+
+        # Return to start position before right-left wiggle
         self.play(
-            kernel_group.animate.move_to(right_target),
-            run_time=4,
+            kernel_group.animate.move_to(kernel_start),
+            run_time=0.35,
             rate_func=rate_functions.ease_in_out_sine,
         )
-        self.play(
-            kernel_group.animate.move_to(up_target),
-            run_time=4,
-            rate_func=rate_functions.ease_in_out_sine,
-        )
+
+        # Right-left wiggle (right, left, right, left)
+        wiggle_positions_rl = [right_pos, left_pos, right_pos, left_pos]
+        for pos in wiggle_positions_rl:
+            self.play(
+                kernel_group.animate.move_to(pos),
+                run_time=0.35,
+                rate_func=rate_functions.ease_in_out_sine,
+            )
         wiggle_angles = [-0.4, 0.35, -0.25, 0.2, 0.0]
         for angle in wiggle_angles:
             self.play(
@@ -208,6 +241,19 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
                 run_time=0.35,
                 rate_func=rate_functions.ease_in_out_sine,
             )
+
+        # Final animation: Expand kernel box to infinity and morph equation limits
+        # Kernel box expands infinitely (representing infinite kernel support)
+        # First, fix the kernel axes in place (don't let them move with the expanding box)
+        kernel_axes_group.suspend_updating()  # Stop the always_redraw updater
+
+        self.play(
+            kernel_box.animate.scale(50),  # Scale up dramatically
+            Transform(equation_finite, equation_infinite),  # Morph limits to infinity
+            run_time=3.0,
+            rate_func=smooth
+        )
+
         self.wait(2)
 
     # ------------------------------------------------------------------
@@ -366,6 +412,20 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
             (np.abs(yy - cy) <= half_side_y) &
             (np.abs(xx - cx) <= half_side_x)
         )
+
+        # Soften edges within the support box to avoid hard cuts
+        # Normalized distance from center of support box (0 to 1 at edge)
+        # Use max(dx, dy) for square shape to match the box
+        dist_x = np.abs(xx - cx) / half_side_x
+        dist_y = np.abs(yy - cy) / half_side_y
+        max_dist = np.maximum(dist_x, dist_y)
+        
+        # Fade out smoothly in the last 40% of the support region
+        # 1.0 when dist < 0.6, linearly drops to 0.0 at dist = 1.0
+        edge_fade = np.clip((1.0 - max_dist) / 0.4, 0.0, 1.0)
+        
+        # Apply fade to the normalized field values
+        v *= edge_fade
 
         neg_rgb = np.array(ManimColor(IMAGE_NEG_HEX).to_rgb())  # cyan
         pos_rgb = np.array(ManimColor(IMAGE_POS_HEX).to_rgb())  # orange
