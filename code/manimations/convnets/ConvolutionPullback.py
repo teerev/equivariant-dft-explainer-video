@@ -40,23 +40,16 @@ class ConvolutionPullback(MovingCameraScene):
                 "include_tip": False,
             },
         )
-        axes_shift = LEFT * 1.5 + DOWN * 1.0
+        axes_shift = LEFT * 5.9 + DOWN * 3.5
         axes.shift(axes_shift)
         axes_labels = axes.get_axis_labels(MathTex("s"), MathTex("t"))
 
         # --- background image ---
-        # High resolution, rotated analytically frame-by-frame for perfect smoothness
-        # using always_redraw (re-evaluating function) instead of image rotation
-        theta_tracker = ValueTracker(0.0)
-        
-        def get_input_image():
-            return self.create_input_image(
-                resolution=1500, 
-                span=6.0,
-                rotation_angle=theta_tracker.get_value()
-            ).set_width(18.0).set_z_index(-2).move_to(axes.c2p(0, 0))
-            
-        input_image = always_redraw(get_input_image)
+        # Matched to ConvolutionContinuousVariableChange
+        input_image = self.create_input_image(resolution=360, span=6.5)
+        input_image.set_width(axes.width * 3.2)
+        input_image.set_z_index(-2)
+        input_image.move_to(self.camera.frame.get_center())
 
         # --- Coordinate System Rotation Tracker ---
         coord_alpha_tracker = ValueTracker(0.0)
@@ -119,10 +112,12 @@ class ConvolutionPullback(MovingCameraScene):
 
         # --- Kernel Axes (sigma, tau) moving with kernel ---
         def get_kernel_axes():
-            center = kernel_outline.get_center()
-            # Determine width/height based on current outline shape
-            w = kernel_outline.width
-            h = kernel_outline.height
+            # Center moves with the coordinate system (axes are rotated)
+            center = axes.c2p(1.6, 1.6)
+
+            # Determine width/height based on target width
+            w = target_kernel_width * 0.4 # Diameter of the outline we removed
+            h = target_kernel_width * 0.4
             
             k_axes = Axes(
                 x_range=[0, 1.5, 1],
@@ -150,15 +145,6 @@ class ConvolutionPullback(MovingCameraScene):
             g = VGroup(k_axes, sigma_tick, tau_tick, sigma_label, tau_label)
             
             # Rotate local axes to match global coordinate rotation
-            # Rotate about the kernel center (which is the center of this local system approx)
-            # Actually k_axes.move_to(center, aligned_edge=DL) puts origin at DL.
-            # We want to rotate the whole group around the mobject center? 
-            # No, the "up" direction of the axes should tilt.
-            # So rotating around the group's center or the axes origin?
-            # Usually we want the text to stay upright? 
-            # User said "rotate along with the (s,t) coordinate system".
-            # If (s,t) rotates, the whole paper rotates. Text usually rotates with the paper.
-            # So rotate the whole group.
             g.rotate(coord_alpha_tracker.get_value(), about_point=center)
             
             return g
@@ -177,10 +163,15 @@ class ConvolutionPullback(MovingCameraScene):
         angle_tracker = ValueTracker(0.0)
 
         def global_vector_group():
-            target = kernel_outline.get_center()
+            final_target = axes.c2p(1.6, 1.6)
+            # axes is rotating, so c2p gives the rotated position directly
+            
+            # Use the rotated origin as start point to be safe
+            origin = axes.c2p(0, 0)
+
             arrow = Arrow(
-                origin_point,
-                target,
+                origin_point, # Use the static origin point for start to avoid jitter? No, use dynamic
+                final_target,
                 buff=0,
                 color=vector_color,
                 stroke_width=2.5,
@@ -193,7 +184,7 @@ class ConvolutionPullback(MovingCameraScene):
             lbl_st = MathTex(r"(s,t)", color=vector_color).scale(0.5)
             lbl_p = MathTex(r"\mathbf{p}", color=vector_color).scale(0.5)
             
-            pos = target + UP * 0.2
+            pos = final_target + UP * 0.2
             lbl_st.move_to(pos).set_opacity(1 - alpha)
             lbl_p.move_to(pos).set_opacity(alpha)
             
@@ -206,11 +197,13 @@ class ConvolutionPullback(MovingCameraScene):
         # base_offset = np.array([kernel_box.width * -0.48, kernel_box.height * 0.25, 0.0]) * 0.8
         # Since kernel_box is now kernel_outline (Circle), width is same as original box width.
         base_offset = np.array(
-            [kernel_outline.width * -0.48, kernel_outline.height * 0.25, 0.0]
+            [kernel_box.width * 0.48, kernel_box.height * 0.25, 0.0]
         ) * 0.8
 
         def offset_vector_group():
-            base = kernel_outline.get_center()
+            # Base position is simply the rotated kernel center (given by axes)
+            base = axes.c2p(1.6, 1.6)
+
             angle = angle_tracker.get_value()
             coord_angle = coord_alpha_tracker.get_value()
             total_angle = angle + coord_angle
@@ -218,7 +211,7 @@ class ConvolutionPullback(MovingCameraScene):
 
             cos_a, sin_a = np.cos(total_angle), np.sin(total_angle)
             
-            # Rotate base offset
+            # Rotate base offset (relative vector)
             rotated_offset = np.array([
                 base_offset[0] * cos_a - base_offset[1] * sin_a,
                 base_offset[0] * sin_a + base_offset[1] * cos_a,
@@ -286,11 +279,23 @@ class ConvolutionPullback(MovingCameraScene):
         
         # Position in top-left corner with offset
         colorbar_group.to_corner(UL, buff=0.5).shift(DOWN * 1.0)
+
+        # --- Pullback Equations ---
+        pullback_left = MathTex(r"(\mathbf{Q}_\alpha \cdot X)(p)", color=WHITE).scale(0.8)
+        pullback_right = MathTex(r"X(\mathbf{Q}_{-\alpha}\,p)", color=WHITE).scale(0.8)
+
+        # Position equations in top center, above colorbar
+        equation_y = self.camera.frame.get_top()[1] - 0.8
+        pullback_left.move_to([0, equation_y, 0])
+        pullback_right.move_to([0, equation_y, 0])
+
+        pullback_left.set_opacity(0)  # Start invisible
+        pullback_right.set_opacity(0)  # Start invisible
         
         # --- Add everything to scene ---
         self.add(input_image)
         self.add(kernel_image)
-        self.add(kernel_outline)
+        # self.add(kernel_outline)
         
         # Group axes and labels for easier rotation later
         axes_group = VGroup(axes, axes_labels)
@@ -321,7 +326,7 @@ class ConvolutionPullback(MovingCameraScene):
         rotation_angle = 20 * DEGREES
         
         self.play(
-            theta_tracker.animate.set_value(rotation_angle),
+            Rotate(input_image, rotation_angle, about_point=axes.c2p(0, 0)),
             run_time=2.0,
             rate_func=smooth
         )
@@ -330,7 +335,7 @@ class ConvolutionPullback(MovingCameraScene):
         
         # --- Stage 2: Rotate back to start ---
         self.play(
-            theta_tracker.animate.set_value(0.0),
+            Rotate(input_image, -rotation_angle, about_point=axes.c2p(0, 0)),
             run_time=1.5,
             rate_func=smooth
         )
