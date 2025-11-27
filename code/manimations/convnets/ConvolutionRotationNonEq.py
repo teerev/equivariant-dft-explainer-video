@@ -12,7 +12,7 @@ class ConvolutionRotationNonEq(RightRegionScene):
         conv_image_path = "/Users/user/repos/equivariant-dft-explainer-video/notes/con_sample.png"
 
         # Boxed equation at top left: g f(X) = f(g X)
-        equation_text = MathTex(r"g f(X) = f(g X)")
+        equation_text = MathTex(r"g f(X) \not= f(g X)")
         equation_box = SurroundingRectangle(equation_text, color=WHITE, buff=0.2, stroke_width=2)
         equation_group = VGroup(equation_text, equation_box)
         # Roughly place it high up first
@@ -76,7 +76,7 @@ class ConvolutionRotationNonEq(RightRegionScene):
         fX_img = self.create_mnist_image(conv_image_path).move_to(right_plane.get_center())
         fX_label = MathTex("f(X)", font_size=32).next_to(fX_img, UP, buff=0.2)
         
-        f_arrow_1 = Arrow(left_plane.get_center(), right_plane.get_center(), **arrow_kwargs)
+        f_arrow_1 = Arrow(left_plane.get_right() + LEFT*0.75, right_plane.get_left() + RIGHT*0.75, **arrow_kwargs)
         f_text_1 = MathTex("f", font_size=28).next_to(f_arrow_1, UP, buff=0.1)
         
         self.play(
@@ -126,13 +126,17 @@ class ConvolutionRotationNonEq(RightRegionScene):
         
         # 3. Convolve: g X (Left) -> ? (Right)
         q_mark = MathTex("?", color=RED, font_size=96).move_to(right_plane.get_center())
+        fgX_label = MathTex(r"f(g X)", font_size=32)
+        fgX_label.move_to(right_plane.get_center())
+        fgX_label.match_y(gX_label)
         
-        f_arrow_2 = Arrow(left_plane.get_center(), right_plane.get_center(), **arrow_kwargs)
+        f_arrow_2 = Arrow(left_plane.get_right() + LEFT*0.75, right_plane.get_left() + RIGHT*0.75, **arrow_kwargs)
         f_text_2 = MathTex("f", font_size=28).next_to(f_arrow_2, UP, buff=0.1)
         
         self.play(
             Create(f_arrow_2), Write(f_text_2),
-            FadeIn(q_mark)
+            FadeIn(q_mark),
+            Write(fgX_label)
         )
         
         self.wait(2)
