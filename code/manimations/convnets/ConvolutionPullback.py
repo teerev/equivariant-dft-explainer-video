@@ -281,13 +281,32 @@ class ConvolutionPullback(MovingCameraScene):
         colorbar_group.to_corner(UL, buff=0.5).shift(DOWN * 1.0)
 
         # --- Pullback Equations ---
-        pullback_left = MathTex(r"(\mathbf{Q}_\alpha \cdot X)(p)", color=WHITE).scale(0.8)
-        pullback_right = MathTex(r"X(\mathbf{Q}_{-\alpha}\,p)", color=WHITE).scale(0.8)
+        # Equation from ConvolutionContinuousVariableChange (notes.tex 460-467)
+        equation_rot = MathTex(
+            r"(X * F)(p) = \int_{\mathbb{R}^2} X(p + p') F(p')\,\mathrm{d}p'",
+            color=WHITE
+        ).scale(0.55).to_edge(UP, buff=0.5)
+        self.add(equation_rot)
+
+        # --- Rotation Matrix ---
+        rotation_matrix = MathTex(
+            r"\mathbf{Q}_\alpha = \begin{bmatrix} \cos\alpha & -\sin\alpha \\ \sin\alpha & \cos\alpha \end{bmatrix}",
+            color=WHITE
+        ).scale(0.55)
+        rotation_matrix.to_corner(UL, buff=0.2).shift(RIGHT * 0.5)
+        self.add(rotation_matrix)
+
+        pullback_left = MathTex(r"(\mathbf{Q}_\alpha \cdot X)(p)", color=WHITE).scale(0.55)
+        pullback_right = MathTex(r"= X(\mathbf{Q}_{-\alpha}\,p)", color=WHITE).scale(0.55)
 
         # Position equations in top center, above colorbar
+        # Align pullback equations with rotation matrix or integral equation
         equation_y = self.camera.frame.get_top()[1] - 0.8
-        pullback_left.move_to([0, equation_y, 0])
-        pullback_right.move_to([0, equation_y, 0])
+        
+        # Move pullback equations down slightly to not overlap with rotation matrix if they are near
+        # Actually, requested: "Place this pullback equation just below the rotation matrix"
+        pullback_left.next_to(rotation_matrix, DOWN, buff=0.2).align_to(rotation_matrix, LEFT)
+        pullback_right.next_to(pullback_left, RIGHT, buff=0.1)
 
         pullback_left.set_opacity(0)  # Start invisible
         pullback_right.set_opacity(0)  # Start invisible
@@ -318,6 +337,7 @@ class ConvolutionPullback(MovingCameraScene):
         # then the "camera frame" stays fixed. So simple `self.add()` works perfectly!
         # The colorbar will stay upright because the camera doesn't rotate.
         self.add(colorbar_group)
+        self.add(pullback_left, pullback_right) # Add equations to scene but invisible
         
         self.wait(1)
 
@@ -327,6 +347,7 @@ class ConvolutionPullback(MovingCameraScene):
         
         self.play(
             Rotate(input_image, rotation_angle, about_point=axes.c2p(0, 0)),
+            pullback_left.animate.set_opacity(1.0),
             run_time=2.0,
             rate_func=smooth
         )
@@ -336,6 +357,7 @@ class ConvolutionPullback(MovingCameraScene):
         # --- Stage 2: Rotate back to start ---
         self.play(
             Rotate(input_image, -rotation_angle, about_point=axes.c2p(0, 0)),
+            # pullback_left.animate.set_opacity(0.0), # Do NOT hide LHS
             run_time=1.5,
             rate_func=smooth
         )
@@ -366,6 +388,7 @@ class ConvolutionPullback(MovingCameraScene):
 
         self.play(
             coord_alpha_tracker.animate.set_value(-rotation_angle),
+            pullback_right.animate.set_opacity(1.0),
             run_time=2.0,
             rate_func=smooth
         )
