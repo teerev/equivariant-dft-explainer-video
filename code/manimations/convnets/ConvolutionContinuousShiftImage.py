@@ -25,13 +25,13 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         equation_finite = MathTex(
             r"Y(s,t) = (X * F)(s,t) = \int_{-A/2}^{A/2}\!\!\int_{-B/2}^{B/2} X(s + \sigma,\; t + \tau) F(\sigma,\tau)\,\mathrm{d}\sigma\mathrm{d}\tau",
             color=WHITE
-        ).scale(0.7).to_edge(UP, buff=0.5)
+        ).scale(0.55).to_edge(UP, buff=0.5)
 
         # Create equation with infinite limits for morphing
         equation_infinite = MathTex(
             r"Y(s,t) = (X * F)(s,t) = \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty} X(s + \sigma,\; t + \tau) F(\sigma,\tau)\,\mathrm{d}\sigma\mathrm{d}\tau",
             color=WHITE
-        ).scale(0.7).to_edge(UP, buff=0.5)
+        ).scale(0.55).to_edge(UP, buff=0.5)
 
         axes = Axes(
             x_range=[-3, 3, 1],
@@ -44,7 +44,7 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
                 "include_tip": False,
             },
         )
-        axes_shift = LEFT * 5.2 + DOWN * 3.5
+        axes_shift = LEFT * 5.9 + DOWN * 3.5
         axes.shift(axes_shift)
         axes_labels = axes.get_axis_labels(MathTex("s"), MathTex("t"))
 
@@ -121,7 +121,7 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
             return VGroup(arrow, label)
 
         base_offset = np.array(
-            [kernel_box.width * -0.48, kernel_box.height * 0.25, 0.0]
+            [kernel_box.width * 0.48, kernel_box.height * 0.25, 0.0]
         ) * 0.8
         angle_tracker = ValueTracker(0.0)
 
@@ -191,17 +191,16 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         self.add(equation_finite)
 
         self.play(FadeIn(input_image, run_time=2.0))
-        self.play(FadeIn(kernel_group, run_time=1.2))
+        self.wait(1.0)
+        self.play(FadeIn(colorbar_group, run_time=0.8))
         self.play(Create(axes), Write(axes_labels))
-        
+        self.play(FadeIn(kernel_group, run_time=1.2))
         # Animate kernel axes appearing with the kernel
         self.play(Create(kernel_axes_group))
-        
         self.play(
             FadeIn(global_vector, run_time=0.8),
             FadeIn(offset_vector, run_time=0.8),
         )
-        self.play(FadeIn(colorbar_group, run_time=0.8))
 
         # Define wiggle positions relative to kernel_start (1.2, 1.2)
         # Pure cardinal directions - only change one coordinate at a time
@@ -241,6 +240,7 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
                 run_time=0.35,
                 rate_func=rate_functions.ease_in_out_sine,
             )
+        self.wait(1.0)
 
         # Final animation: Expand kernel box to infinity and morph equation limits
         # Kernel box expands infinitely (representing infinite kernel support)
@@ -250,7 +250,7 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         self.play(
             kernel_box.animate.scale(50),  # Scale up dramatically
             Transform(equation_finite, equation_infinite),  # Morph limits to infinity
-            run_time=3.0,
+            run_time=6.0,
             rate_func=smooth
         )
 
