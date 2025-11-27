@@ -471,20 +471,29 @@ And the continuous convolution without the integral limits:
   \begin{equation}
     (X * F)(p)
     \;=\;
-    \int_{\mathbb{R}^2} X(p + p')\,F(p')\,\mathrm{d}p'.
+    \int_{\mathbb{R}^2} X(p + p')\,F(p')\,\mathrm{d}p'
   \end{equation}
   
-  Let $R \in SO(2)$ be a rotation matrix and define its action on functions by
+    Let $Q_\alpha \in SO(2)$ be a rotation matrix by angle $\alpha$:
+  \begin{equation}
+    \label{eq:rotation-matrix-def}
+    Q_\alpha =
+    \begin{pmatrix}
+      \cos\alpha & -\sin\alpha \\
+      \sin\alpha & \cos\alpha
+    \end{pmatrix}
+  \end{equation}
+  Define its action on functions by
   \begin{equation}
     \label{eq:rotation-action}
-    (R X)(p) := X(R^{-1} p),
+    (Q_\alpha X)(p) := X(Q_\alpha^{-1} p)
   \end{equation}
-  so that $R X$ is just $X$ viewed in a rotated coordinate system. Rotation
+  so that $Q_\alpha X$ is just $X$ viewed in a rotated coordinate system. Rotation
   equivariance of the convolution would mean
   \begin{equation}
     \label{eq:rotation-equivariance}
-    R(X * F) \;=\; (R X) * F
-    \quad\text{for all }X\text{ and all }R\in SO(2).
+    Q_\alpha(X * F) \;=\; (Q_\alpha X) * F
+    \quad\text{for all }X\text{ and all }Q_\alpha\in SO(2)
   \end{equation}
   
   As in the translational case, we compare the two sides explicitly.
@@ -493,39 +502,37 @@ And the continuous convolution without the integral limits:
   Plug the rotated input into the convolution:
   \begin{align}
     \label{eq:rot-eq1}
-    ((R X) * F)(p)
-      &= \int_{\mathbb{R}^2} (R X)(p + p')\,F(p')\,\mathrm{d}p'
+    ((Q_\alpha X) * F)(p)
+      &= \int_{\mathbb{R}^2} (Q_\alpha X)(p + p')\,F(p')\,\mathrm{d}p'
           \\
     \label{eq:rot-eq2}
-      &= \int_{\mathbb{R}^2} X(R^{-1}(p + p'))\,F(p')\,\mathrm{d}p'
-         .
+      &= \int_{\mathbb{R}^2} X(Q_\alpha^{-1}(p + p'))\,F(p')\,\mathrm{d}p'
   \end{align}
   
   \textbf{Convolve first, then rotate.}
   Now rotate the output of the convolution:
   \begin{align}
     \label{eq:rot-eq3}
-    (R (X * F))(p)
-      &= (X * F)(R^{-1} p)
+    (Q_\alpha (X * F))(p)
+      &= (X * F)(Q_\alpha^{-1} p)
           \\
     \label{eq:rot-eq4}
-      &= \int_{\mathbb{R}^2} X(R^{-1} p + p')\,F(p')\,\mathrm{d}p'
-         .
+      &= \int_{\mathbb{R}^2} X(Q_\alpha^{-1} p + p')\,F(p')\,\mathrm{d}p'
   \end{align}
   
   To compare \eqref{eq:rot-eq2} and \eqref{eq:rot-eq4}, make a change of
-  variables $p' = R z$ in \eqref{eq:rot-eq2}. Since $R$ is orthogonal,
+  variables $p' = Q_\alpha z$ in \eqref{eq:rot-eq2}. Since $Q_\alpha$ is orthogonal,
   $\mathrm{d}p' = \mathrm{d}z$, and we obtain
   \begin{align}
     \label{eq:rot-eq5}
-    ((R X) * F)(p)
-      &= \int_{\mathbb{R}^2} X\bigl(R^{-1} p + z\bigr)\,F(R z)\,\mathrm{d}z.
+    ((Q_\alpha X) * F)(p)
+      &= \int_{\mathbb{R}^2} X\bigl(Q_\alpha^{-1} p + z\bigr)\,F(Q_\alpha z)\,\mathrm{d}z
   \end{align}
   By contrast, \eqref{eq:rot-eq4} can be written (renaming $p'$ to $z$) as
   \begin{align}
     \label{eq:rot-eq6}
-    (R (X * F))(p)
-      &= \int_{\mathbb{R}^2} X\bigl(R^{-1} p + z\bigr)\,F(z)\,\mathrm{d}z.
+    (Q_\alpha (X * F))(p)
+      &= \int_{\mathbb{R}^2} X\bigl(Q_\alpha^{-1} p + z\bigr)\,F(z)\,\mathrm{d}z
   \end{align}
   
   For rotation equivariance \eqref{eq:rotation-equivariance} to hold, we would
@@ -533,17 +540,16 @@ And the continuous convolution without the integral limits:
   all $p$. Since $X$ is arbitrary, the integrands must agree almost everywhere:
   \begin{equation}
     \label{eq:rot-condition}
-    F(z) = F(R z)
-    \quad\text{for all }z\in\mathbb{R}^2\text{ and all }R\in SO(2).
+    F(z) = F(Q_\alpha z)
+    \quad\text{for all }z\in\mathbb{R}^2\text{ and all }Q_\alpha\in SO(2)
   \end{equation}
   Thus $F$ must be invariant under every rotation, i.e.\ rotationally
   symmetric (radial, $F(z) = f(\|z\|)$). For a generic, anisotropic kernel
   (e.g.\ an oriented edge detector) this condition fails, so in general
   \begin{equation}
-    R(X * F) \;\neq\; (R X) * F.
+    Q_\alpha(X * F) \;\neq\; (Q_\alpha X) * F
   \end{equation}
-  Therefore ordinary convolution is \emph{not} rotationally equivariant unless
-  the kernel itself is rotationally symmetric.
+the kernel itself is rotationally symmetric.
   
 
 \section{Demo of translational equivariance and rotational non-equivariance}
