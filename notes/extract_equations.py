@@ -5,6 +5,7 @@ import shutil
 import tempfile
 import subprocess
 import argparse
+from multiprocessing import Pool, cpu_count
 from pathlib import Path
 
 OUTPUT_DIR = Path("./equations")
@@ -126,11 +127,14 @@ def build_tex_for_equation(eq_src: str, preamble: str) -> str:
 \end{{document}}
 """
 
-def run_pdflatex(tex_source: str, jobname: str):
+def run_pdflatex(tex_source: str, jobname: str, transparent: bool):
     """
     Compile LaTeX source via a temporary work directory so no .tex artifacts end
     up in OUTPUT_DIR. Only the final PDF is moved into place.
     """
+    subdir = OUTPUT_DIR / ("transparent" if transparent else "opaque")
+    subdir.mkdir(parents=True, exist_ok=True)
+
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
         tex_path = tmpdir_path / f"{jobname}.tex"
@@ -145,13 +149,34 @@ def run_pdflatex(tex_source: str, jobname: str):
         )
 
         pdf_path = tmpdir_path / f"{jobname}.pdf"
-        dest_pdf = OUTPUT_DIR / f"{jobname}.pdf"
+        dest_pdf = subdir / f"{jobname}.pdf"
         shutil.move(pdf_path, dest_pdf)
+
+
+def compile_task(task):
+    tex_source_eq = build_tex_for_equation(task["eq_src"], task["preamble"])
+    try:
+        run_pdflatex(
+            tex_source_eq,
+            jobname=task["jobname"],
+            transparent=task["transparent"],
+        )
+        return (task["jobname"], task["transparent"], True, "")
+    except subprocess.CalledProcessError as exc:
+        return (task["jobname"], task["transparent"], False, str(exc))
+
 
 def main():
     parser = argparse.ArgumentParser(description="Extract LaTeX equations to PDF.")
     parser.add_argument("input_tex", type=Path, help="Input .tex file")
-    parser.add_argument("--transparent", action="store_true", help="Output white-on-transparent PDF")
+    parser.add_argument("--opaque-only", action="store_true", help="Only output opaque background PDFs")
+    parser.add_argument("--transparent-only", action="store_true", help="Only output transparent PDFs")
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=cpu_count(),
+        help="Number of parallel workers to use (default: number of cores)",
+    )
     args = parser.parse_args()
 
     if not args.input_tex.exists():
@@ -161,33 +186,60 @@ def main():
     tex_source = read_file(args.input_tex)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
+    if args.opaque_only and args.transparent_only:
+        print("Error: --opaque-only and --transparent-only are mutually exclusive.")
+        sys.exit(1)
     equations = find_equations(tex_source)
     print(f"Found {len(equations)} equations.")
 
-    preamble = get_preamble(transparent=args.transparent)
+    modes = []
+    if not args.transparent_only:
+        modes.append((False, "opaque"))
+    if not args.opaque_only:
+        modes.append((True, "transparent"))
+    if not modes:
+        print("Nothing to do: no output mode selected.")
+        return
 
-    total = len(equations)
-    sys.stdout.write(f"\r[{'-'*40}] 0/{total}")
+    total = len(equations) * len(modes)
+    completed = 0
+    bar_len = 40
+    sys.stdout.write(f"\r[{'-' * bar_len}] 0/{total}")
     sys.stdout.flush()
+
+    tasks = []
+    preamble_map = {
+        transparent: get_preamble(transparent=transparent)
+        for transparent, _ in modes
+    }
 
     for i, eq in enumerate(equations, start=1):
         idx = f"{i:03d}"
         cleaned_eq = disable_numbering(eq)
-        tex_source_eq = build_tex_for_equation(cleaned_eq, preamble)
+        for transparent, _ in modes:
+            tasks.append(
+                {
+                    "jobname": f"eq_{idx}",
+                    "eq_src": cleaned_eq,
+                    "transparent": transparent,
+                    "preamble": preamble_map[transparent],
+                }
+            )
 
-        jobname = f"eq_{idx}"
-        try:
-            run_pdflatex(tex_source_eq, jobname)
-        except subprocess.CalledProcessError:
-            sys.stdout.write("\n")
-            print(f"Failed to compile eq_{idx}")
-        
-        bar_len = 40
-        filled_len = int(bar_len * i // total)
-        bar = '=' * filled_len + '-' * (bar_len - filled_len)
-        sys.stdout.write(f"\r[{bar}] {i}/{total}")
-        sys.stdout.flush()
+    workers = max(1, args.workers)
+    with Pool(processes=workers) as pool:
+        for jobname, transparent, success, error_msg in pool.imap_unordered(
+            compile_task, tasks
+        ):
+            if not success:
+                sys.stdout.write("\n")
+                mode_label = "transparent" if transparent else "opaque"
+                print(f"Failed to compile {mode_label} {jobname}: {error_msg}")
+            completed += 1
+            filled_len = int(bar_len * completed // total)
+            bar = "=" * filled_len + "-" * (bar_len - filled_len)
+            sys.stdout.write(f"\r[{bar}] {completed}/{total}")
+            sys.stdout.flush()
 
     print()
     print("Done. PDFs are in ./equations")
