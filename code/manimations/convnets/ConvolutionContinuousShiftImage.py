@@ -248,9 +248,9 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         kernel_axes_group.suspend_updating()  # Stop the always_redraw updater
 
         self.play(
-            kernel_box.animate.scale(50),  # Scale up dramatically
+            kernel_box.animate.scale(50.0 / 3.0),  # Scale up dramatically
             Transform(equation_finite, equation_infinite),  # Morph limits to infinity
-            run_time=6.0,
+            run_time=2.0,
             rate_func=smooth
         )
 
