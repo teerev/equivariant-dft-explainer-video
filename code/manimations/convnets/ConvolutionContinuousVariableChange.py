@@ -21,6 +21,21 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
     def construct(self):
         self.camera.background_color = BLACK
 
+        # --- Equations ---
+        # Initial equation: centred convolution
+        equation_centred = MathTex(
+            r"Y(s,t) = (X * F)(s,t) = \int_{-A/2}^{A/2}\!\!\int_{-B/2}^{B/2} X(s + \sigma,\; t + \tau) F(\sigma,\tau)\,\mathrm{d}\sigma\mathrm{d}\tau",
+            color=WHITE
+        ).scale(0.55).to_edge(UP, buff=0.5)
+
+        # Final equation: convolution notation with vector p
+        equation_rot = MathTex(
+            r"(X * F)(p) = \int_{\mathbb{R}^2} X(p + p') F(p')\,\mathrm{d}p'",
+            color=WHITE
+        ).scale(0.55).to_edge(UP, buff=0.5)
+
+        self.add(equation_centred)
+
         axes = Axes(
             x_range=[-3, 3, 1],
             y_range=[-3, 3, 1],
@@ -247,6 +262,7 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
             ReplacementTransform(kernel_image, kernel_circle),
             ReplacementTransform(kernel_box, circle_outline),
             vector_length_tracker.animate.set_value(0.8), # Shrink vector by 20%
+            ReplacementTransform(equation_centred, equation_rot), # Morph equation
             run_time=2.0
         )
         
@@ -259,17 +275,11 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
         kernel_axes_group.suspend_updating()
         self.play(
             kernel_box.animate.scale(50),
-            run_time=2.0,
-            rate_func=smooth
-        )
-        
-        self.wait(1)
-        
-        # --- Relabel Vectors (Smooth Transition) ---
-        self.play(
+            # --- Relabel Vectors (Smooth Transition) ---
             global_label_alpha.animate.set_value(1),
             offset_label_alpha.animate.set_value(1),
-            run_time=1.0
+            run_time=2.0,
+            rate_func=smooth
         )
         
         self.wait(2)
