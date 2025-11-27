@@ -32,15 +32,16 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
                 "include_tip": False,
             },
         )
-        axes_shift = LEFT * 1.5 + DOWN * 1.0
+        axes_shift = LEFT * 5.9 + DOWN * 3.5
         axes.shift(axes_shift)
         axes_labels = axes.get_axis_labels(MathTex("s"), MathTex("t"))
 
         # --- background image ---
+        # Matched to ConvolutionContinuousShiftImage
         input_image = self.create_input_image(resolution=360, span=6.5)
         input_image.set_width(axes.width * 3.2)
         input_image.set_z_index(-2)
-        input_image.move_to(axes.c2p(0, 0))
+        input_image.move_to(self.camera.frame_center) # Matched centering
 
         # --- kernel setup ---
         kernel_span = 3.0
@@ -49,8 +50,11 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
         kernel_image = self.create_kernel_image(resolution=240, span=kernel_span, shape="square")
         kernel_image.set_width(axes.width * 0.95)
         
-        # Position at the "final" location from the previous scene
-        final_pos = axes.c2p(1.6, 1.6)
+        # Position at the "final" location from the previous scene (ShiftImage)
+        # In ShiftImage, it ended at left_pos = axes.c2p(0.8, 1.2) after the wiggle loop.
+        # The user wants "equal to the ending positions in the ConvolutionContinuousShiftImage.py".
+        # ShiftImage's wiggle ends at left_pos (0.8, 1.2).
+        final_pos = axes.c2p(1.6, 1.6) 
         kernel_image.move_to(final_pos)
         kernel_image.set_z_index(-1)
 
@@ -136,7 +140,7 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
 
         # --- Offset vector (sigma, tau) -> p' ---
         base_offset = np.array(
-            [kernel_box.width * -0.48, kernel_box.height * 0.25, 0.0]
+            [kernel_box.width * 0.48, kernel_box.height * 0.25, 0.0]
         ) * 0.8
 
         def offset_vector_group():
@@ -190,8 +194,6 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
             color=[IMAGE_NEG_COLOR, BLACK, IMAGE_POS_COLOR],
             opacity=1.0,
         )
-        frame_ul = self.camera.frame_center + (LEFT * config.frame_width / 2) + (UP * config.frame_height / 2)
-        colorbar.move_to(frame_ul + RIGHT * 0.8 + DOWN * 1.5)
 
         neg_label = MathTex("-1", color=GREY_B).scale(0.5)
         neg_label.next_to(colorbar, LEFT, buff=0.1)
@@ -207,6 +209,9 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
 
         colorbar_group = VGroup(colorbar, neg_label, zero_label, pos_label)
         colorbar_group.set_z_index(10)
+
+        # Position in top-left corner with offset, matching ConvolutionPullback.py
+        colorbar_group.to_corner(UL, buff=0.5).shift(DOWN * 1.0)
 
         # --- Setup Scene ---
         self.add(input_image)
@@ -247,6 +252,16 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
         
         # Update references
         kernel_box = circle_outline 
+        
+        self.wait(1)
+
+        # Send the circular kernel boundary off to "infinity" while keeping axes fixed
+        kernel_axes_group.suspend_updating()
+        self.play(
+            kernel_box.animate.scale(50),
+            run_time=2.0,
+            rate_func=smooth
+        )
         
         self.wait(1)
         
