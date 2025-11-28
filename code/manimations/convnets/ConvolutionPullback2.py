@@ -45,7 +45,7 @@ class ConvolutionPullback2(MovingCameraScene):
                 "include_ticks": False, 
             },
         )
-        axes_shift = LEFT * 4.0 + DOWN * 1.0
+        axes_shift = LEFT * 4.5 + UP * 1.5
         axes.shift(axes_shift)
         axes_labels = axes.get_axis_labels(MathTex("s", color=WHITE), MathTex("t", color=WHITE)) 
         
@@ -60,6 +60,15 @@ class ConvolutionPullback2(MovingCameraScene):
         separation_tracker = ValueTracker(0.0) # For pullback split
         rotated_axis_label_opacity_tracker = ValueTracker(0.0)
         right_panel_rotation_tracker = ValueTracker(0.0)
+        
+        # --- Positioning Configuration ---
+        separation_vector = RIGHT * 4.0
+        
+        def get_right_origin():
+            # Use value from separation_tracker (0 to 1) to interpolate
+            # This allows controlling both distance and direction with one vector
+            # separation_tracker will now go from 0 to 1
+            return axes.c2p(0,0) + separation_vector * separation_tracker.get_value()
 
         # --- Kernel Setup ---
         kernel_span = 3.0
@@ -113,7 +122,7 @@ class ConvolutionPullback2(MovingCameraScene):
             origin = axes.c2p(0,0)
             rel_pos = initial_kernel_center - origin
             
-            right_origin = origin + RIGHT * separation_tracker.get_value()
+            right_origin = get_right_origin()
             
             # Apply panel rotation around right_origin
             panel_angle = right_panel_rotation_tracker.get_value()
@@ -158,7 +167,7 @@ class ConvolutionPullback2(MovingCameraScene):
         
         def global_vector_group():
             # Right Panel Origin
-            origin = axes.c2p(0, 0) + RIGHT * separation_tracker.get_value()
+            origin = get_right_origin()
             
             vec = initial_kernel_center - axes.c2p(0,0) # Fixed relative vector
             
@@ -201,7 +210,7 @@ class ConvolutionPullback2(MovingCameraScene):
 
         def offset_vector_group():
             # Relative to global_vector tip in Right Panel
-            origin = axes.c2p(0, 0) + RIGHT * separation_tracker.get_value()
+            origin = get_right_origin()
             vec = initial_kernel_center - axes.c2p(0,0)
             
             # Apply panel rotation
@@ -318,7 +327,7 @@ class ConvolutionPullback2(MovingCameraScene):
             sep = separation_tracker.get_value()
             
             # Center moves with separation
-            center = axes.c2p(0,0) + RIGHT * sep
+            center = get_right_origin()
             
             new_axes = Axes(
                 x_range=[-0.5, 3, 1],
@@ -363,7 +372,7 @@ class ConvolutionPullback2(MovingCameraScene):
             if abs(angle) < 0.01 or sep > 0.1:
                 return VGroup()
 
-            origin = axes.c2p(0,0) + RIGHT * sep
+            origin = get_right_origin()
             
             # Reference T axis (vertical)
             t_point = origin + UP * 1.2
@@ -451,10 +460,10 @@ class ConvolutionPullback2(MovingCameraScene):
         
         # Animation 3: Separation (Pullback)
         # Move Right Panel components to the right
-        # separation_tracker -> 5.0 ?
+        # separation_tracker -> 1.0 (full separation vector)
         
         self.play(
-            separation_tracker.animate.set_value(7.5),
+            separation_tracker.animate.set_value(1.0),
             FadeOut(angle_arc),
             FadeOut(angle_label),
             run_time=2.0
