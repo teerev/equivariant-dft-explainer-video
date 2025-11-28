@@ -219,10 +219,7 @@ def make_panel(index: int) -> Mobject:
         origin = center
 
         p_vec = arrow_p(origin, blob.get_center(), label="p")
-        # label (X*F)(p) near the blob
-        value_label = MathTex(r"(X * F)(p)", color=TEXT_COLOR).scale(0.7)
-        value_label.next_to(blob, UP, buff=0.1)
-        g.add(axes, blob, p_vec, value_label)
+        g.add(axes, blob, p_vec)
 
     elif index == 6:
         # --- Panel 6: original coordinates, blob at Q_α p ---
@@ -232,13 +229,11 @@ def make_panel(index: int) -> Mobject:
         # Here we rotate the original p_offset by ALPHA
         rot_offset = rotate_vector(p_initial_offset, ALPHA)
         blob = make_kernel_blob(center, offset_vector=rot_offset)
+        blob.rotate(ALPHA, about_point=blob.get_center())
         origin = center
 
         p_vec = arrow_p(origin, blob.get_center(), label=r"Q_\alpha p")
-        value_label = MathTex(r"(X * F)(Q_\alpha^{-1} p)",
-                          color=TEXT_COLOR).scale(0.7)
-        value_label.next_to(blob, UP, buff=0.1)
-        g.add(axes, blob, p_vec, value_label)
+        g.add(axes, blob, p_vec)
 
     elif index == 7:
         # --- Panel 7: rotated coordinates, blob at p in Q_{-α} frame ---
@@ -251,10 +246,7 @@ def make_panel(index: int) -> Mobject:
         origin = center
 
         p_vec = arrow_p(origin, blob.get_center(), label="p")
-        value_label = MathTex(r"((Q_\alpha X) * F)(p)",
-                          color=TEXT_COLOR).scale(0.7)
-        value_label.next_to(blob, UP, buff=0.1)
-        g.add(axes, blob, p_vec, value_label)
+        g.add(axes, blob, p_vec)
 
     elif index == 8:
         # --- Panel 8: rotated coordinates, highlight p' mismatch ---
@@ -272,10 +264,8 @@ def make_panel(index: int) -> Mobject:
                               direction=rotate_vector(UP, -ALPHA),
                               label=r"p''",
                               color=PPRIME_COLOR)
-        info = MathTex(r"F(p') \neq F(Q_\alpha p')", color=TEXT_COLOR).scale(0.7)
-        info.next_to(blob, DOWN, buff=0.1)
 
-        g.add(axes, blob, p_vec, pprime, info)
+        g.add(axes, blob, p_vec, pprime)
 
     else:
         # Fallback placeholder
