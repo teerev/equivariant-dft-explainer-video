@@ -15,7 +15,7 @@ ZERO_RGB = np.array([0.0, 0.0, 0.0])
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-class ConvolutionPullback2(MovingCameraScene):
+class ConvolutionPullback2a(MovingCameraScene):
     def setup(self):
         super().setup()
         # RightRegionScene logic adapted for MovingCameraScene
@@ -55,16 +55,16 @@ class ConvolutionPullback2(MovingCameraScene):
         # --- Trackers ---
         scale_tracker = ValueTracker(0.7) # Global scale factor for everything
         coord_alpha_tracker = ValueTracker(0.0)
-        vector_rotation_tracker = ValueTracker(0.0)
-        axes_rotation_tracker = ValueTracker(0.0)
+        vector_rotation_tracker = ValueTracker(20 * DEGREES)
+        axes_rotation_tracker = ValueTracker(20 * DEGREES)
         global_label_alpha = ValueTracker(1.0)
         offset_label_alpha = ValueTracker(1.0)
         vector_length_tracker = ValueTracker(1.5) 
         angle_tracker = ValueTracker(0.0)
-        offset_label_opacity_tracker = ValueTracker(0.0)
-        separation_tracker = ValueTracker(0.0) # For pullback split
-        rotated_axis_label_opacity_tracker = ValueTracker(0.0)
-        right_panel_rotation_tracker = ValueTracker(0.0)
+        offset_label_opacity_tracker = ValueTracker(1.0)
+        separation_tracker = ValueTracker(1.0) # For pullback split
+        rotated_axis_label_opacity_tracker = ValueTracker(1.0)
+        right_panel_rotation_tracker = ValueTracker(20 * DEGREES)
         
         # --- Positioning Configuration ---
         separation_vector = RIGHT * 3.0
@@ -121,6 +121,7 @@ class ConvolutionPullback2(MovingCameraScene):
              print(f"Warning: {s_png_path} does not exist.")
 
         s_image = ImageMobject(str(s_png_path))
+        # Increased width to 1.2 * 0.7 (was 0.8 * 0.7)
         s_image.set_width(1.2 * 0.7)
         
         # Fixed S image (Right Panel)
@@ -431,15 +432,6 @@ class ConvolutionPullback2(MovingCameraScene):
         self.add(rotated_axes) # Initially at sep=0, angle=0 -> on top of axes
         self.add(neg_angle_indicator)
         
-        self.wait(2)
-        
-        # Animation 1: Rotation
-        self.play(
-            vector_rotation_tracker.animate.set_value(20 * DEGREES),
-            run_time=2.0
-        )
-        
-        # Animation 2: Labels appear
         # Left panel labels (Angle, Qp, Qp')
         # We need to recreate these as always_redraw or simple objects?
         # They are static relative to Left Panel (which doesn't move).
@@ -454,53 +446,48 @@ class ConvolutionPullback2(MovingCameraScene):
         
         line_p = Line(origin, initial_kernel_center)
         line_q = Line(origin, qp_point)
-        angle_arc = Angle(line_p, line_q, radius=0.6 * 0.7, color=WHITE)
-        angle_label = MathTex(r"\alpha", color=WHITE).scale(0.6 * 0.7)
-        angle_label.move_to(Angle(line_p, line_q, radius=0.9 * 0.7).point_from_proportion(0.5))
+        # angle_arc is FadeOut'd in original scene, so we don't add it here
+        # angle_label is FadeOut'd in original scene, so we don't add it here
+        
         label_qp = MathTex(r"\mathbf{Q}_\alpha \mathbf{p}", color=WHITE).scale(0.6 * 0.7 * 1.5)
         label_qp.next_to(qp_point, UP, buff=0.1 * 0.7)
+        self.add(label_qp)
+        
+        self.wait(1)
+
+        # --- Morphing to Convolved Image ---
+        s_conv_path = project_root / "notes" / "s_conv.png"
+        
+        # Snapshot current state and replace always_redraw with static mobjects
+        current_s_static = s_image_static_group()
+        current_s_dynamic = get_s_image_pos()
+        
+        self.remove(s_image_static, s_image_dynamic)
+        self.add(current_s_static, current_s_dynamic)
+        
+        # Create targets using s_conv.png
+        # 1. Static S (Right Panel)
+        target_s_static = ImageMobject(str(s_conv_path))
+        target_s_static.match_width(current_s_static)
+        target_s_static.move_to(current_s_static.get_center())
+        # Apply the same rotation as the source
+        target_s_static.rotate(right_panel_rotation_tracker.get_value())
+        target_s_static.set_z_index(current_s_static.z_index)
+        
+        # 2. Dynamic S (Left Panel)
+        target_s_dynamic = ImageMobject(str(s_conv_path))
+        target_s_dynamic.match_width(current_s_dynamic)
+        target_s_dynamic.move_to(current_s_dynamic.get_center())
+        # Apply the same rotation as the source
+        target_s_dynamic.rotate(vector_rotation_tracker.get_value())
+        target_s_dynamic.set_z_index(current_s_dynamic.z_index)
         
         self.play(
-            Create(angle_arc),
-            Write(angle_label),
-            Write(label_qp),
-            offset_label_opacity_tracker.animate.set_value(1.0),
+            Transform(current_s_static, target_s_static),
+            Transform(current_s_dynamic, target_s_dynamic),
             run_time=1.5
         )
-        
-        # Animation 3: Axes Rotation
-        self.play(
-            axes_rotation_tracker.animate.set_value(20 * DEGREES),
-            run_time=2.0
-        )
-        
-        self.play(
-            rotated_axis_label_opacity_tracker.animate.set_value(1.0),
-            run_time=1.0
-        )
-        
         self.wait(1)
-        
-        # Animation 3: Separation (Pullback)
-        # Move Right Panel components to the right
-        # separation_tracker -> 1.0 (full separation vector)
-        
-        self.play(
-            separation_tracker.animate.set_value(1.0),
-            FadeOut(angle_arc),
-            FadeOut(angle_label),
-            run_time=2.0
-        )
-        
-        self.wait(1)
-        
-        # Animation 4: Right Panel Rotation
-        self.play(
-            right_panel_rotation_tracker.animate.set_value(20 * DEGREES),
-            run_time=2.0
-        )
-        
-        self.wait(2)
 
     def create_kernel_image(self, resolution=220, span=3.0, cutoff=None, shape="square", rotation_angle=0.0):
         np.random.seed(10)
