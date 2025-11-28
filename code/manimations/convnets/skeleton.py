@@ -38,7 +38,7 @@ def get_panel_center(row: int, col: int) -> np.ndarray:
     
     # Shift panels to the left, proportionally to their column index
     # (col=0 moves 1 unit left, col=3 moves 4 units left)
-    shift_unit = 0.05 * fw
+    shift_unit = 0.03 * fw
     x -= (col + 1) * shift_unit
 
     y =  fh / 2 - (row + 0.5) * cell_h + 0.3
@@ -54,8 +54,8 @@ def make_axes(center: np.ndarray,
     Draw a simple pair of axes centred at `center`.
     Optionally rotate them and prefix the labels with, e.g., Q_{-α}.
     """
-    x_axis = Arrow(ORIGIN, RIGHT * 1.8, buff=0, stroke_width=3, tip_length=0.15)
-    y_axis = Arrow(ORIGIN, UP * 1.8, buff=0, stroke_width=3, tip_length=0.15)
+    x_axis = Arrow(ORIGIN, RIGHT * 2.3, buff=0, stroke_width=3, tip_length=0.15)
+    y_axis = Arrow(ORIGIN, UP * 2.3, buff=0, stroke_width=3, tip_length=0.15)
     axes_lines = VGroup(x_axis, y_axis)
 
     if rotate_angle != 0:
@@ -81,12 +81,12 @@ def make_axes(center: np.ndarray,
     return VGroup(axes_lines, x_label, y_label)
 
 
-def make_S(center: np.ndarray, offset_vector=RIGHT * 1.5 + DOWN * 0.3) -> Mobject:
+def make_S(center: np.ndarray, offset_vector=RIGHT * 2.0 + UP * 0.6) -> Mobject:
     """
     A blue 'S' at a fixed offset within the panel.
-    Replace with ImageMobject if you want the real glyph.
     """
-    s_obj = Text("S", color=S_COLOR).scale(2.5)
+    s_obj = ImageMobject("/Users/user/repos/equivariant-dft-explainer-video/notes/s.png")
+    s_obj.scale_to_fit_height(0.9)
     s_obj.move_to(center + offset_vector)
     return s_obj
 
@@ -95,16 +95,15 @@ def make_kernel_blob(center: np.ndarray,
                      offset_vector=RIGHT * 1.5 + DOWN * 0.3) -> Mobject:
     """
     Placeholder "kernel response" blob.
-    You can replace this with ImageMobject("your_kernel.png").
     """
-    blob = Circle(radius=0.6, stroke_width=0, fill_color=KERNEL_COLOR,
-                  fill_opacity=0.25)
+    blob = ImageMobject("/Users/user/repos/equivariant-dft-explainer-video/notes/s_conv.png")
+    blob.scale_to_fit_height(1.5)
     blob.move_to(center + offset_vector)
     return blob
 
 
 def arrow_p(origin: np.ndarray, target: np.ndarray, label="p") -> VGroup:
-    arr = Arrow(origin, target, buff=0.1, color=P_COLOR, stroke_width=3, tip_length=0.15)
+    arr = Arrow(origin, target, buff=0, color=P_COLOR, stroke_width=3, tip_length=0.15)
     lab = MathTex(label, color=TEXT_COLOR).scale(0.8)
     lab.next_to(arr.get_end(), UR, buff=0.1)
     return VGroup(arr, lab)
@@ -116,7 +115,7 @@ def arrow_pprime(base_point: np.ndarray,
                  color=PPRIME_COLOR) -> VGroup:
     arr = Arrow(base_point,
                 base_point + direction * 1.0,
-                buff=0.1,
+                buff=0,
                 color=color,
                 stroke_width=3,
                 tip_length=0.15)
@@ -145,8 +144,8 @@ def make_panel(index: int) -> Mobject:
     # Shift entire figure left and down by removed axis lengths (1.0 each)
     center += LEFT * 1.0 + DOWN * 1.0
 
-    # We'll assemble each panel as a VGroup to keep things tidy.
-    g = VGroup()
+    # We'll assemble each panel as a Group (not VGroup, because we have ImageMobjects)
+    g = Group()
 
     # Panel-specific content
     
@@ -154,7 +153,7 @@ def make_panel(index: int) -> Mobject:
     # This controls the initial angle of p with the x axis
     # Default is RIGHT * 1.5 + DOWN * 0.3
     # You can change this to control p's initial angle/length
-    p_initial_offset = RIGHT * 1.0 + UP * 0.3
+    p_initial_offset = RIGHT * 2.0 + UP * 0.6
     
     if index == 1:
         # --- Panel 1: original coordinates, image X, point p ---
@@ -163,16 +162,26 @@ def make_panel(index: int) -> Mobject:
         origin = center  # intersection of axes
 
         p_vec = arrow_p(origin, s_obj.get_center(), label="p")
-        g.add(axes, s_obj, p_vec)
+        pprime = arrow_pprime(s_obj.get_center(), direction=UP, label=r"p'")
+        g.add(axes, s_obj, p_vec, pprime)
 
     elif index == 2:
         # --- Panel 2: same as 1, plus p' at S ---
+        # Rotate p and p' rigidly by ALPHA
         axes = make_axes(center, s_label="s", t_label="t")
-        s_obj = make_S(center, offset_vector=p_initial_offset)
+        
+        rot_offset = rotate_vector(p_initial_offset, ALPHA)
+        # Create S at the rotated position
+        s_obj = make_S(center, offset_vector=rot_offset)
+        # Rotate S about its own center by -ALPHA
+        s_obj.rotate(ALPHA, about_point=s_obj.get_center())
+
         origin = center
 
-        p_vec = arrow_p(origin, s_obj.get_center(), label="p")
-        pprime = arrow_pprime(s_obj.get_center(), direction=UP, label=r"p'")
+        p_vec = arrow_p(origin, s_obj.get_center(), label=r"Q_\alpha p")
+        
+        rot_direction = rotate_vector(UP, ALPHA)
+        pprime = arrow_pprime(s_obj.get_center(), direction=rot_direction, label=r"Q_\alpha p'")
         g.add(axes, s_obj, p_vec, pprime)
 
     elif index == 3:
@@ -260,7 +269,7 @@ def make_panel(index: int) -> Mobject:
         p_vec = arrow_p(origin, blob.get_center(), label="p")
         # show a "different" p' (e.g. slightly rotated) to emphasise mismatch
         pprime = arrow_pprime(blob.get_center(),
-                              direction=rotate_vector(UP, ALPHA/2),
+                              direction=rotate_vector(UP, -ALPHA),
                               label=r"p''",
                               color=PPRIME_COLOR)
         info = MathTex(r"F(p') \neq F(Q_\alpha p')", color=TEXT_COLOR).scale(0.7)
