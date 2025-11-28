@@ -28,50 +28,52 @@ class ConvolutionPullback2(MovingCameraScene):
         self.camera.background_color = BLACK
 
         # --- Global Axis ---
+        # Range modified to cut off negative ranges
+        # Keep small negative amount: [-0.5, 3, 1]
         axes = Axes(
-            x_range=[-3, 3, 1],
-            y_range=[-3, 3, 1],
-            x_length=6,
-            y_length=6,
+            x_range=[-0.5, 3, 1],
+            y_range=[-0.5, 3, 1],
+            x_length=3.5, 
+            y_length=3.5, 
             axis_config={
-                "color": GREY_B,
+                "color": WHITE, 
                 "stroke_width": 2,
-                "include_tip": False,
+                "include_tip": True, 
+                "tip_length": 0.15,
+                "tip_width": 0.1,
+                "tip_height": 0.1,
+                "include_ticks": False, 
             },
         )
-        axes_shift = LEFT * 5.9 + DOWN * 3.5
+        axes_shift = LEFT * 4.0 + DOWN * 1.0
         axes.shift(axes_shift)
-        axes_labels = axes.get_axis_labels(MathTex("s"), MathTex("t"))
+        axes_labels = axes.get_axis_labels(MathTex("s", color=WHITE), MathTex("t", color=WHITE)) 
         
-        # --- Coordinate System Rotation Tracker ---
+        # --- Trackers ---
         coord_alpha_tracker = ValueTracker(0.0)
+        rotation_alpha_tracker = ValueTracker(0.0)
+        global_label_alpha = ValueTracker(1.0)
+        offset_label_alpha = ValueTracker(1.0)
+        vector_length_tracker = ValueTracker(1.5) 
+        angle_tracker = ValueTracker(0.0)
+        offset_label_opacity_tracker = ValueTracker(0.0)
+        separation_tracker = ValueTracker(0.0) # For pullback split
+        rotated_axis_label_opacity_tracker = ValueTracker(0.0)
+        right_panel_rotation_tracker = ValueTracker(0.0)
 
         # --- Kernel Setup ---
         kernel_span = 3.0
-        # Changing initial position to adjust angle of p.
-        # Originally (1.6, 1.6), which is 45 degrees.
-        # Target angle is 20 degrees with s-axis.
-        # Radius was sqrt(1.6^2 + 1.6^2) approx 2.26
-        # New coordinates: (r * cos(20deg), r * sin(20deg))
         radius = np.sqrt(1.6**2 + 1.6**2)
-        # Actually, user asked to increase length of p by 180% (1.8x).
-        # So new radius = 2.26 * 1.8 = 4.07
-        # Wait, "180% as long" usually means 1.8 * original_length.
-        # "Increase the length ... so it's 180% as long" -> factor 1.8.
-        
         new_radius = radius * 1.4
         target_angle = 15 * DEGREES
-        
         new_x = new_radius * np.cos(target_angle)
         new_y = new_radius * np.sin(target_angle)
         
         initial_kernel_center = axes.c2p(new_x, new_y)
-        target_kernel_width = axes.width * 0.95
+        target_kernel_width = 5.7
 
         def get_kernel_image():
             angle = coord_alpha_tracker.get_value()
-            
-            # 1. Create kernel image with internal rotation (to align with local axes)
             img = self.create_kernel_image(
                 resolution=400, 
                 span=kernel_span, 
@@ -80,21 +82,17 @@ class ConvolutionPullback2(MovingCameraScene):
             )
             img.set_width(target_kernel_width)
             
-            # 2. Calculate position
             origin = axes.c2p(0, 0)
             vec = initial_kernel_center - origin
-            
-            # Rotate vector by angle
             c, s = np.cos(angle), np.sin(angle)
             rx = vec[0] * c - vec[1] * s
             ry = vec[0] * s + vec[1] * c
             rotated_vec = np.array([rx, ry, 0])
-            
             new_pos = origin + rotated_vec
             
             img.move_to(new_pos)
             img.set_z_index(-1)
-            img.set_opacity(0) # Hide kernel image but keep it
+            img.set_opacity(0) 
             return img
 
         kernel_image = always_redraw(get_kernel_image)
@@ -102,63 +100,84 @@ class ConvolutionPullback2(MovingCameraScene):
         # --- Background Image (s.png) ---
         project_root = Path(__file__).parent.parent.parent.parent
         s_png_path = project_root / "notes" / "s.png"
-        
         if not s_png_path.exists():
              print(f"Warning: {s_png_path} does not exist.")
 
         s_image = ImageMobject(str(s_png_path))
         s_image.set_width(0.8)
         
+        # Fixed S image (Right Panel)
+        def s_image_static_group():
+            # Moves with separation
+            # Initial position relative to axes origin
+            origin = axes.c2p(0,0)
+            rel_pos = initial_kernel_center - origin
+            
+            right_origin = origin + RIGHT * separation_tracker.get_value()
+            
+            # Apply panel rotation around right_origin
+            panel_angle = right_panel_rotation_tracker.get_value()
+            
+            c, s = np.cos(panel_angle), np.sin(panel_angle)
+            rx = rel_pos[0] * c - rel_pos[1] * s
+            ry = rel_pos[0] * s + rel_pos[1] * c
+            rotated_rel_pos = np.array([rx, ry, 0])
+            
+            pos = right_origin + rotated_rel_pos
+            
+            img = s_image.copy()
+            img.move_to(pos)
+            img.rotate(panel_angle)
+            img.set_z_index(-4)
+            return img
+
+        s_image_static = always_redraw(s_image_static_group)
+        
+        # Dynamic S image (Left Panel)
         def get_s_image_pos():
-             # Same logic as kernel position
-             angle = coord_alpha_tracker.get_value()
+             angle = rotation_alpha_tracker.get_value()
              origin = axes.c2p(0, 0)
              vec = initial_kernel_center - origin
-             
              c, s = np.cos(angle), np.sin(angle)
              rx = vec[0] * c - vec[1] * s
              ry = vec[0] * s + vec[1] * c
              rotated_vec = np.array([rx, ry, 0])
-             
              new_pos = origin + rotated_vec
              
              s_img = s_image.copy()
              s_img.move_to(new_pos)
-             s_img.set_z_index(-3) # Behind everything
+             s_img.rotate(angle)
+             s_img.set_z_index(-3) 
              return s_img
 
         s_image_dynamic = always_redraw(get_s_image_pos)
 
 
-        # --- Global Vector (s,t) -> p ---
-        origin_point = axes.c2p(0, 0)
+        # --- Global Vector p (Right Panel) ---
         vector_color = GREY_A
         
-        # Trackers
-        global_label_alpha = ValueTracker(1.0)
-        offset_label_alpha = ValueTracker(1.0)
-        vector_length_tracker = ValueTracker(1.5) 
-        angle_tracker = ValueTracker(0.0)
-
         def global_vector_group():
-            # final_target depends on the rotated kernel center
-            angle = coord_alpha_tracker.get_value()
-            origin = axes.c2p(0, 0)
-            vec = initial_kernel_center - origin
+            # Right Panel Origin
+            origin = axes.c2p(0, 0) + RIGHT * separation_tracker.get_value()
             
-            c, s = np.cos(angle), np.sin(angle)
+            vec = initial_kernel_center - axes.c2p(0,0) # Fixed relative vector
+            
+            # Apply panel rotation
+            panel_angle = right_panel_rotation_tracker.get_value()
+            c, s = np.cos(panel_angle), np.sin(panel_angle)
             rx = vec[0] * c - vec[1] * s
             ry = vec[0] * s + vec[1] * c
             rotated_vec = np.array([rx, ry, 0])
+            
             final_target = origin + rotated_vec
             
             arrow = Arrow(
-                origin_point, 
+                origin, 
                 final_target,
                 buff=0,
                 color=vector_color,
                 stroke_width=2.5,
-                tip_length=0.08,
+                tip_length=0.08, 
                 max_tip_length_to_length_ratio=1.0,
             ).set_z_index(2)
             
@@ -175,45 +194,36 @@ class ConvolutionPullback2(MovingCameraScene):
 
         global_vector = always_redraw(global_vector_group)
 
-        # --- Offset vector (sigma, tau) -> p' ---
+        # --- Offset vector p' (Right Panel) ---
         kw = target_kernel_width * 0.4
         kh = target_kernel_width * 0.4
-        
-        # decrease the length of vector p' so it's half its current length
-        # Previous length factor was implicitly around 0.45 * height.
-        # Now multiply by 0.5
-        base_offset = np.array(
-            [0.0, kh * 0.45 * 0.5, 0.0]
-        )
+        base_offset = np.array([0.0, kh * 0.45 * 0.5, 0.0])
 
         def offset_vector_group():
-            # Base position is simply the rotated kernel center
-            angle = coord_alpha_tracker.get_value()
-            origin = axes.c2p(0, 0)
-            vec = initial_kernel_center - origin
-            c, s = np.cos(angle), np.sin(angle)
+            # Relative to global_vector tip in Right Panel
+            origin = axes.c2p(0, 0) + RIGHT * separation_tracker.get_value()
+            vec = initial_kernel_center - axes.c2p(0,0)
+            
+            # Apply panel rotation
+            panel_angle = right_panel_rotation_tracker.get_value()
+            c, s = np.cos(panel_angle), np.sin(panel_angle)
+            
+            # Rotated p
             rx = vec[0] * c - vec[1] * s
             ry = vec[0] * s + vec[1] * c
-            base = origin + np.array([rx, ry, 0])
-
-            angle_val = angle_tracker.get_value()
-            coord_angle = coord_alpha_tracker.get_value()
-            total_angle = angle_val + coord_angle
-            scale = vector_length_tracker.get_value()
-
-            cos_a, sin_a = np.cos(total_angle), np.sin(total_angle)
+            rotated_vec = np.array([rx, ry, 0])
             
-            rotated_offset = np.array([
-                base_offset[0] * cos_a - base_offset[1] * sin_a,
-                base_offset[0] * sin_a + base_offset[1] * cos_a,
-                base_offset[2]
-            ])
-            
-            offset = rotated_offset * scale
+            base = origin + rotated_vec
+
+            # Rotated offset vector (p')
+            offset = base_offset * vector_length_tracker.get_value()
+            rx_off = offset[0] * c - offset[1] * s
+            ry_off = offset[0] * s + offset[1] * c
+            rotated_offset = np.array([rx_off, ry_off, 0])
             
             arrow = Arrow(
                 base,
-                base + offset,
+                base + rotated_offset,
                 buff=0,
                 color=SCARLET,
                 stroke_width=2.2,
@@ -226,7 +236,10 @@ class ConvolutionPullback2(MovingCameraScene):
             lbl_st = MathTex(r"(\sigma,\tau)", color=SCARLET).scale(0.5)
             lbl_p = MathTex(r"\mathbf{p}'", color=SCARLET).scale(0.5)
             
-            pos = base + offset + UP * 0.2
+            pos = base + rotated_offset + UP * 0.2
+            # Rotate label pos offset if needed? Usually UP is fine but maybe better aligned
+            # Keep it simple: just place above tip
+            
             lbl_st.move_to(pos).set_opacity(1 - alpha)
             lbl_p.move_to(pos).set_opacity(alpha)
             
@@ -234,12 +247,226 @@ class ConvolutionPullback2(MovingCameraScene):
 
         offset_vector = always_redraw(offset_vector_group)
 
+        # --- Rotated Vector Q_alpha p (Left Panel) ---
+        def rotated_vector_group():
+            # Left Panel Origin = axes.c2p(0,0) (Fixed)
+            angle = rotation_alpha_tracker.get_value()
+            origin = axes.c2p(0, 0)
+            vec = initial_kernel_center - origin 
+            
+            c, s = np.cos(angle), np.sin(angle)
+            rx = vec[0] * c - vec[1] * s
+            ry = vec[0] * s + vec[1] * c
+            rotated_vec = np.array([rx, ry, 0])
+            
+            target = origin + rotated_vec
+            
+            arrow = Arrow(
+                origin, 
+                target,
+                buff=0,
+                color=WHITE, 
+                stroke_width=2.5,
+                tip_length=0.08,
+                max_tip_length_to_length_ratio=1.0,
+            ).set_z_index(3) 
+            
+            return arrow
+
+        rotated_vector = always_redraw(rotated_vector_group)
+
+        # --- Rotated Offset Vector Q_alpha p' (Left Panel) ---
+        def rotated_offset_vector_group():
+            angle = rotation_alpha_tracker.get_value()
+            origin = axes.c2p(0, 0)
+            vec = initial_kernel_center - origin 
+            
+            c, s = np.cos(angle), np.sin(angle)
+            rx = vec[0] * c - vec[1] * s
+            ry = vec[0] * s + vec[1] * c
+            rotated_vec = np.array([rx, ry, 0])
+            base = origin + rotated_vec 
+            
+            kh = 5.7 * 0.4
+            p_prime = np.array([0.0, kh * 0.45 * 0.5, 0.0])
+            
+            rx_off = p_prime[0] * c - p_prime[1] * s
+            ry_off = p_prime[0] * s + p_prime[1] * c
+            rotated_offset = np.array([rx_off, ry_off, 0])
+            
+            arrow = Arrow(
+                base,
+                base + rotated_offset,
+                buff=0,
+                color=SCARLET, 
+                stroke_width=2.2,
+                tip_length=0.08,
+                max_tip_length_to_length_ratio=1.0,
+            ).set_z_index(3)
+            
+            lbl = MathTex(r"\mathbf{Q}_\alpha \mathbf{p}'", color=SCARLET).scale(0.5)
+            lbl.next_to(base + rotated_offset, UP, buff=0.1)
+            lbl.set_opacity(offset_label_opacity_tracker.get_value())
+            
+            return VGroup(arrow, lbl)
+
+        rotated_offset_vector = always_redraw(rotated_offset_vector_group)
+
+        # --- Rotated Axes (Right Panel) ---
+        def rotated_axes_group():
+            angle = rotation_alpha_tracker.get_value()
+            sep = separation_tracker.get_value()
+            
+            # Center moves with separation
+            center = axes.c2p(0,0) + RIGHT * sep
+            
+            new_axes = Axes(
+                x_range=[-0.5, 3, 1],
+                y_range=[-0.5, 3, 1],
+                x_length=3.5,
+                y_length=3.5,
+                axis_config={
+                    "color": WHITE, 
+                    "stroke_width": 2,
+                    "include_tip": True,
+                    "tip_length": 0.15,
+                    "tip_width": 0.1,
+                    "tip_height": 0.1,
+                    "include_ticks": False,
+                },
+            )
+            # Ensure origin is at center
+            origin_offset = new_axes.c2p(0,0)
+            new_axes.shift(center - origin_offset)
+            
+            l_s = MathTex(r"\mathbf{Q}_{-\alpha} s", color=WHITE)
+            l_t = MathTex(r"\mathbf{Q}_{-\alpha} t", color=WHITE)
+            l_s.next_to(new_axes.x_axis.get_end(), RIGHT, buff=0.1)
+            l_t.next_to(new_axes.y_axis.get_end(), UP, buff=0.1)
+            
+            l_s.set_opacity(rotated_axis_label_opacity_tracker.get_value())
+            l_t.set_opacity(rotated_axis_label_opacity_tracker.get_value())
+
+            g = VGroup(new_axes, l_s, l_t)
+            g.rotate(-angle + right_panel_rotation_tracker.get_value(), about_point=center)
+            
+            return g
+
+        rotated_axes = always_redraw(rotated_axes_group)
+        
+        # --- Negative Angle Indicator (Right Panel) ---
+        def neg_angle_group():
+            angle = rotation_alpha_tracker.get_value()
+            sep = separation_tracker.get_value()
+
+            # Hide if separation starts (or angle is very small)
+            if abs(angle) < 0.01 or sep > 0.1:
+                return VGroup()
+
+            origin = axes.c2p(0,0) + RIGHT * sep
+            
+            # Reference T axis (vertical)
+            t_point = origin + UP * 1.2
+            
+            # Rotated T axis
+            c, s = np.cos(-angle), np.sin(-angle)
+            t_vec = UP * 1.2
+            rx = t_vec[0] * c - t_vec[1] * s
+            ry = t_vec[0] * s + t_vec[1] * c
+            qt_point = origin + np.array([rx, ry, 0])
+            
+            line_t = Line(origin, t_point)
+            line_qt = Line(origin, qt_point)
+            
+            arc = Angle(line_qt, line_t, radius=0.5, color=WHITE)
+            lbl = MathTex(r"-\alpha", color=WHITE).scale(0.6)
+            pos = Angle(line_qt, line_t, radius=0.8).point_from_proportion(0.5)
+            lbl.move_to(pos)
+            
+            # Only show if angle > 0
+            if angle < 0.01:
+                arc.set_opacity(0)
+                lbl.set_opacity(0)
+            
+            return VGroup(arc, lbl)
+
+        neg_angle_indicator = always_redraw(neg_angle_group)
+
+
         # Add everything to scene
         self.add(axes, axes_labels)
         self.add(kernel_image)
+        self.add(s_image_static) 
         self.add(s_image_dynamic)
         self.add(global_vector)
         self.add(offset_vector)
+        self.add(rotated_vector)
+        self.add(rotated_offset_vector) 
+        self.add(rotated_axes) # Initially at sep=0, angle=0 -> on top of axes
+        self.add(neg_angle_indicator)
+        
+        self.wait(2)
+        
+        # Animation 1: Rotation
+        self.play(
+            rotation_alpha_tracker.animate.set_value(20 * DEGREES),
+            run_time=2.0
+        )
+        
+        self.play(
+            rotated_axis_label_opacity_tracker.animate.set_value(1.0),
+            run_time=1.0
+        )
+        
+        # Animation 2: Labels appear
+        # Left panel labels (Angle, Qp, Qp')
+        # We need to recreate these as always_redraw or simple objects?
+        # They are static relative to Left Panel (which doesn't move).
+        
+        angle_rot = rotation_alpha_tracker.get_value()
+        origin = axes.c2p(0, 0)
+        vec_p = initial_kernel_center - origin
+        c, s = np.cos(angle_rot), np.sin(angle_rot)
+        rx = vec_p[0] * c - vec_p[1] * s
+        ry = vec_p[0] * s + vec_p[1] * c
+        qp_point = origin + np.array([rx, ry, 0])
+        
+        line_p = Line(origin, initial_kernel_center)
+        line_q = Line(origin, qp_point)
+        angle_arc = Angle(line_p, line_q, radius=0.6, color=WHITE)
+        angle_label = MathTex(r"\alpha", color=WHITE).scale(0.6)
+        angle_label.move_to(Angle(line_p, line_q, radius=0.9).point_from_proportion(0.5))
+        label_qp = MathTex(r"\mathbf{Q}_\alpha \mathbf{p}", color=WHITE).scale(0.6)
+        label_qp.next_to(qp_point, UP, buff=0.1)
+        
+        self.play(
+            Create(angle_arc),
+            Write(angle_label),
+            Write(label_qp),
+            offset_label_opacity_tracker.animate.set_value(1.0),
+            run_time=1.5
+        )
+        
+        self.wait(1)
+        
+        # Animation 3: Separation (Pullback)
+        # Move Right Panel components to the right
+        # separation_tracker -> 5.0 ?
+        
+        self.play(
+            separation_tracker.animate.set_value(7.5),
+            FadeOut(angle_arc),
+            FadeOut(angle_label),
+            run_time=2.0
+        )
+        
+        self.wait(1)
+        
+        # Animation 4: Right Panel Rotation
+        self.play(
+            right_panel_rotation_tracker.animate.set_value(20 * DEGREES),
+            run_time=2.0
+        )
         
         self.wait(2)
 
@@ -250,7 +477,6 @@ class ConvolutionPullback2(MovingCameraScene):
         ys = np.linspace(-span, span, resolution)
         X, Y = np.meshgrid(xs, ys)
         
-        # Apply rotation
         if rotation_angle != 0:
             c, s = np.cos(-rotation_angle), np.sin(-rotation_angle)
             X_rot = c * X - s * Y
@@ -290,10 +516,8 @@ class ConvolutionPullback2(MovingCameraScene):
         contrast_gamma = 0.6
         v = np.sign(v) * np.power(np.abs(v), contrast_gamma)
 
-        # Support Mask
         h, w = v.shape
         cy, cx = h // 2, w // 2
-        # box width is ~0.4 of image width. 
         support_ratio = 0.4
         
         yy = np.arange(h)[:, None]
@@ -307,7 +531,6 @@ class ConvolutionPullback2(MovingCameraScene):
                 (np.abs(xx - cx) <= half_side_x)
             )
         else:
-            # Circle support
             radius = (h * support_ratio) / 2
             dist_sq = (yy - cy)**2 + (xx - cx)**2
             support_mask = dist_sq <= radius**2
