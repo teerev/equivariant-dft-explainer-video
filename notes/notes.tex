@@ -446,8 +446,7 @@ And the continuous convolution without the integral limits:
   \end{equation}
   in direct analogy with the kernel--centred discrete case.
   
-
-
+ 
 
 
 
@@ -466,6 +465,10 @@ And the continuous convolution without the integral limits:
     X(p + p')\,
     F(p')\,\mathrm{d}p'
   \end{equation}
+
+
+
+
 
   Here $p$ denotes the evaluation point (kernel centre) and $p'$ is an offset within the kernel footprint.  In vector form:
   \begin{equation}
@@ -555,6 +558,49 @@ And the continuous convolution without the integral limits:
   \end{equation}
 the kernel itself is rotationally symmetric.
   
+
+
+Equation bits for keynote:
+
+\begin{equation}
+  \int_{\mathbb{R}^2}
+  X(p + p')\,
+  F(p')\,\mathrm{d}p'
+\end{equation}
+
+
+\begin{equation}
+  \int_{\mathbb{R}^2} (Q_\alpha X)(p + p')\,F(p')\,\mathrm{d}p'
+\end{equation}
+
+
+\begin{equation}
+  \int_{\mathbb{R}^2} X(Q_\alpha^{-1}(p + p'))\,F(p')\,\mathrm{d}p'
+\end{equation}
+
+
+\begin{equation}
+  ((Q_\alpha X) * F)(p)
+\end{equation}
+
+
+\begin{equation}
+  (X * F)(p)
+\end{equation}
+
+\begin{equation}
+  (Q_\alpha (X * F))(p)
+\end{equation}
+
+\begin{equation}
+  (X * F)(Q_\alpha^{-1} p)
+\end{equation}
+
+\begin{equation}
+  \int_{\mathbb{R}^2} X(Q_\alpha^{-1} p + p')\,F(p')\,\mathrm{d}p'
+\end{equation}
+
+
 
 \section{Demo of translational equivariance and rotational non-equivariance}
 \section{Demo: Thatcher effect}
