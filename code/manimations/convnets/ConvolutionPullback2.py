@@ -288,7 +288,7 @@ class ConvolutionPullback2(MovingCameraScene):
             base = origin + rotated_vec 
             
             kh = 5.7 * 0.4
-            p_prime = np.array([0.0, kh * 0.45 * 0.5, 0.0])
+            p_prime = np.array([0.0, kh * 0.45 * 0.5, 0.0]) * vector_length_tracker.get_value()
             
             rx_off = p_prime[0] * c - p_prime[1] * s
             ry_off = p_prime[0] * s + p_prime[1] * c
