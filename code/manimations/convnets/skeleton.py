@@ -13,9 +13,11 @@ COLS = 4
 S_COLOR       = "#00D5FF"
 KERNEL_COLOR  = "#00D5FF"   # bluish; you can replace with ImageMobject later
 P_COLOR       = WHITE
-PPRIME_COLOR  = RED
+PPRIME_COLOR  = "#FF0000"
 TEXT_COLOR    = WHITE
 ALPHA         = PI / 12     # 15 degrees
+KERNEL_CIRCLE = True
+PHANTOM_KERNEL_CIRCLES = True
 
 # ============================================================
 # Layout helpers
@@ -34,14 +36,17 @@ def get_panel_center(row: int, col: int) -> np.ndarray:
     cell_w = fw / COLS
     cell_h = fh / ROWS
 
-    x = -fw / 2 + (col + 0.5) * cell_w
+    # Fix the leftmost column center
+    # Left edge is -fw/2. We add a bit of padding (e.g., 2.2 units).
+    # Note: Manim coordinate height is 8.0, width is ~14.2 for 16:9.
+    LEFT_START_X = -fw / 2 + 1.2
     
-    # Shift panels to the left, proportionally to their column index
-    # (col=0 moves 1 unit left, col=3 moves 4 units left)
-    shift_unit = 0.03 * fw
-    x -= (col + 1) * shift_unit
+    # Spacing between columns (squeezed relative to uniform spacing)
+    PANEL_SPACING_X = 2.5
 
-    y =  fh / 2 - (row + 0.5) * cell_h + 0.3
+    x = LEFT_START_X + col * PANEL_SPACING_X
+
+    y =  fh / 2 - (row + 0.5) * cell_h + 0.5
     return np.array([x, y, 0.0])
 
 
@@ -105,7 +110,12 @@ def make_kernel_blob(center: np.ndarray,
 def arrow_p(origin: np.ndarray, target: np.ndarray, label="p") -> VGroup:
     arr = Arrow(origin, target, buff=0, color=P_COLOR, stroke_width=3, tip_length=0.15)
     lab = MathTex(label, color=TEXT_COLOR).scale(0.8)
-    lab.next_to(arr.get_end(), UR, buff=0.1)
+    # Place label at midpoint, shifted slightly down/right to avoid overlap
+    midpoint = (origin + target) / 2
+    # Direction perpendicular to arrow could be calculated, but a simple shift might suffice
+    # given most arrows are generally pointing right/down.
+    # Let's try putting it BELOW the midpoint.
+    lab.move_to(midpoint + UP * 0.3 + LEFT * 0.1)
     return VGroup(arr, lab)
 
 
@@ -114,13 +124,14 @@ def arrow_pprime(base_point: np.ndarray,
                  label=r"p'",
                  color=PPRIME_COLOR) -> VGroup:
     arr = Arrow(base_point,
-                base_point + direction * 1.0,
+                base_point + direction * 0.5,
                 buff=0,
                 color=color,
                 stroke_width=3,
                 tip_length=0.15)
     lab = MathTex(label, color=color).scale(0.8)
-    lab.next_to(arr.get_end(), RIGHT, buff=0.1)
+    # Move label up relative to the arrow tip
+    lab.next_to(arr.get_end(), UP, buff=0.1)
     return VGroup(arr, lab)
 
 
@@ -146,6 +157,10 @@ def make_panel(index: int) -> Mobject:
 
     # We'll assemble each panel as a Group (not VGroup, because we have ImageMobjects)
     g = Group()
+    
+    # Global scale factor for everything inside the panel
+    # Shrink by 20% means scale = 0.8
+    PANEL_SCALE = 0.8
 
     # Panel-specific content
     
@@ -164,6 +179,10 @@ def make_panel(index: int) -> Mobject:
         p_vec = arrow_p(origin, s_obj.get_center(), label="p")
         pprime = arrow_pprime(s_obj.get_center(), direction=UP, label=r"p'")
         g.add(axes, s_obj, p_vec, pprime)
+        if KERNEL_CIRCLE:
+            c = Circle(radius=0.5, color=PPRIME_COLOR, stroke_width=2)
+            c.move_to(s_obj.get_center())
+            g.add(c)
 
     elif index == 2:
         # --- Panel 2: same as 1, plus p' at S ---
@@ -183,6 +202,10 @@ def make_panel(index: int) -> Mobject:
         rot_direction = rotate_vector(UP, ALPHA)
         pprime = arrow_pprime(s_obj.get_center(), direction=rot_direction, label=r"Q_\alpha p'")
         g.add(axes, s_obj, p_vec, pprime)
+        if KERNEL_CIRCLE:
+            c = Circle(radius=0.5, color=PPRIME_COLOR, stroke_width=2)
+            c.move_to(s_obj.get_center())
+            g.add(c)
 
     elif index == 3:
         # --- Panel 3: rotated coordinates Q_{-α}, still showing S and p' ---
@@ -197,6 +220,10 @@ def make_panel(index: int) -> Mobject:
         p_vec = arrow_p(origin, s_obj.get_center(), label="p")
         pprime = arrow_pprime(s_obj.get_center(), direction=UP, label=r"p'")
         g.add(axes, s_obj, p_vec, pprime)
+        if KERNEL_CIRCLE:
+            c = Circle(radius=0.5, color=PPRIME_COLOR, stroke_width=2)
+            c.move_to(s_obj.get_center())
+            g.add(c)
 
     elif index == 4:
         # --- Panel 4: rotated coordinates, kernel response at p, p' arrow ---
@@ -209,8 +236,13 @@ def make_panel(index: int) -> Mobject:
         origin = center
 
         p_vec = arrow_p(origin, blob.get_center(), label="p")
-        pprime = arrow_pprime(blob.get_center(), direction=UP, label=r"p'")
+        # Use specific color for panel 4 as requested
+        pprime = arrow_pprime(blob.get_center(), direction=UP, label=r"p'", color="#3A1E1E")
         g.add(axes, blob, p_vec, pprime)
+        if PHANTOM_KERNEL_CIRCLES:
+            c = Circle(radius=0.5, color="#3A1E1E", stroke_width=2)
+            c.move_to(blob.get_center())
+            g.add(c)
 
     elif index == 5:
         # --- Panel 5: original coordinates, kernel response at p (X*F)(p) ---
@@ -219,7 +251,16 @@ def make_panel(index: int) -> Mobject:
         origin = center
 
         p_vec = arrow_p(origin, blob.get_center(), label="p")
-        g.add(axes, blob, p_vec)
+        # Add phantom p'' vector pointing UP
+        pprime = arrow_pprime(blob.get_center(),
+                              direction=UP,
+                              label=r"p''",
+                              color="#3A1E1E")
+        g.add(axes, blob, p_vec, pprime)
+        if PHANTOM_KERNEL_CIRCLES:
+            c = Circle(radius=0.5, color="#3A1E1E", stroke_width=2)
+            c.move_to(blob.get_center())
+            g.add(c)
 
     elif index == 6:
         # --- Panel 6: original coordinates, blob at Q_α p ---
@@ -233,7 +274,13 @@ def make_panel(index: int) -> Mobject:
         origin = center
 
         p_vec = arrow_p(origin, blob.get_center(), label=r"Q_\alpha p")
-        g.add(axes, blob, p_vec)
+        # Add phantom p'' vector pointing UP
+        pprime = arrow_pprime(blob.get_center(), direction=UP, label=r"p''", color="#3A1E1E")
+        g.add(axes, blob, p_vec, pprime)
+        if PHANTOM_KERNEL_CIRCLES:
+            c = Circle(radius=0.5, color="#3A1E1E", stroke_width=2)
+            c.move_to(blob.get_center())
+            g.add(c)
 
     elif index == 7:
         # --- Panel 7: rotated coordinates, blob at p in Q_{-α} frame ---
@@ -246,7 +293,16 @@ def make_panel(index: int) -> Mobject:
         origin = center
 
         p_vec = arrow_p(origin, blob.get_center(), label="p")
-        g.add(axes, blob, p_vec)
+        # Add phantom p'' vector rotated by ALPHA relative to UP
+        pprime = arrow_pprime(blob.get_center(),
+                              direction=rotate_vector(UP, -ALPHA),
+                              label=r"p''",
+                              color="#3A1E1E")
+        g.add(axes, blob, p_vec, pprime)
+        if PHANTOM_KERNEL_CIRCLES:
+            c = Circle(radius=0.5, color="#3A1E1E", stroke_width=2)
+            c.move_to(blob.get_center())
+            g.add(c)
 
     elif index == 8:
         # --- Panel 8: rotated coordinates, highlight p' mismatch ---
@@ -266,6 +322,10 @@ def make_panel(index: int) -> Mobject:
                               color=PPRIME_COLOR)
 
         g.add(axes, blob, p_vec, pprime)
+        if KERNEL_CIRCLE:
+            c = Circle(radius=0.5, color=PPRIME_COLOR, stroke_width=2)
+            c.move_to(blob.get_center())
+            g.add(c)
 
     else:
         # Fallback placeholder
@@ -277,6 +337,9 @@ def make_panel(index: int) -> Mobject:
         ).move_to(center)
         label = Text(str(index)).scale(0.7).move_to(center)
         g.add(rect, label)
+
+    # Apply the global scale to the entire panel group
+    g.scale(PANEL_SCALE, about_point=center)
 
     return g
 
