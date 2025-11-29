@@ -209,7 +209,7 @@ def make_panel(index: int) -> Mobject:
 # Scene base + 8 cumulative scenes
 # ============================================================
 
-class EquivariancePanels8(Scene):
+class ExitToComparison(Scene):
     """
     Shows panels 3 and 8, then rearranges them.
     """
@@ -240,4 +240,53 @@ class EquivariancePanels8(Scene):
             p8.animate.move_to(target_p8),
             run_time=2.0
         )
+        self.wait(1.0)
+
+        # Rotate both panels by +15 degrees about their centers
+        # But keep labels upright.
+        anims = []
+        for p in [p3, p8]:
+            center = p.get_center()
+            
+            # Deconstruct panel components based on make_panel structure:
+            # p[0]: axes group (lines, xlabel, ylabel)
+            # p[1]: S object / blob
+            # p[2]: p vector group (arrow, label)
+            # p[3]: p' vector group (arrow, label)
+            # p[4]: Circle (since KERNEL_CIRCLE=True)
+            
+            axes_group = p[0]
+            s_obj = p[1]
+            p_vec_group = p[2]
+            pprime_group = p[3]
+            
+            # Identify parts to rotate normally (geometry)
+            rotatable_parts = [
+                axes_group[0],   # axes lines
+                s_obj,           # image
+                p_vec_group[0],  # p arrow
+                pprime_group[0], # p' arrow
+            ]
+            if len(p) > 4:
+                rotatable_parts.append(p[4]) # circle
+            
+            # Identify labels to move (position only) but not rotate (orientation)
+            labels = [
+                axes_group[1],   # x label
+                axes_group[2],   # y label
+                p_vec_group[1],  # p label
+                pprime_group[1], # p' label
+            ]
+            
+            # Animate geometry rotation
+            for part in rotatable_parts:
+                anims.append(Rotate(part, angle=ALPHA, about_point=center))
+                
+            # Animate label positions
+            for lab in labels:
+                curr_pos = lab.get_center()
+                new_pos = center + rotate_vector(curr_pos - center, ALPHA)
+                anims.append(lab.animate.move_to(new_pos))
+        
+        self.play(*anims, run_time=1.5)
         self.wait(1.0)
