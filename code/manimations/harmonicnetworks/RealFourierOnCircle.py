@@ -49,10 +49,10 @@ class RealFourierOnCircle(Scene):
         # 3. Layout positions
         # ------------------------------------------------------------
         top_y = 2.5
-        x_positions = [-4.0, -1.3, 1.3, 4.0]
+        x_positions = [-5.5, -3.2, -0.9, 1.4]
         small_radius = 0.9
-        big_radius = 2.8
-        center_big = np.array([0.0, -1.0, 0.0])
+        big_radius = 2.24  # Reduced by 20%
+        center_big = np.array([-3.2, -1.0, 0.0])
 
         # sample angular grid
         N = 360
@@ -158,11 +158,11 @@ class RealFourierOnCircle(Scene):
             return label
 
         coeff_group = VGroup(
-            coeff_label("a_0", a0, np.array([4.5, 1.5, 0.0])),
-            coeff_label("a_1", a1, np.array([4.5, 0.8, 0.0])),
-            coeff_label("b_1", b1, np.array([4.5, 0.1, 0.0])),
-            coeff_label("a_2", a2, np.array([4.5, -0.6, 0.0])),
-            coeff_label("b_2", b2, np.array([4.5, -1.3, 0.0])),
+            coeff_label("a_0", a0, np.array([1.5,  0.5, 0.0])),
+            coeff_label("a_1", a1, np.array([1.5, -0.2, 0.0])),
+            coeff_label("b_1", b1, np.array([1.5, -0.9, 0.0])),
+            coeff_label("a_2", a2, np.array([1.5, -1.6, 0.0])),
+            coeff_label("b_2", b2, np.array([1.5, -2.3, 0.0])),
         )
 
         # ------------------------------------------------------------
@@ -175,7 +175,7 @@ class RealFourierOnCircle(Scene):
             r" + a_2 \cos 2\theta"
             r" + b_2 \sin 2\theta"
         ).scale(0.8)
-        full_expr.next_to(center_big, DOWN, buff=0.7)
+        full_expr.move_to(np.array([-2.0, -3.5, 0.0]))
 
         # ------------------------------------------------------------
         # 9. Draw everything
@@ -189,18 +189,27 @@ class RealFourierOnCircle(Scene):
         # ------------------------------------------------------------
         # 10. Animate coefficients
         # ------------------------------------------------------------
-        targets_1 = {a0: 0.3, a1: 0.7, b1: -0.5, a2: 0.4, b2: 0.25}
-        targets_2 = {a0: -0.2, a1: -0.6, b1: 0.4, a2: -0.3, b2: 0.5}
+        # More dramatic variation, especially for higher frequency terms
+        targets_1 = {a0: 0.5, a1: 0.8, b1: -0.7, a2: -0.9, b2: 0.85}
+        targets_2 = {a0: -0.4, a1: -0.9, b1: 0.6, a2: 0.8, b2: -0.9}
+        targets_3 = {a0: 0.2, a1: 0.3, b1: -0.2, a2: -0.5, b2: 0.4}
 
         self.play(
             *[tracker.animate.set_value(v) for tracker, v in targets_1.items()],
             run_time=3.0,
             rate_func=smooth,
         )
-        self.wait(1.0)
+        self.wait(0.5)
 
         self.play(
             *[tracker.animate.set_value(v) for tracker, v in targets_2.items()],
+            run_time=3.0,
+            rate_func=smooth,
+        )
+        self.wait(0.5)
+
+        self.play(
+            *[tracker.animate.set_value(v) for tracker, v in targets_3.items()],
             run_time=3.0,
             rate_func=smooth,
         )
