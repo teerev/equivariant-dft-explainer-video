@@ -13,6 +13,7 @@ IMAGE_NEG_RGB = np.array(IMAGE_NEG_COLOR.to_rgb())
 IMAGE_POS_RGB = np.array(IMAGE_POS_COLOR.to_rgb())
 ZERO_RGB = np.array([0.0, 0.0, 0.0])
 
+GLOBAL_SCALE = 1.05
 sys.path.append(str(Path(__file__).parent.parent))
 
 class ConvolutionPullback2(MovingCameraScene):
@@ -33,27 +34,27 @@ class ConvolutionPullback2(MovingCameraScene):
         axes = Axes(
             x_range=[-0.5, 3, 1],
             y_range=[-0.5, 3, 1],
-            x_length=3.5 * 0.7, 
-            y_length=3.5 * 0.7, 
+            x_length=3.5 * GLOBAL_SCALE, 
+            y_length=3.5 * GLOBAL_SCALE, 
             axis_config={
                 "color": WHITE, 
-                "stroke_width": 2 * 0.7,
+                "stroke_width": 2 * GLOBAL_SCALE,
                 "include_tip": True, 
-                "tip_length": 0.15 * 0.7,
-                "tip_width": 0.1 * 0.7,
-                "tip_height": 0.1 * 0.7,
+                "tip_length": 0.15 * GLOBAL_SCALE,
+                "tip_width": 0.1 * GLOBAL_SCALE,
+                "tip_height": 0.1 * GLOBAL_SCALE,
                 "include_ticks": False, 
             },
         )
-        axes_shift = LEFT * 4.5 + UP * 2.3
+        axes_shift = LEFT * 4.5 + UP * 1.5
         axes.shift(axes_shift)
         axes_labels = axes.get_axis_labels(
-            MathTex("s", color=WHITE).scale(0.7), 
-            MathTex("t", color=WHITE).scale(0.7)
+            MathTex("s", color=WHITE).scale(GLOBAL_SCALE), 
+            MathTex("t", color=WHITE).scale(GLOBAL_SCALE)
         ) 
         
         # --- Trackers ---
-        scale_tracker = ValueTracker(0.7) # Global scale factor for everything
+        scale_tracker = ValueTracker(GLOBAL_SCALE) # Global scale factor for everything
         coord_alpha_tracker = ValueTracker(0.0)
         vector_rotation_tracker = ValueTracker(0.0)
         axes_rotation_tracker = ValueTracker(0.0)
@@ -67,7 +68,7 @@ class ConvolutionPullback2(MovingCameraScene):
         right_panel_rotation_tracker = ValueTracker(0.0)
         
         # --- Positioning Configuration ---
-        separation_vector = RIGHT * 3.0
+        separation_vector = RIGHT * 4.5
         
         def get_right_origin():
             # Use value from separation_tracker (0 to 1) to interpolate
@@ -87,7 +88,7 @@ class ConvolutionPullback2(MovingCameraScene):
         
         # c2p will automatically handle the scaling since axes are scaled
         initial_kernel_center = axes.c2p(new_x, new_y)
-        target_kernel_width = 5.7 * 0.7
+        target_kernel_width = 5.7 * GLOBAL_SCALE
 
         def get_kernel_image():
             angle = coord_alpha_tracker.get_value()
@@ -121,7 +122,7 @@ class ConvolutionPullback2(MovingCameraScene):
              print(f"Warning: {s_png_path} does not exist.")
 
         s_image = ImageMobject(str(s_png_path))
-        s_image.set_width(1.2 * 0.7)
+        s_image.set_width(0.8 * GLOBAL_SCALE)
         
         # Fixed S image (Right Panel)
         def s_image_static_group():
@@ -193,17 +194,17 @@ class ConvolutionPullback2(MovingCameraScene):
                 final_target,
                 buff=0,
                 color=vector_color,
-                stroke_width=2.5 * 0.7,
-                tip_length=0.08 * 0.7, 
+                stroke_width=2.5 * GLOBAL_SCALE,
+                tip_length=0.08 * GLOBAL_SCALE, 
                 max_tip_length_to_length_ratio=1.0,
             ).set_z_index(2)
             
             alpha = global_label_alpha.get_value()
             
-            lbl_st = MathTex(r"(s,t)", color=vector_color).scale(0.5 * 0.7)
-            lbl_p = MathTex(r"\mathbf{p}", color=vector_color).scale(0.5 * 0.7 * 1.5)
+            lbl_st = MathTex(r"(s,t)", color=vector_color).scale(0.5 * GLOBAL_SCALE)
+            lbl_p = MathTex(r"\mathbf{p}", color=vector_color).scale(0.5 * GLOBAL_SCALE * 1.5)
             
-            pos = final_target + UP * 0.2 * 0.7
+            pos = final_target + UP * 0.2 * GLOBAL_SCALE
             lbl_st.move_to(pos).set_opacity(1 - alpha)
             lbl_p.move_to(pos).set_opacity(alpha)
             
@@ -243,17 +244,17 @@ class ConvolutionPullback2(MovingCameraScene):
                 base + rotated_offset,
                 buff=0,
                 color=SCARLET,
-                stroke_width=2.2 * 0.7,
-                tip_length=0.08 * 0.7,
+                stroke_width=2.2 * GLOBAL_SCALE,
+                tip_length=0.08 * GLOBAL_SCALE,
                 max_tip_length_to_length_ratio=1.0,
             ).set_z_index(2)
             
             alpha = offset_label_alpha.get_value()
             
-            lbl_st = MathTex(r"(\sigma,\tau)", color=SCARLET).scale(0.5 * 0.7)
-            lbl_p = MathTex(r"\mathbf{p}'", color=SCARLET).scale(0.5 * 0.7 * 1.5)
+            lbl_st = MathTex(r"(\sigma,\tau)", color=SCARLET).scale(0.6 * GLOBAL_SCALE)
+            lbl_p = MathTex(r"\mathbf{p}'", color=SCARLET).scale(0.6 * GLOBAL_SCALE * 1.5)
             
-            pos = base + rotated_offset + UP * 0.2 * 0.7
+            pos = base + rotated_offset + UP * 0.2 * GLOBAL_SCALE
             # Rotate label pos offset if needed? Usually UP is fine but maybe better aligned
             # Keep it simple: just place above tip
             
@@ -283,8 +284,8 @@ class ConvolutionPullback2(MovingCameraScene):
                 target,
                 buff=0,
                 color=WHITE, 
-                stroke_width=2.5 * 0.7,
-                tip_length=0.08 * 0.7,
+                stroke_width=2.5 * GLOBAL_SCALE,
+                tip_length=0.08 * GLOBAL_SCALE,
                 max_tip_length_to_length_ratio=1.0,
             ).set_z_index(3) 
             
@@ -304,7 +305,7 @@ class ConvolutionPullback2(MovingCameraScene):
             rotated_vec = np.array([rx, ry, 0])
             base = origin + rotated_vec 
             
-            kh = 5.7 * 0.4 * 0.7 # scaled kernel height
+            kh = 5.7 * 0.4 * GLOBAL_SCALE # scaled kernel height
             # Note: base_offset calculation above already uses target_kernel_width which we scaled
             # But here we hardcoded 5.7. Let's make sure everything is consistent.
             # Actually, let's just use the same scale factor here.
@@ -312,7 +313,7 @@ class ConvolutionPullback2(MovingCameraScene):
             # p_prime = np.array([0.0, kh * 0.45 * 0.5, 0.0]) * vector_length_tracker.get_value()
             
             # Re-calculating properly:
-            target_kw_scaled = 5.7 * 0.7
+            target_kw_scaled = 5.7 * GLOBAL_SCALE
             kh_scaled = target_kw_scaled * 0.4
             p_prime = np.array([0.0, kh_scaled * 0.45 * 0.5, 0.0]) * vector_length_tracker.get_value()
             
@@ -325,13 +326,13 @@ class ConvolutionPullback2(MovingCameraScene):
                 base + rotated_offset,
                 buff=0,
                 color=SCARLET, 
-                stroke_width=2.2 * 0.7,
-                tip_length=0.08 * 0.7,
+                stroke_width=2.2 * GLOBAL_SCALE,
+                tip_length=0.08 * GLOBAL_SCALE,
                 max_tip_length_to_length_ratio=1.0,
             ).set_z_index(3)
         
-            lbl = MathTex(r"\mathbf{Q}_\alpha \mathbf{p}'", color=SCARLET).scale(0.6 * 0.7 * 1.5)
-            lbl.next_to(base + rotated_offset, UP, buff=0.1 * 0.7)
+            lbl = MathTex(r"\mathbf{Q}_\alpha \mathbf{p}'", color=SCARLET).scale(0.6 * GLOBAL_SCALE * 1.5)
+            lbl.next_to(base + rotated_offset, UP, buff=0.1 * GLOBAL_SCALE)
             lbl.set_opacity(offset_label_opacity_tracker.get_value())
             
             return VGroup(arrow, lbl)
@@ -349,15 +350,15 @@ class ConvolutionPullback2(MovingCameraScene):
             new_axes = Axes(
                 x_range=[-0.5, 3, 1],
                 y_range=[-0.5, 3, 1],
-                x_length=3.5 * 0.7,
-                y_length=3.5 * 0.7,
+                x_length=3.5 * GLOBAL_SCALE,
+                y_length=3.5 * GLOBAL_SCALE,
                 axis_config={
                     "color": WHITE, 
-                    "stroke_width": 2 * 0.7,
+                    "stroke_width": 2 * GLOBAL_SCALE,
                     "include_tip": True,
-                    "tip_length": 0.15 * 0.7,
-                    "tip_width": 0.1 * 0.7,
-                    "tip_height": 0.1 * 0.7,
+                    "tip_length": 0.15 * GLOBAL_SCALE,
+                    "tip_width": 0.1 * GLOBAL_SCALE,
+                    "tip_height": 0.1 * GLOBAL_SCALE,
                     "include_ticks": False,
                 },
             )
@@ -365,10 +366,10 @@ class ConvolutionPullback2(MovingCameraScene):
             origin_offset = new_axes.c2p(0,0)
             new_axes.shift(center - origin_offset)
             
-            l_s = MathTex(r"\mathbf{Q}_{-\alpha} s", color=WHITE).scale(0.7)
-            l_t = MathTex(r"\mathbf{Q}_{-\alpha} t", color=WHITE).scale(0.7)
-            l_s.next_to(new_axes.x_axis.get_end(), RIGHT, buff=0.1 * 0.7)
-            l_t.next_to(new_axes.y_axis.get_end(), UP, buff=0.1 * 0.7)
+            l_s = MathTex(r"\mathbf{Q}_{-\alpha} s", color=WHITE).scale(GLOBAL_SCALE)
+            l_t = MathTex(r"\mathbf{Q}_{-\alpha} t", color=WHITE).scale(GLOBAL_SCALE)
+            l_s.next_to(new_axes.x_axis.get_end(), RIGHT, buff=0.1 * GLOBAL_SCALE)
+            l_t.next_to(new_axes.y_axis.get_end(), UP, buff=0.1 * GLOBAL_SCALE)
             
             l_s.set_opacity(rotated_axis_label_opacity_tracker.get_value())
             l_t.set_opacity(rotated_axis_label_opacity_tracker.get_value())
@@ -404,9 +405,9 @@ class ConvolutionPullback2(MovingCameraScene):
             line_t = Line(origin, t_point)
             line_qt = Line(origin, qt_point)
             
-            arc = Angle(line_qt, line_t, radius=0.5 * 0.7, color=WHITE)
-            lbl = MathTex(r"-\alpha", color=WHITE).scale(0.6 * 0.7)
-            pos = Angle(line_qt, line_t, radius=0.8 * 0.7).point_from_proportion(0.5)
+            arc = Angle(line_qt, line_t, radius=0.5 * GLOBAL_SCALE, color=WHITE)
+            lbl = MathTex(r"-\alpha", color=WHITE).scale(0.6 * GLOBAL_SCALE)
+            pos = Angle(line_qt, line_t, radius=0.8 * GLOBAL_SCALE).point_from_proportion(0.5)
             lbl.move_to(pos)
             
             # Only show if angle > 0
@@ -417,6 +418,37 @@ class ConvolutionPullback2(MovingCameraScene):
             return VGroup(arc, lbl)
 
         neg_angle_indicator = always_redraw(neg_angle_group)
+
+
+        # --- Equation ---
+        # (\mathbf{Q}_\alpha \cdot X)(p) \;:=\; X\bigl(\mathbf{Q}_{-\alpha}\,p\bigr)
+        
+        # Position relative to axes origin
+        # axes origin is at y=1.5. We want equation around y=-1.5 to -2.0.
+        # So offset should be around DOWN * 3.0 to 3.5
+        eq_y_offset = DOWN * 2.8
+        
+        eq_lhs = MathTex(r"(\mathbf{Q}_\alpha \cdot X)(p)", color=WHITE).scale(GLOBAL_SCALE)
+        eq_eq = MathTex(r"\;:=", color=WHITE).scale(GLOBAL_SCALE)
+        eq_rhs = MathTex(r"X\bigl(\mathbf{Q}_{-\alpha}\,p\bigr)", color=WHITE).scale(GLOBAL_SCALE)
+        
+        # Calculate positions
+        # Note: separation_vector is used directly here as it defines the final translation
+        # Use visual centers for midpoint calculation
+        left_center = axes.get_center()
+        final_right_center = left_center + separation_vector 
+        
+        midpoint = (left_center + final_right_center) / 2
+        
+        # Control equation spacing here:
+        eq_spacing = 2.0 * GLOBAL_SCALE # Distance from center for LHS and RHS
+        
+        # Use left_center as Y reference for offset since all are on same Y level relative to panels
+        y_pos = (left_center + eq_y_offset)[1]
+        
+        eq_lhs.move_to(np.array([(midpoint - RIGHT * eq_spacing)[0], y_pos, 0]))
+        eq_eq.move_to(np.array([midpoint[0], y_pos, 0]))
+        eq_rhs.move_to(np.array([(midpoint + RIGHT * eq_spacing)[0], y_pos, 0]))
 
 
         # Add everything to scene
@@ -454,16 +486,17 @@ class ConvolutionPullback2(MovingCameraScene):
         
         line_p = Line(origin, initial_kernel_center)
         line_q = Line(origin, qp_point)
-        angle_arc = Angle(line_p, line_q, radius=0.6 * 0.7, color=WHITE)
-        angle_label = MathTex(r"\alpha", color=WHITE).scale(0.6 * 0.7)
-        angle_label.move_to(Angle(line_p, line_q, radius=0.9 * 0.7).point_from_proportion(0.5))
-        label_qp = MathTex(r"\mathbf{Q}_\alpha \mathbf{p}", color=WHITE).scale(0.6 * 0.7 * 1.5)
-        label_qp.next_to(qp_point, UP, buff=0.1 * 0.7)
+        angle_arc = Angle(line_p, line_q, radius=0.6 * GLOBAL_SCALE, color=WHITE)
+        angle_label = MathTex(r"\alpha", color=WHITE).scale(0.6 * GLOBAL_SCALE)
+        angle_label.move_to(Angle(line_p, line_q, radius=0.9 * GLOBAL_SCALE).point_from_proportion(0.5))
+        label_qp = MathTex(r"\mathbf{Q}_\alpha \mathbf{p}", color=WHITE).scale(0.6 * GLOBAL_SCALE * 1.5)
+        label_qp.next_to(qp_point, UP, buff=0.1 * GLOBAL_SCALE)
         
         self.play(
             Create(angle_arc),
             Write(angle_label),
             Write(label_qp),
+            Write(eq_lhs),
             offset_label_opacity_tracker.animate.set_value(1.0),
             run_time=1.5
         )
@@ -498,6 +531,12 @@ class ConvolutionPullback2(MovingCameraScene):
         self.play(
             right_panel_rotation_tracker.animate.set_value(20 * DEGREES),
             run_time=2.0
+        )
+        
+        self.play(
+            Write(eq_eq),
+            Write(eq_rhs),
+            run_time=1.5
         )
         
         self.wait(2)
