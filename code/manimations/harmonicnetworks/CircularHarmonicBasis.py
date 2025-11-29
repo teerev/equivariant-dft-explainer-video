@@ -85,6 +85,7 @@ class CircularHarmonicBasis(RightRegionScene):
 
         self.angle_tracker = ValueTracker(initial_angle)
         self.radius_tracker = ValueTracker(initial_radius)
+        self.polar_labels_opacity = ValueTracker(0.0)
         
         def get_p_vector_group():
             center = kernel_image.get_center()
@@ -119,6 +120,8 @@ class CircularHarmonicBasis(RightRegionScene):
             line_sigma = Line(center, center + RIGHT * 0.5)
             line_vec = Line(center, target)
             
+            opacity = self.polar_labels_opacity.get_value()
+            
             angle_arc = Angle(
                 line_sigma, line_vec,
                 radius=0.4,
@@ -126,6 +129,7 @@ class CircularHarmonicBasis(RightRegionScene):
                 color=SCARLET,
                 stroke_width=1.5
             )
+            angle_arc.set_opacity(opacity)
             
             theta_label = MathTex(r"\theta", color=SCARLET).scale(0.5)
             # Position theta label
@@ -137,7 +141,7 @@ class CircularHarmonicBasis(RightRegionScene):
                 arc_label_radius * np.sin(mid_arc_angle),
                 0
             ])
-            theta_label.move_to(theta_pos)
+            theta_label.move_to(theta_pos).set_opacity(opacity)
             
             # Radius label 'r'
             # Midpoint of vector, slightly offset
@@ -148,7 +152,7 @@ class CircularHarmonicBasis(RightRegionScene):
                 perp = perp / np.linalg.norm(perp)
             
             r_label = MathTex("r", color=SCARLET).scale(0.5)
-            r_label.move_to(midpoint + perp * 0.15)
+            r_label.move_to(midpoint + perp * 0.15).set_opacity(opacity)
             
             return VGroup(arrow, lbl_p, angle_arc, theta_label, r_label)
         
@@ -161,6 +165,13 @@ class CircularHarmonicBasis(RightRegionScene):
         
         # Initial wait
         self.wait(1)
+        
+        # Fade in polar labels
+        self.play(
+            self.polar_labels_opacity.animate.set_value(1.0),
+            run_time=1.0
+        )
+        self.wait(0.5)
         
         # --- Wiggle Animations ---
         
