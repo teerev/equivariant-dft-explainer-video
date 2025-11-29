@@ -652,6 +652,11 @@ F(p) = F(Q_{\alpha} p')
 
 
 
+
+
+
+
+
 \section{Demo of translational equivariance and rotational non-equivariance}
 \section{Demo: Thatcher effect}
 
@@ -695,6 +700,67 @@ kernel centred at spatial location $p$ and an offset variable
 \]
 
 
+
+\[
+F(r,\theta) = R(r)\,\Theta(\theta)
+\]
+
+
+
+
+\[
+R_\alpha
+\begin{pmatrix}
+\sigma \\[4pt]
+\tau
+\end{pmatrix}
+=
+\begin{pmatrix}
+\cos\alpha & -\sin\alpha \\[4pt]
+\sin\alpha & \cos\alpha
+\end{pmatrix}
+\begin{pmatrix}
+\sigma \\[4pt]
+\tau
+\end{pmatrix}
+=
+\begin{pmatrix}
+\cos\alpha\,\sigma - \sin\alpha\,\tau \\[4pt]
+\sin\alpha\,\sigma + \cos\alpha\,\tau
+\end{pmatrix}
+\]
+
+\[
+e^{i\alpha}(\,\sigma + i\tau\,)
+=
+(\cos\alpha + i\sin\alpha)(\,\sigma + i\tau\,)
+\]
+
+\[
+=
+\bigl(\cos\alpha\,\sigma - \sin\alpha\,\tau\bigr)
+\;+\;
+i\bigl(\sin\alpha\,\sigma + \cos\alpha\,\tau\bigr)
+\]
+
+
+
+
+
+
+
+\begin{equation}
+R_{m,n}(r)
+=
+J_{|m|}\!\left(\alpha_{|m|,n}\,\frac{r}{R}\right)
+\end{equation}
+
+
+
+\begin{equation}
+F(p') = 
+\end{equation}
+
 so that the continuous convolution at $p$ reads
 \begin{equation}
   \label{eq:conv-continuous}
@@ -710,11 +776,11 @@ so that the continuous convolution at $p$ reads
 A rotation by angle $\alpha$ in the plane is represented by the matrix
 \begin{equation}
   \label{eq:rotation-matrix}
-  \mathbf{Q}_\alpha
+  \mathbf{Q}_\theta
   \;=\;
   \begin{pmatrix}
-    \cos\alpha & -\sin\alpha \\
-    \sin\alpha & \cos\alpha
+    \cos\theta & -\sin\theta \\
+    \sin\theta & \cos\theta
   \end{pmatrix},
 \end{equation}
 acting on points $p \in \mathbb{R}^2$ by matrix multiplication:
