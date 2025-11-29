@@ -17,7 +17,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from base_scene import RightRegionScene
 
 
-class CircularHarmonicBasis(RightRegionScene):
+class PolarCoordsIntroduction(RightRegionScene):
     INITIAL_DELAY = 0.0
 
     def construct(self):

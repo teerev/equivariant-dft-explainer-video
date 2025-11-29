@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 
 
-class AngularHarmonicsProper(Scene):
+class FourierBesselAngular(Scene):
     def construct(self):
         # Black background
         self.camera.background_color = BLACK

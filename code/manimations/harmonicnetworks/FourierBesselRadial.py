@@ -4,7 +4,7 @@ from scipy.special import jv, jn_zeros
 from PIL import Image
 
 
-class ProperRadialModes(Scene):
+class FourierBesselRadial(Scene):
     def construct(self):
         # Black background
         self.camera.background_color = BLACK
