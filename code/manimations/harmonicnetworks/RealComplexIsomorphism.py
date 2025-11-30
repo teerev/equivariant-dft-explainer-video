@@ -1,25 +1,87 @@
 from manim import *
 import numpy as np
 
-
 # ------------------------------------------------------------
 # Global config / colours
 # ------------------------------------------------------------
 SCARLET = ManimColor("#ff2400")  # scarlet red for axes
 RADIUS = 1.5                     # circle radius
 ANGLE_P0 = 20 * DEGREES          # initial vector angle wrt sigma-axis
-ALPHA = 30 * DEGREES             # rotation angle for stages 2 and 3
+ALPHA = 54 * DEGREES             # rotation angle for stages 2 and 3
 
+# Colour scheme from RealFourierOnCircle.py
+C_CYAN   = np.array([0.0, 0.8, 1.0])
+C_ORANGE = np.array([1.0, 0.35, 0.0])
+C_BLACK  = np.array([0.0, 0.0, 0.0])
+
+N_SAMPLES = 360
+THETAS = np.linspace(0, TAU, N_SAMPLES)
+
+def value_to_rgb(v):
+    """
+    Map value in [-1, 1] to linear RGB between
+    cyan -> black -> orange.
+    """
+    v = np.clip(v, -1, 1)
+
+    if v < 0:
+        # negative: interpolate cyan (-1) -> black (0)
+        t = (v + 1.0) / 1.0   # v=-1 -> 0, v=0 -> 1
+        rgb = (1 - t) * C_CYAN + t * C_BLACK
+    else:
+        # positive: interpolate black (0) -> orange (+1)
+        t = v / 1.0           # v=0 -> 0, v=1 -> 1
+        rgb = (1 - t) * C_BLACK + t * C_ORANGE
+
+    return rgb
+
+def sample_function(theta):
+    """
+    Arbitrary function using basis functions up to frequency 2.
+    f(theta) = 0.3*cos(theta) + 0.5*sin(theta) - 0.4*cos(2*theta) + 0.2*sin(2*theta)
+    """
+    return (
+        0.3 * np.cos(theta) + 
+        0.7 * np.sin(theta) + 
+        -0.5 * np.cos(2 * theta) + 
+        0.9 * np.sin(2 * theta)
+    )
+
+def coloured_circle(center, radius, func):
+    """
+    func(theta) returns scalar in [-1,1]
+    Produces a VGroup of line segments with stroke matching colour along the circle.
+    """
+    group = VGroup()
+    
+    # Create small segments
+    for i in range(len(THETAS) - 1):
+        th1 = THETAS[i]
+        th2 = THETAS[i+1]
+        
+        # Use midpoint value for better coloring approximation
+        mid_th = (th1 + th2) / 2.0
+        val = func(mid_th)
+        rgb = value_to_rgb(val)
+        
+        p1 = center + radius * np.array([np.cos(th1), np.sin(th1), 0.0])
+        p2 = center + radius * np.array([np.cos(th2), np.sin(th2), 0.0])
+        
+        seg = Line(p1, p2, stroke_width=6)
+        seg.set_color(ManimColor(rgb))
+        group.add(seg)
+
+    return group
 
 # ------------------------------------------------------------
 # Helper constructors
 # ------------------------------------------------------------
 def make_circle_with_axes(center: np.ndarray, coord_label: str):
     """
-    Create a white circle with scarlet Cartesian axes crossing at 'center',
-    and a label like '(\\sigma, \\tau)' or '(\\sigma, i\\tau)'.
+    Create a coloured function circle with scarlet Cartesian axes crossing at 'center'.
     """
-    circle = Circle(radius=RADIUS, color=WHITE, stroke_width=2).move_to(center)
+    # Replace white Circle with coloured_circle
+    circle = coloured_circle(center, RADIUS, sample_function)
 
     radius_axes = 1.1 * RADIUS
     # Short negative stub length
@@ -62,10 +124,6 @@ def make_circle_with_axes(center: np.ndarray, coord_label: str):
 
     # Axis labels: sigma, tau
     # Determine if top (Real) or bottom (Complex) based on which circle it is.
-    # We can distinguish by center y-coordinate or pass a flag.
-    # Let's pass a flag or just deduce from 'coord_label' being empty but we want specific labels?
-    # Actually, the user asked to remove "(\sigma, \tau)" main label but kept the axis labels.
-    # Let's add sigma/tau axis labels back manually.
     
     sigma_label = MathTex(r"\sigma", color=SCARLET).scale(0.6).next_to(x_axis, RIGHT, buff=0.1)
     
@@ -176,6 +234,11 @@ class Stage2(Scene):
         self.add(real_group, complex_group)
 
         real_center = real_arrow.get_start()  # this is the center for rotation
+        
+        # Get the function circle from real_group (it's the first element in the VGroup returned by make_circle_with_axes)
+        # Structure of make_circle_with_axes: VGroup(circle, axes) -> group.add(labels)
+        # So real_group[0] is the circle (VGroup of lines)
+        real_circle = real_group[0]
 
         # Brief pause before rotation
         self.wait(0.8)
@@ -190,6 +253,7 @@ class Stage2(Scene):
         
         self.play(
             Rotate(real_arrow, angle=ALPHA, about_point=real_center),
+            Rotate(real_circle, angle=ALPHA, about_point=real_center),
             Transform(p_label_real, q_label_real, path_arc=ALPHA),
             run_time=1.5,
         )
@@ -210,6 +274,10 @@ class Stage3(Scene):
         real_center = real_arrow.get_start()
         real_arrow.rotate(angle=ALPHA, about_point=real_center)
         
+        # Ensure real circle starts rotated
+        real_circle = real_group[0]
+        real_circle.rotate(angle=ALPHA, about_point=real_center)
+        
         # Update real label to Q_alpha p' and position it correctly
         q_label_real = MathTex(r"Q_\alpha p'", color=SCARLET).scale(0.7)
         q_label_real.next_to(real_arrow.get_end(), UP + RIGHT, buff=0.15)
@@ -222,6 +290,7 @@ class Stage3(Scene):
         self.add(real_group, complex_group)
 
         complex_center = complex_arrow.get_start()
+        complex_circle = complex_group[0]
 
         # Brief pause before rotation
         self.wait(0.8)
@@ -243,6 +312,7 @@ class Stage3(Scene):
         # We use path_arc to make the label move in a curve similar to the arrow.
         self.play(
             Rotate(complex_arrow, angle=ALPHA, about_point=complex_center),
+            Rotate(complex_circle, angle=ALPHA, about_point=complex_center),
             Transform(p_label_complex, q_label_complex, path_arc=ALPHA),
             run_time=1.5,
         )
