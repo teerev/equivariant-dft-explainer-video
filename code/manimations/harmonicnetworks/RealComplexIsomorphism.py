@@ -142,7 +142,7 @@ def layout_scene():
     real_group.add(real_arrow, p_prime_label_real)
     complex_group.add(complex_arrow, p_prime_label_complex)
 
-    return real_group, complex_group, real_arrow, complex_arrow
+    return real_group, complex_group, real_arrow, complex_arrow, p_prime_label_real, p_prime_label_complex
 
 
 # ------------------------------------------------------------
@@ -152,7 +152,7 @@ class Stage1(Scene):
     def construct(self):
         self.camera.background_color = BLACK
 
-        real_group, complex_group, _, _ = layout_scene()
+        real_group, complex_group, _, _, _, _ = layout_scene()
 
         # Bring everything in
         self.play(
@@ -170,7 +170,7 @@ class Stage2(Scene):
     def construct(self):
         self.camera.background_color = BLACK
 
-        real_group, complex_group, real_arrow, complex_arrow = layout_scene()
+        real_group, complex_group, real_arrow, complex_arrow, p_label_real, _ = layout_scene()
 
         # Make sure all elements are on screen
         self.add(real_group, complex_group)
@@ -180,11 +180,20 @@ class Stage2(Scene):
         # Brief pause before rotation
         self.wait(0.8)
 
-        # Rotate ONLY the real-plane arrow
+        # Rotate ONLY the real-plane arrow and update label
+        
+        # Calculate correct end position for the target label
+        end_arrow_tip = real_center + RADIUS * np.array([np.cos(ANGLE_P0 + ALPHA), np.sin(ANGLE_P0 + ALPHA), 0])
+        
+        q_label_real = MathTex(r"Q_\alpha p'", color=SCARLET).scale(0.7)
+        q_label_real.next_to(end_arrow_tip, UP + RIGHT, buff=0.15)
+        
         self.play(
             Rotate(real_arrow, angle=ALPHA, about_point=real_center),
+            Transform(p_label_real, q_label_real, path_arc=ALPHA),
             run_time=1.5,
         )
+        
         self.wait(1.0)
 
 
@@ -195,12 +204,20 @@ class Stage3(Scene):
     def construct(self):
         self.camera.background_color = BLACK
 
-        real_group, complex_group, real_arrow, complex_arrow = layout_scene()
+        real_group, complex_group, real_arrow, complex_arrow, p_label_real, p_label_complex = layout_scene()
 
         # Ensure real arrow starts rotated (continuing from Stage 2)
         real_center = real_arrow.get_start()
         real_arrow.rotate(angle=ALPHA, about_point=real_center)
-
+        
+        # Update real label to Q_alpha p' and position it correctly
+        q_label_real = MathTex(r"Q_\alpha p'", color=SCARLET).scale(0.7)
+        q_label_real.next_to(real_arrow.get_end(), UP + RIGHT, buff=0.15)
+        
+        # We need to replace the old label in the group/scene with the new one
+        # p_label_real was added to real_group in layout_scene()
+        p_label_real.become(q_label_real)
+        
         # Add everything (initially same as Stage 1)
         self.add(real_group, complex_group)
 
@@ -210,8 +227,24 @@ class Stage3(Scene):
         self.wait(0.8)
 
         # Rotate ONLY the complex-plane arrow
+        
+        # Helper to update label position
+        def update_label_complex(mob):
+            mob.next_to(complex_arrow.get_end(), UP + RIGHT, buff=0.15)
+
+        # Calculate correct end position for the target label
+        end_arrow_tip = complex_center + RADIUS * np.array([np.cos(ANGLE_P0 + ALPHA), np.sin(ANGLE_P0 + ALPHA), 0])
+        
+        # New label after rotation: Q_alpha p'
+        q_label_complex = MathTex(r"Q_\alpha p'", color=SCARLET).scale(0.7)
+        q_label_complex.next_to(end_arrow_tip, UP + RIGHT, buff=0.15)
+
+        # We remove updater before Transform so they don't conflict.
+        # We use path_arc to make the label move in a curve similar to the arrow.
         self.play(
             Rotate(complex_arrow, angle=ALPHA, about_point=complex_center),
+            Transform(p_label_complex, q_label_complex, path_arc=ALPHA),
             run_time=1.5,
         )
+        
         self.wait(1.0)
