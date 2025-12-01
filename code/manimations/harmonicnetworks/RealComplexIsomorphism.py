@@ -5,7 +5,7 @@ import numpy as np
 # Global config / colours
 # ------------------------------------------------------------
 SCARLET = ManimColor("#ff2400")
-RADIUS = 1.5
+RADIUS = 1.35
 
 C_CYAN   = np.array([0.0, 0.8, 1.0])
 C_ORANGE = np.array([1.0, 0.35, 0.0])
@@ -15,7 +15,7 @@ N_SAMPLES = 360
 THETAS = np.linspace(0, TAU, N_SAMPLES)
 
 THETA0 = 30 * DEGREES   # angle of p' from sigma axis
-ALPHA  = 47 * DEGREES   # rotation angle for Stage 2
+ALPHA  = 47 * DEGREES   # rotation angle for Stage 2/3
 
 # ------------------------------------------------------------
 # Colour mapping
@@ -173,9 +173,9 @@ def make_circle_components(center, func, label_tex):
 # Full layout
 # ------------------------------------------------------------
 def layout_scene():
-    top_center          = np.array([-4.0,  2.0, 0.0])
-    bottom_left_center  = np.array([-5.0, -1.8, 0.0])
-    bottom_right_center = np.array([-1.5, -1.8, 0.0])
+    top_center          = np.array([-5.5,  0.0, 0.0])
+    bottom_left_center  = np.array([-5.5,  2.0, 0.0])
+    bottom_right_center = np.array([-5.5, -2.0, 0.0])
 
     circle_top, deco_top, axes_lbl_top, p_lbl_top, func_lbl_top = make_circle_components(
         top_center,
@@ -186,13 +186,13 @@ def layout_scene():
     circle_breal, deco_breal, axes_lbl_breal, p_lbl_breal, func_lbl_breal = make_circle_components(
         bottom_left_center,
         lambda th: np.real(complex_fourier(th)),
-        r"\Re (\Theta_{\text{complex}}(\theta))"
+        r"\Re(\Theta_{\text{complex}}(\theta))"
     )
 
     circle_bimag, deco_bimag, axes_lbl_bimag, p_lbl_bimag, func_lbl_bimag = make_circle_components(
         bottom_right_center,
         lambda th: np.imag(complex_fourier(th)),
-        r"\Im (\Theta_{\text{complex}}(\theta))"
+        r"\Im(\Theta_{\text{complex}}(\theta))"
     )
 
     return (
@@ -223,21 +223,16 @@ class Stage1(Scene):
 
         self.play(
             FadeIn(top_group),
-            FadeIn(breal_group),
-            FadeIn(bimag_group),
-
             FadeIn(axes_lbl_top),   FadeIn(p_lbl_top),   FadeIn(func_lbl_top),
-            FadeIn(axes_lbl_breal), FadeIn(p_lbl_breal), FadeIn(func_lbl_breal),
-            FadeIn(axes_lbl_bimag), FadeIn(p_lbl_bimag), FadeIn(func_lbl_bimag),
-
             run_time=1.5,
         )
         self.wait(1.0)
 
 
 # ------------------------------------------------------------
-# Stage 2 — Active rotation of f: circle rotates by +α,
-#           p' fixed, show Q_α p' and algebra on the right.
+# Stage 2 — Active rotation of Θ_real(θ):
+#           top circle rotates by +α,
+#           p' fixed, show Q_α p' and α on the top panel.
 # ------------------------------------------------------------
 class Stage2(Scene):
     def construct(self):
@@ -255,25 +250,21 @@ class Stage2(Scene):
         breal_group = VGroup(circle_breal, deco_breal)
         bimag_group = VGroup(circle_bimag, deco_bimag)
 
-        # Add the base configuration (same as end of Stage 1)
-        # Note: deco_* includes axes_lines, p_group (arrow), theta_group (arc+label)
-        # We must explicitly add axes_labels, p_label, func_label as they are separate
+        # Base configuration (as at end of Stage 1)
         self.add(
-            top_group, breal_group, bimag_group,
+            top_group,
             axes_lbl_top,   p_lbl_top,   func_lbl_top,
-            axes_lbl_breal, p_lbl_breal, func_lbl_breal,
-            axes_lbl_bimag, p_lbl_bimag, func_lbl_bimag,
         )
         self.wait(0.5)
 
-        # -----------------------------
-        # New arrow for Q_α p'(θ)
-        # -----------------------------
-        # Create q_arrow starting at p' position (copy of p_arrow)
-        p_arrow = deco_top[1][0]
+        # ----------------------------------------------------
+        # New arrow for Q_α p'(θ) on the TOP circle
+        # ----------------------------------------------------
+        # deco_top = VGroup(axes_lines, p_group, theta_group)
+        p_arrow = deco_top[1][0]  # p_group[0]
         q_arrow = p_arrow.copy().set_color(WHITE)
 
-        # Calculate final position for label placement
+        # End position of Q_α p' for label placement
         q_dir_final = np.array([
             np.cos(THETA0 + ALPHA),
             np.sin(THETA0 + ALPHA),
@@ -299,17 +290,136 @@ class Stage2(Scene):
             + 1.1 * np.array([np.cos(mid_angle), np.sin(mid_angle), 0.0])
         )
 
-        # Animate: rotate only the top circle (function), add Q_α p' and α arc
+        # ----------------------------------------------------
+        # Animate: rotate only the TOP FUNCTION circle by +α
+        #          p', axes and θ stay fixed; Q_α p' rotates
+        #          with the function and then stays visible.
+        # ----------------------------------------------------
         self.add(q_arrow)
         self.play(
             Rotate(circle_top, angle=ALPHA, about_point=top_center),
-            Rotate(q_arrow, angle=ALPHA, about_point=top_center),
+            Rotate(q_arrow,    angle=ALPHA, about_point=top_center),
             FadeIn(alpha_arc),
             FadeIn(alpha_label),
             FadeIn(q_label),
             run_time=2.0,
         )
-        self.wait(0.5)
-
         self.wait(2.0)
 
+
+# ------------------------------------------------------------
+# Stage 3 — Active rotation of Θ_complex(θ):
+#           bottom Re/Im circles rotate by +α,
+#           p' fixed everywhere,
+#           show corresponding Q_α p' vectors on all panels.
+# ------------------------------------------------------------
+class Stage3(Scene):
+    def construct(self):
+        self.camera.background_color = BLACK
+
+        (
+            circle_top, deco_top, axes_lbl_top, p_lbl_top, func_lbl_top,
+            circle_breal, deco_breal, axes_lbl_breal, p_lbl_breal, func_lbl_breal,
+            circle_bimag, deco_bimag, axes_lbl_bimag, p_lbl_bimag, func_lbl_bimag,
+            top_center, bl_center, br_center,
+        ) = layout_scene()
+
+        # Group the three panels
+        top_group   = VGroup(circle_top,   deco_top)
+        breal_group = VGroup(circle_breal, deco_breal)
+        bimag_group = VGroup(circle_bimag, deco_bimag)
+
+        # Base configuration: Start with bottom circles visible, top invisible
+        self.add(
+            breal_group, bimag_group,
+            axes_lbl_breal, p_lbl_breal, func_lbl_breal,
+            axes_lbl_bimag, p_lbl_bimag, func_lbl_bimag,
+        )
+
+        self.wait(0.5)
+
+        # ----------------------------------------------------
+        # Corresponding Q_α p' vectors on the BOTTOM circles
+        # ----------------------------------------------------
+        # Bottom-left (Re)
+        p_arrow_breal = deco_breal[1][0]
+        q_arrow_breal = p_arrow_breal.copy().set_color(WHITE)
+
+        # Bottom-right (Im)
+        p_arrow_bimag = deco_bimag[1][0]
+        q_arrow_bimag = p_arrow_bimag.copy().set_color(WHITE)
+
+        self.add(q_arrow_breal, q_arrow_bimag)
+
+        # ----------------------------------------------------
+        # Labels and Arcs for Bottom-Left
+        # ----------------------------------------------------
+        q_dir_bl = np.array([
+            np.cos(THETA0 + ALPHA),
+            np.sin(THETA0 + ALPHA),
+            0.0
+        ])
+        q_end_bl = bl_center + RADIUS * q_dir_bl
+        q_label_bl = MathTex(r"Q_\alpha p'", color=WHITE).scale(0.7)
+        q_label_bl.next_to(q_end_bl, UP + RIGHT, buff=0.15)
+
+        alpha_arc_bl = Arc(
+            radius=0.8,
+            start_angle=THETA0,
+            angle=ALPHA,
+            arc_center=bl_center,
+            color=WHITE,
+        )
+        alpha_label_bl = MathTex(r"\alpha", color=WHITE).scale(0.6)
+        mid_angle_bl = THETA0 + ALPHA / 2.0
+        alpha_label_bl.move_to(
+            bl_center
+            + 1.1 * np.array([np.cos(mid_angle_bl), np.sin(mid_angle_bl), 0.0])
+        )
+
+        # ----------------------------------------------------
+        # Labels and Arcs for Bottom-Right
+        # ----------------------------------------------------
+        q_dir_br = np.array([
+            np.cos(THETA0 + ALPHA),
+            np.sin(THETA0 + ALPHA),
+            0.0
+        ])
+        q_end_br = br_center + RADIUS * q_dir_br
+        q_label_br = MathTex(r"Q_\alpha p'", color=WHITE).scale(0.7)
+        q_label_br.next_to(q_end_br, UP + RIGHT, buff=0.15)
+
+        alpha_arc_br = Arc(
+            radius=0.8,
+            start_angle=THETA0,
+            angle=ALPHA,
+            arc_center=br_center,
+            color=WHITE,
+        )
+        alpha_label_br = MathTex(r"\alpha", color=WHITE).scale(0.6)
+        mid_angle_br = THETA0 + ALPHA / 2.0
+        alpha_label_br.move_to(
+            br_center
+            + 1.1 * np.array([np.cos(mid_angle_br), np.sin(mid_angle_br), 0.0])
+        )
+
+        # After rotation, these will end up at angle θ + α in each panel.
+        # We animate both the circle and these arrows together.
+
+        self.play(
+            Rotate(circle_breal, angle=ALPHA, about_point=bl_center),
+            Rotate(circle_bimag, angle=ALPHA, about_point=br_center),
+            Rotate(q_arrow_breal, angle=ALPHA, about_point=bl_center),
+            Rotate(q_arrow_bimag, angle=ALPHA, about_point=br_center),
+            
+            FadeIn(q_label_bl),
+            FadeIn(alpha_arc_bl),
+            FadeIn(alpha_label_bl),
+            
+            FadeIn(q_label_br),
+            FadeIn(alpha_arc_br),
+            FadeIn(alpha_label_br),
+            
+            run_time=2.0,
+        )
+        self.wait(2.0)
