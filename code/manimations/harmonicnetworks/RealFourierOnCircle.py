@@ -218,7 +218,7 @@ class RealFourierOnCircle(Scene):
         # 8. Analytic expression for f(theta)
         # ------------------------------------------------------------
         full_expr = MathTex(
-            r"f(\theta) = a_0"
+            r"\Theta(\theta) = a_0"
             r" + a_1 \cos\theta"
             r" + b_1 \sin\theta"
             r" + a_2 \cos 2\theta"
