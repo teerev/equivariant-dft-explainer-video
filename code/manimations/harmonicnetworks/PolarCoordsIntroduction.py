@@ -85,6 +85,7 @@ class PolarCoordsIntroduction(RightRegionScene):
 
         self.angle_tracker = ValueTracker(initial_angle)
         self.radius_tracker = ValueTracker(initial_radius)
+        self.label_shift_tracker = ValueTracker(0.0)
         
         def get_p_vector_group():
             center = kernel_image.get_center()
@@ -113,6 +114,7 @@ class PolarCoordsIntroduction(RightRegionScene):
             # Label p'
             lbl_p = MathTex(r"\mathbf{p}'", color=SCARLET).scale(0.6)
             lbl_p.next_to(arrow.get_end(), UP, buff=0.1)
+            lbl_p.shift(RIGHT * 0.15 * self.label_shift_tracker.get_value())
             
             # Angle arc (theta)
             # Reference line (sigma axis direction)
@@ -196,25 +198,40 @@ class PolarCoordsIntroduction(RightRegionScene):
         delta_r = 0.2
         
         self.play(
-            self.radius_tracker.animate.set_value(base_r + delta_r),
-            run_time=0.5, rate_func=smooth
-        )
-        self.play(
             self.radius_tracker.animate.set_value(base_r - delta_r),
-            run_time=1.0, rate_func=smooth
+            run_time=0.5, rate_func=smooth
         )
         self.play(
             self.radius_tracker.animate.set_value(base_r + delta_r),
             run_time=1.0, rate_func=smooth
         )
         self.play(
-            self.radius_tracker.animate.set_value(base_r - delta_r),
+            self.radius_tracker.animate.set_value(base_r -1.5 * delta_r),
             run_time=1.0, rate_func=smooth
         )
-        self.play(
-            self.radius_tracker.animate.set_value(base_r),
-            run_time=0.5, rate_func=smooth
+
+        final_radius = self.radius_tracker.get_value()
+        highlight_circle = Circle(
+            radius=final_radius,
+            color=WHITE,
+            stroke_width=2.5,
         )
+        highlight_circle.move_to(kernel_image.get_center())
+        highlight_circle.set_z_index(1)
+
+        self.play(
+            FadeIn(highlight_circle),
+            self.label_shift_tracker.animate.set_value(1.0),
+            run_time=0.8,
+        )
+        #self.play(
+        #    self.radius_tracker.animate.set_value(base_r - delta_r),
+        #    run_time=1.0, rate_func=smooth
+        #)
+        #self.play(
+        #    self.radius_tracker.animate.set_value(base_r),
+        #    run_time=0.5, rate_func=smooth
+        #)
         
         self.wait(2)
 
