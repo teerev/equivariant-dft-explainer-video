@@ -18,19 +18,13 @@ sys.path.append(str(Path(__file__).parent.parent))
 from base_scene import RightRegionScene
 
 
-class ConvolutionContinuousVariableChange(RightRegionScene):
+class CircularKernelsEquivarianceDemo(RightRegionScene):
     def construct(self):
         self.camera.background_color = BLACK
 
         # --- Equations ---
         # Final equation: convolution notation with vector p
-        equation_rot = MathTex(
-            r"(X * F)(p) = \int_{\mathbb{R}^2} X(p + p') F(p')\,\mathrm{d}p'",
-            color=WHITE
-        ).scale(0.55).to_edge(UP, buff=0.5)
-
-        self.add(equation_rot)
-
+        
         axes = Axes(
             x_range=[-3, 3, 1],
             y_range=[-3, 3, 1],
@@ -42,7 +36,7 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
                 "include_tip": False,
             },
         )
-        axes_shift = LEFT * 5.9 + DOWN * 3.5
+        axes_shift = LEFT * 5.9 + DOWN * 3.0
         axes.shift(axes_shift)
         axes_labels = axes.get_axis_labels(MathTex("s"), MathTex("t"))
 
@@ -84,8 +78,8 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
             h = kernel_box.height
             
             k_axes = Axes(
-                x_range=[0, 1.5, 1],
-                y_range=[0, 1.5, 1],
+                x_range=[-0.4, 1.5, 1],
+                y_range=[-0.4, 1.5, 1],
                 x_length=w * 0.6,
                 y_length=h * 0.6,
                 axis_config={
@@ -95,7 +89,7 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
                     "include_ticks": False,
                 },
             )
-            k_axes.move_to(center, aligned_edge=DL)
+            k_axes.shift(center - k_axes.c2p(0, 0))
             
             sigma_tick = Line(UP * 0.08, DOWN * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.x_axis.get_end())
             tau_tick = Line(LEFT * 0.08, RIGHT * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.y_axis.get_end())
@@ -240,6 +234,12 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
         max_m = 3
         max_n = 3
 
+        # Add initial label for m=0, n=1
+        current_eq_tex = self.get_bessel_label(0, 1, "real")
+        current_eq = MathTex(current_eq_tex, color=WHITE).scale(0.5)
+        current_eq.next_to(kernel_box, DOWN*2.6 + RIGHT*0.2, buff=0.3)
+        self.add(current_eq)
+
         for m in range(max_m + 1):
             for n in range(1, max_n + 1):
                 if m == 0 and n == 1:
@@ -250,9 +250,18 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
                 new_img.set_width(current_kernel.width)
                 new_img.move_to(current_kernel.get_center())
                 new_img.set_z_index(current_kernel.get_z_index())
+                
+                new_eq_tex = self.get_bessel_label(m, n, "real")
+                new_eq = MathTex(new_eq_tex, color=WHITE).scale(0.5)
+                new_eq.next_to(kernel_box, DOWN*2.6, buff=0.3)
 
-                self.play(ReplacementTransform(current_kernel, new_img), run_time=1.0)
+                self.play(
+                    ReplacementTransform(current_kernel, new_img),
+                    ReplacementTransform(current_eq, new_eq),
+                    run_time=1.0
+                )
                 current_kernel = new_img
+                current_eq = new_eq
                 self.wait(0.5)
 
                 # Imag part (if m > 0)
@@ -262,13 +271,84 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
                     new_img_imag.move_to(current_kernel.get_center())
                     new_img_imag.set_z_index(current_kernel.get_z_index())
 
-                    self.play(ReplacementTransform(current_kernel, new_img_imag), run_time=1.0)
+                    new_eq_tex_imag = self.get_bessel_label(m, n, "imag")
+                    new_eq_imag = MathTex(new_eq_tex_imag, color=WHITE).scale(0.5)
+                    new_eq_imag.next_to(kernel_box, DOWN*2.6 + RIGHT*0.2, buff=0.3)
+
+                    self.play(
+                        ReplacementTransform(current_kernel, new_img_imag),
+                        ReplacementTransform(current_eq, new_eq_imag),
+                        run_time=1.0
+                    )
                     current_kernel = new_img_imag
+                    current_eq = new_eq_imag
                     self.wait(0.5)
+        
+        # --- Extend angular index m up to 12 ---
+        # Keep last radial index n (which is max_n)
+        last_n = max_n
+        
+        for m in range(max_m + 1, 13):
+             # Real part only for brevity/visual impact of high frequency? 
+             # Or both? Let's show Real to keep it snappy or both if desired.
+             # User said "extend the series", usually implies same pattern.
+             # We'll show both Real and Imag parts.
+             
+             # Real part
+             new_img = self.create_bessel_image(m, last_n, "real", resolution=240, span=kernel_span, shape="circle")
+             new_img.set_width(current_kernel.width)
+             new_img.move_to(current_kernel.get_center())
+             new_img.set_z_index(current_kernel.get_z_index())
+             
+             new_eq_tex = self.get_bessel_label(m, last_n, "real")
+             new_eq = MathTex(new_eq_tex, color=WHITE).scale(0.5)
+             new_eq.next_to(kernel_box, DOWN*2.6 + RIGHT*0.2, buff=0.3)
+
+             self.play(
+                ReplacementTransform(current_kernel, new_img),
+                ReplacementTransform(current_eq, new_eq),
+                run_time=0.8
+             )
+             current_kernel = new_img
+             current_eq = new_eq
+             
+             # Imag part
+             new_img_imag = self.create_bessel_image(m, last_n, "imag", resolution=240, span=kernel_span, shape="circle")
+             new_img_imag.set_width(current_kernel.width)
+             new_img_imag.move_to(current_kernel.get_center())
+             new_img_imag.set_z_index(current_kernel.get_z_index())
+
+             new_eq_tex_imag = self.get_bessel_label(m, last_n, "imag")
+             new_eq_imag = MathTex(new_eq_tex_imag, color=WHITE).scale(0.5)
+             new_eq_imag.next_to(kernel_box, DOWN*2.6 + RIGHT*0.2, buff=0.3)
+
+             self.play(
+                ReplacementTransform(current_kernel, new_img_imag),
+                ReplacementTransform(current_eq, new_eq_imag),
+                run_time=0.8
+             )
+             current_kernel = new_img_imag
+             current_eq = new_eq_imag
 
         self.wait(2)
 
 
+    def get_bessel_label(self, m, n, part):
+        # Format label string for MathTex
+        # e.g. \psi_{m,n}^{(\cos)}(r,\theta)
+        
+        func_type = r"(\cos)" if part == "real" else r"(\sin)"
+        trig = r"\cos" if part == "real" else r"\sin"
+        
+        if m == 0:
+            # No angular part for m=0 real, and imag is 0 (handled by logic loop usually skipping it, but here for completeness)
+            return fr"F_{{{m},{n}}}(r,\theta) = J_{{{m}}}\!\left(\alpha_{{{m},{n}}}\frac{{r}}{{R}}\right)"
+        
+        return (
+            fr"F_{{{m},{n}}}^{{{func_type}}}(r,\theta) = "
+            fr"J_{{{m}}}\!\left(\alpha_{{{m},{n}}}\frac{{r}}{{R}}\right)"
+            fr"\,{trig}({m}\theta)"
+        )
 
     def create_bessel_image(self, m, n, part="real", resolution=240, span=3.0, shape="square"):
         xs = np.linspace(-span, span, resolution)
