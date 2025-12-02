@@ -22,11 +22,26 @@ class HarmonicFeatureMapBehaviour(Scene):
         top_row = Group(input_panel).arrange(RIGHT, buff=1.5)
         top_row.to_edge(UP, buff=1.0)
 
-        equation = MathTex(
-            r"Y_{m,q}^{\alpha}\bigl(Q_{\alpha}p\bigr)"
-            r" = e^{-\,i m \alpha}\,Y_{m,q}(p)",
-            font_size=25,
+        eq1 = MathTex(
+            r"Y^{\alpha}\bigl(\mathbf{Q}_{\alpha} p\bigr) = D(\alpha)\,Y(p)",
+            font_size=32
         )
+        
+        matrix_content = (
+            r"D(\alpha) ="
+            r"\begin{pmatrix}"
+            r"e^{-3\mathrm{i}\alpha} & 0 & 0 & 0 & 0 & 0 & 0 \\"
+            r"0 & e^{-2\mathrm{i}\alpha} & 0 & 0 & 0 & 0 & 0 \\"
+            r"0 & 0 & e^{-\mathrm{i}\alpha} & 0 & 0 & 0 & 0 \\"
+            r"0 & 0 & 0 & 1 & 0 & 0 & 0 \\"
+            r"0 & 0 & 0 & 0 & e^{\mathrm{i}\alpha} & 0 & 0 \\"
+            r"0 & 0 & 0 & 0 & 0 & e^{2\mathrm{i}\alpha} & 0 \\"
+            r"0 & 0 & 0 & 0 & 0 & 0 & e^{3\mathrm{i}\alpha}"
+            r"\end{pmatrix}"
+        )
+        eq2 = MathTex(matrix_content, font_size=20)
+        
+        equation = VGroup(eq1, eq2).arrange(DOWN, buff=0.2)
         equation.next_to(top_row, RIGHT, buff=0.4)
 
         # --------------------------------------------------------------
@@ -76,8 +91,14 @@ class HarmonicFeatureMapBehaviour(Scene):
         # Let's assume aspect ratio ~1.0 for square tiles, plus padding.
         # Visually shifting LEFT * 1.5 should be safe based on layout.
         
+        # User requested to move image and equation to the left a bit more
+        # Original shift was LEFT * 1.8
+        # I will shift top_row and equation further left by adding an extra shift
+        
         shift_vec = LEFT * 1.8
-        top_row.shift(shift_vec)
+        top_row_extra_shift = LEFT * 1.1 # Tweak this value to move image/equation further left
+        
+        top_row.shift(shift_vec + top_row_extra_shift)
         equation.next_to(top_row, RIGHT, buff=0.4)
         bottom_grid.shift(shift_vec)
 
@@ -101,7 +122,8 @@ class HarmonicFeatureMapBehaviour(Scene):
         rotate_input = True
         if rotate_input:
             input_center = input_img.get_center()
-            input_img.add_updater(make_rot_updater(omega_input, input_center))
+            # Reverse direction of input rotation (-omega_input)
+            input_img.add_updater(make_rot_updater(-omega_input, input_center))
 
         # Each harmonic: -m × input frequency (e^{-i m alpha}),
         # images spin inside static frames.

@@ -24,6 +24,13 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
 
         # --- Equations ---
         # Final equation: convolution notation with vector p
+        # equation_rot_text = r"(X * F)(p) = \int_{\mathbb{R}^2} X(p + p') F(p')\,\mathrm{d}p'"
+        equation_rot = MathTex(
+            r"(X * F)(p) = \int_{\mathbb{R}^2} X(p + p') F(p')\,\mathrm{d}p'",
+            color=WHITE
+        ).scale(0.55).to_edge(UP, buff=0.5)
+
+        self.add(equation_rot)
         
         axes = Axes(
             x_range=[-3, 3, 1],
@@ -253,16 +260,16 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
                 
                 new_eq_tex = self.get_bessel_label(m, n, "real")
                 new_eq = MathTex(new_eq_tex, color=WHITE).scale(0.5)
-                new_eq.next_to(kernel_box, DOWN*2.6, buff=0.3)
+                new_eq.next_to(kernel_box, DOWN*2.6 + RIGHT*0.2, buff=0.3)
 
                 self.play(
                     ReplacementTransform(current_kernel, new_img),
                     ReplacementTransform(current_eq, new_eq),
-                    run_time=1.0
+                    run_time=0.5
                 )
                 current_kernel = new_img
                 current_eq = new_eq
-                self.wait(0.5)
+                self.wait(0.25)
 
                 # Imag part (if m > 0)
                 if m > 0:
@@ -307,7 +314,7 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
              self.play(
                 ReplacementTransform(current_kernel, new_img),
                 ReplacementTransform(current_eq, new_eq),
-                run_time=0.8
+                run_time=0.4
              )
              current_kernel = new_img
              current_eq = new_eq
@@ -325,10 +332,24 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
              self.play(
                 ReplacementTransform(current_kernel, new_img_imag),
                 ReplacementTransform(current_eq, new_eq_imag),
-                run_time=0.8
+                run_time=0.4
              )
              current_kernel = new_img_imag
              current_eq = new_eq_imag
+
+        # --- Final Equation Morph ---
+        # "Make the equation at the top of the page morph from its current form into a form 
+        # where a bar appears over the top of the F(p') function in the integral."
+        
+        equation_bar = MathTex(
+            r"(X * F)(p) = \int_{\mathbb{R}^2} X(p + p') \overline{F(p')}\,\mathrm{d}p'",
+            color=WHITE
+        ).scale(0.55).move_to(equation_rot)
+
+        self.play(
+            ReplacementTransform(equation_rot, equation_bar),
+            run_time=2.0
+        )
 
         self.wait(2)
 
