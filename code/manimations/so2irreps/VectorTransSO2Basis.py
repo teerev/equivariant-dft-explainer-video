@@ -136,12 +136,12 @@ class VectorTransSO2Basis(Scene):
             origin,
             p_target_orig,
             buff=0,
-            color=GREY,
+            color=WHITE,
             stroke_width=2.5 * GLOBAL_SCALE,
             tip_length=0.08 * GLOBAL_SCALE,
             max_tip_length_to_length_ratio=1.0,
         )
-        original_label = MathTex(r"\mathbf{p}", color=GREY).scale(0.5 * GLOBAL_SCALE)
+        original_label = MathTex(r"\mathbf{p}", color=WHITE).scale(0.5 * GLOBAL_SCALE)
         # original_label.next_to(p_target_orig, UP + RIGHT, buff=0.1 * GLOBAL_SCALE)
         # Put label at midpoint of the vector line
         original_label.move_to(original_arrow.get_center() + 0.2 * UP * GLOBAL_SCALE)
@@ -173,9 +173,9 @@ class VectorTransSO2Basis(Scene):
             original_arrow,
             radius=0.6 * GLOBAL_SCALE,
             other_angle=False,
-            color=YELLOW
+            color=WHITE
         )
-        label_alpha = MathTex(r"\alpha", color=YELLOW).scale(0.6 * GLOBAL_SCALE)
+        label_alpha = MathTex(r"\alpha", color=WHITE).scale(0.6 * GLOBAL_SCALE)
         label_alpha.next_to(angle_alpha, RIGHT, buff=0.05 * GLOBAL_SCALE)
         
         # Angle beta: subtended by vector u with a small horizontal line at p's end
@@ -198,9 +198,9 @@ class VectorTransSO2Basis(Scene):
             original_u_arrow,
             radius=0.5 / 3 * GLOBAL_SCALE,
             other_angle=False,
-            color=GREEN
+            color=BLUE
         )
-        label_beta = MathTex(r"\beta", color=GREEN).scale(0.6 * GLOBAL_SCALE)
+        label_beta = MathTex(r"\beta", color=BLUE).scale(0.6 * GLOBAL_SCALE)
         # Position beta label closer to arc
         label_beta.next_to(angle_beta, RIGHT, buff=0.05 * GLOBAL_SCALE)
         label_beta.shift(0.05 * UP * GLOBAL_SCALE)
@@ -223,13 +223,13 @@ class VectorTransSO2Basis(Scene):
                 origin, 
                 p_target_rot,
                 buff=0,
-                color=GREY, 
+                color=WHITE, 
                 stroke_width=2.5 * GLOBAL_SCALE,
                 tip_length=0.08 * GLOBAL_SCALE,
                 max_tip_length_to_length_ratio=1.0,
             )
             
-            label_p = MathTex(r"\mathbf{p}", color=GREY).scale(0.5 * GLOBAL_SCALE)
+            label_p = MathTex(r"\mathbf{p}", color=WHITE).scale(0.5 * GLOBAL_SCALE)
             label_p.move_to(arrow_p.get_center() + 0.2 * UP * GLOBAL_SCALE)
             
             # --- 2. Rotated u(p) vector ---
@@ -281,10 +281,10 @@ class VectorTransSO2Basis(Scene):
                 line_to_p,
                 radius=0.6 * GLOBAL_SCALE,
                 other_angle=False,
-                color=YELLOW
+                color=WHITE
             )
             # Ensure label alpha follows the arc
-            label_alpha_mob = MathTex(r"\alpha", color=YELLOW).scale(0.6 * GLOBAL_SCALE)
+            label_alpha_mob = MathTex(r"\alpha", color=WHITE).scale(0.6 * GLOBAL_SCALE)
             # Use point_from_proportion to place label
             label_alpha_mob.move_to(
                 Angle(s_line_local, line_to_p, radius=0.6 * GLOBAL_SCALE + 0.25).point_from_proportion(0.5)
@@ -435,10 +435,10 @@ class VectorTransSO2Basis(Scene):
                 start_angle=0.0,
                 angle=beta_arc_angle,
                 arc_center=p_tip,
-                color=GREEN,
+                color=BLUE,
                 stroke_width=2.0 * GLOBAL_SCALE,
             )
-            beta_label_dynamic = MathTex(r"\beta", color=GREEN).scale(0.5 * GLOBAL_SCALE)
+            beta_label_dynamic = MathTex(r"\beta", color=BLUE).scale(0.5 * GLOBAL_SCALE)
             beta_label_dynamic.move_to(
                 beta_arc.point_from_proportion(0.5) + 0.05 * UP * GLOBAL_SCALE
             )
@@ -449,11 +449,11 @@ class VectorTransSO2Basis(Scene):
                 start_angle=0.0,
                 angle=beta_arc_angle,
                 arc_center=origin2,
-                color=GREEN,
+                color=BLUE,
                 stroke_width=2.0 * GLOBAL_SCALE,
             )
             if abs(beta_arc_angle) > 1e-3:
-                beta2_label = MathTex(r"\beta", color=GREEN).scale(0.5 * GLOBAL_SCALE)
+                beta2_label = MathTex(r"\beta", color=BLUE).scale(0.5 * GLOBAL_SCALE)
                 beta2_label.move_to(beta2_arc.point_from_proportion(0.5) + 0.05 * UP * GLOBAL_SCALE)
                 beta2_parts = [beta2_arc, beta2_label]
             else:
@@ -464,10 +464,10 @@ class VectorTransSO2Basis(Scene):
                 start_angle=0.0,
                 angle=beta_arc_angle_neg,
                 arc_center=origin3,
-                color=GREEN,
+                color=BLUE,
                 stroke_width=2.0 * GLOBAL_SCALE,
             )
-            beta3_label = MathTex(r"-\beta", color=GREEN).scale(0.5 * GLOBAL_SCALE)
+            beta3_label = MathTex(r"-\beta", color=BLUE).scale(0.5 * GLOBAL_SCALE)
             beta3_label.move_to(
                 beta3_arc.point_from_proportion(0.5) + 0.05 * DOWN * GLOBAL_SCALE
             )

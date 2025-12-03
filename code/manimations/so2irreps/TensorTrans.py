@@ -193,7 +193,7 @@ class StressTensorRotation(Scene):
             stroke_width=2 * GLOBAL_SCALE,
             tip_length=0.07 * GLOBAL_SCALE,
         )
-        n_label = MathTex(r"\hat{\mathbf{n}}(\mathbf{p})", color=GREEN_C).scale(0.5 * GLOBAL_SCALE)
+        n_label = MathTex(r"\mathbf{t}(\mathbf{p})", color=GREEN_C).scale(0.5 * GLOBAL_SCALE)
         n_label.next_to(n_arrow.get_end(), UP + RIGHT, buff=0.06)
 
         t_vec = sigma @ n  # traction in (s,t) components
@@ -201,12 +201,12 @@ class StressTensorRotation(Scene):
             p_tip,
             axes.c2p(*(p0[:2] + 0.7 * t_vec)),
             buff=0,
-            color=BLUE_C,
+            color=GREEN_C,
             stroke_width=2 * GLOBAL_SCALE,
             tip_length=0.07 * GLOBAL_SCALE,
         )
-        t_label = MathTex(r"\mathbf{t}(\mathbf{p})",
-                          color=BLUE_C).scale(0.45 * GLOBAL_SCALE)
+        t_label = MathTex(r"\hat{\mathbf{n}}(\mathbf{p})",
+                          color=GREEN_C).scale(0.45 * GLOBAL_SCALE)
         t_label.next_to(t_arrow.get_end(), RIGHT + 0.2 * UP, buff=0.06)
 
         self.add(base_line, n_arrow, n_label, t_arrow, t_label)
@@ -236,7 +236,7 @@ class StressTensorRotation(Scene):
                 stroke_width=2.2 * GLOBAL_SCALE,
                 tip_length=0.07 * GLOBAL_SCALE,
             )
-            n_label_rot = MathTex(r"\hat{\mathbf{n}}^\alpha(\mathbf{Q}_\alpha\mathbf{p})",
+            n_label_rot = MathTex(r"\mathbf{t}^\alpha(\mathbf{Q}_\alpha\mathbf{p})",
                                   color=GREEN_C).scale(0.45 * GLOBAL_SCALE)
             n_label_rot.next_to(n_arrow_rot.get_end(), UP + RIGHT, buff=0.06)
 
@@ -245,13 +245,13 @@ class StressTensorRotation(Scene):
                 p_rot_tip_coords,
                 axes.c2p(*(p_rot + 0.7 * t_rot)),
                 buff=0,
-                color=BLUE_C,
+                color=GREEN_C,
                 stroke_width=2.2 * GLOBAL_SCALE,
                 tip_length=0.07 * GLOBAL_SCALE,
             )
             t_label_rot = MathTex(
-                r"\mathbf{t}^\alpha(\mathbf{Q}_\alpha\mathbf{p})",
-                color=BLUE_C
+                r"\hat{\mathbf{n}}^\alpha(\mathbf{Q}_\alpha\mathbf{p})",
+                color=GREEN_C
             ).scale(0.45 * GLOBAL_SCALE)
             t_label_rot.next_to(t_arrow_rot.get_end(), RIGHT + 0.2 * UP, buff=0.06)
 
