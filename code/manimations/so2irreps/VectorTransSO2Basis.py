@@ -1,7 +1,7 @@
 from manim import *
 import numpy as np
 
-class VectorTrans(Scene):
+class VectorTransSO2Basis(Scene):
     def construct(self):
         # 4x2 grid configuration
         grid_w = config.frame_width / 4
