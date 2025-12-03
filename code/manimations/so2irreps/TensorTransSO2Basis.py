@@ -54,8 +54,8 @@ class TensorTransSO2Basis(Scene):
         
         # Vertical: Re(u^(+1)(p)), Horizontal: Im(u^(+1)(p))
         axes2_labels = axes2.get_axis_labels(
-            MathTex(r"\Im(\sigma^{+2}(\mathbf{p}))", color=WHITE).scale(0.6 * GLOBAL_SCALE),
-            MathTex(r"\Re(\sigma^{+2}(\mathbf{p}))", color=WHITE).scale(0.6 * GLOBAL_SCALE)
+            MathTex(r"\Im(\sigma^{(+2)}", color=WHITE).scale(0.6 * GLOBAL_SCALE),
+            MathTex(r"\Re(\sigma^{(+2)}", color=WHITE).scale(0.6 * GLOBAL_SCALE)
         )
         axes_group2 = VGroup(axes2, axes2_labels)
 
@@ -78,8 +78,8 @@ class TensorTransSO2Basis(Scene):
         
         # Vertical: Re(u^(-1)(p)), Horizontal: Im(u^(-1)(p))
         axes3_labels = axes3.get_axis_labels(
-            MathTex(r"\Im(\sigma^{-2}(\mathbf{p}))", color=WHITE).scale(0.6 * GLOBAL_SCALE),
-            MathTex(r"\Re(\sigma^{-2}(\mathbf{p}))", color=WHITE).scale(0.6 * GLOBAL_SCALE)
+            MathTex(r"\Im(\sigma^{(-2)})", color=WHITE).scale(0.6 * GLOBAL_SCALE),
+            MathTex(r"\Re(\sigma^{(-2)})", color=WHITE).scale(0.6 * GLOBAL_SCALE)
         )
         axes_group3 = VGroup(axes3, axes3_labels)
 
@@ -195,22 +195,22 @@ class TensorTransSO2Basis(Scene):
             tip_scene,
             axes.c2p(*(p_val[:2] + 1.4 * n_vec)),
             buff=0,
-            color=GREEN_C,
+            color=BLUE_C,
             stroke_width=2 * GLOBAL_SCALE,
             tip_length=0.07 * GLOBAL_SCALE,
         )
-        n_label_base = MathTex(r"\hat{\mathbf{n}}(\mathbf{p})", color=GREEN_C).scale(0.5 * GLOBAL_SCALE)
+        n_label_base = MathTex(r"\hat{\mathbf{n}}(\mathbf{p})", color=BLUE_C).scale(0.5 * GLOBAL_SCALE)
         n_label_base.next_to(n_arrow_base.get_end(), UP + RIGHT, buff=0.06)
 
         t_arrow_base = Arrow(
             tip_scene,
             axes.c2p(*(p_val[:2] + 1.4 * t_vec)),
             buff=0,
-            color=BLUE_C,
+            color=GREEN_C,
             stroke_width=2 * GLOBAL_SCALE,
             tip_length=0.07 * GLOBAL_SCALE,
         )
-        t_label_base = MathTex(r"\mathbf{t}(\mathbf{p})", color=BLUE_C).scale(0.45 * GLOBAL_SCALE)
+        t_label_base = MathTex(r"\mathbf{t}(\mathbf{p})", color=GREEN_C).scale(0.45 * GLOBAL_SCALE)
         t_label_base.next_to(t_arrow_base.get_end(), RIGHT + 0.2 * UP, buff=0.06)
 
         beta_angle_base = float(np.mod(np.arctan2(n_vec[1], n_vec[0]), TAU))
@@ -300,13 +300,13 @@ class TensorTransSO2Basis(Scene):
                 p_tip,
                 axes.c2p(*(p_rot + 1.4 * t_rot)),
                 buff=0,
-                color=BLUE_C,
+                color=GREEN_C,
                 stroke_width=2.2 * GLOBAL_SCALE,
                 tip_length=0.07 * GLOBAL_SCALE,
             )
             t_label_rot = MathTex(
                 r"\mathbf{t}^\alpha(\mathbf{Q}_\alpha\mathbf{p})",
-                color=BLUE_C
+                color=GREEN_C
             ).scale(0.45 * GLOBAL_SCALE)
             t_label_rot.next_to(t_arrow_rot.get_end(), RIGHT + 0.2 * UP, buff=0.06)
 
@@ -354,7 +354,7 @@ class TensorTransSO2Basis(Scene):
                 tip_length=0.07 * GLOBAL_SCALE,
                 max_tip_length_to_length_ratio=1.0,
             )
-            label_u_plus = MathTex(r"\sigma^{+2}", color=BLUE_C).scale(0.5 * GLOBAL_SCALE)
+            label_u_plus = MathTex(r"\sigma^{(+2)}", color=BLUE_C).scale(0.5 * GLOBAL_SCALE)
             label_u_plus.next_to(arrow2.get_end(), RIGHT + 0.2 * UP, buff=0.08 * GLOBAL_SCALE)
             
             # Panel 3 Vector (Freq -1?)
@@ -381,7 +381,7 @@ class TensorTransSO2Basis(Scene):
                 tip_length=0.07 * GLOBAL_SCALE,
                 max_tip_length_to_length_ratio=1.0,
             )
-            label_u_minus = MathTex(r"\sigma^{-2}", color=BLUE_C).scale(0.5 * GLOBAL_SCALE)
+            label_u_minus = MathTex(r"\sigma^{(-2)}", color=BLUE_C).scale(0.5 * GLOBAL_SCALE)
             label_u_minus.next_to(arrow3.get_end(), LEFT + 0.2 * DOWN, buff=0.08 * GLOBAL_SCALE)
             
             # Also add beta angles for these new vectors?
@@ -406,17 +406,16 @@ class TensorTransSO2Basis(Scene):
                     *beta3_angle_parts
                 )
             
-            # Use arcs for beta indicators to avoid flicker/glitches
             beta2_arc = Arc(
                 radius=0.4 * GLOBAL_SCALE,
                 start_angle=0.0,
                 angle=beta_arc_angle,
                 arc_center=origin2,
-                color=GREEN,
+                color=BLUE_C,
                 stroke_width=2.0 * GLOBAL_SCALE,
             )
             if abs(beta_arc_angle) > 1e-3:
-                beta2_label = MathTex(r"2\alpha", color=GREEN).scale(0.5 * GLOBAL_SCALE)
+                beta2_label = MathTex(r"2\beta", color=BLUE_C).scale(0.5 * GLOBAL_SCALE)
                 beta2_label.move_to(beta2_arc.point_from_proportion(0.5) + 0.05 * UP * GLOBAL_SCALE)
                 beta2_parts = [beta2_arc, beta2_label]
             else:
@@ -427,10 +426,10 @@ class TensorTransSO2Basis(Scene):
                 start_angle=0.0,
                 angle=beta_arc_angle_neg,
                 arc_center=origin3,
-                color=GREEN,
+                color=BLUE_C,
                 stroke_width=2.0 * GLOBAL_SCALE,
             )
-            beta3_label = MathTex(r"-2\alpha", color=GREEN).scale(0.5 * GLOBAL_SCALE)
+            beta3_label = MathTex(r"-2\beta", color=BLUE_C).scale(0.5 * GLOBAL_SCALE)
             beta3_label.move_to(
                 beta3_arc.point_from_proportion(0.5) + 0.05 * DOWN * GLOBAL_SCALE
             )
