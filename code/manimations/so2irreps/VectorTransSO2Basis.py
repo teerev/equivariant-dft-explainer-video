@@ -115,7 +115,7 @@ class VectorTrans(Scene):
         # Using a vector roughly visible in the first quadrant
         p_val = np.array([2.5, 0.4, 0])
         p_len = np.linalg.norm(p_val[:2])
-        u_len = 0.5 * p_len
+        u_len = 0.75 * p_len  # 50% longer than before
         u_angle = 60 * DEGREES  # up-right, 30 degrees from vertical
         u_vec_base = np.array(
             [
@@ -378,6 +378,8 @@ class VectorTrans(Scene):
                 tip_length=0.07 * GLOBAL_SCALE,
                 max_tip_length_to_length_ratio=1.0,
             )
+            label_u_plus = MathTex(r"\mathbf{u}^{+}(\mathbf{p})", color=BLUE_C).scale(0.5 * GLOBAL_SCALE)
+            label_u_plus.next_to(arrow2.get_end(), RIGHT + 0.2 * UP, buff=0.08 * GLOBAL_SCALE)
             
             # Panel 3 Vector (Freq -1?)
             # Request says "beta must be the same as the angle beta on the left plot".
@@ -403,6 +405,8 @@ class VectorTrans(Scene):
                 tip_length=0.07 * GLOBAL_SCALE,
                 max_tip_length_to_length_ratio=1.0,
             )
+            label_u_minus = MathTex(r"\mathbf{u}^{-}(\mathbf{p})", color=BLUE_C).scale(0.5 * GLOBAL_SCALE)
+            label_u_minus.next_to(arrow3.get_end(), LEFT + 0.2 * DOWN, buff=0.08 * GLOBAL_SCALE)
             
             # Also add beta angles for these new vectors?
             # "they must subtend an angle beta with their horizontal axes"
@@ -419,27 +423,22 @@ class VectorTrans(Scene):
                     angle_alpha_mob, label_alpha_mob,
                     horiz_line_mob, 
                     *beta_angle_parts,
-                    arrow2, arrow3,
+                    arrow2, label_u_plus,
+                    arrow3, label_u_minus,
                     *beta2_angle_parts,
                     *beta3_angle_parts
                 )
             
-            # Use lists to collect angle parts to handle parallel line errors gracefully
-            beta_parts = []
-            try:
-                angle_beta_mob = Angle(
-                    horiz_line_mob,
-                    line_u,
-                    radius=0.5 / 3 * GLOBAL_SCALE,
-                    other_angle=False,
-                    color=GREEN
-                )
-                label_beta_mob = MathTex(r"\beta", color=GREEN).scale(0.6 * GLOBAL_SCALE)
-                label_beta_mob.next_to(angle_beta_mob, RIGHT, buff=0.05 * GLOBAL_SCALE)
-                label_beta_mob.shift(0.05 * UP * GLOBAL_SCALE)
-                beta_parts = [angle_beta_mob, label_beta_mob]
-            except ValueError:
-                pass # Lines parallel, skip beta angle
+            # Use arcs for beta indicators to avoid flicker/glitches
+            beta_arc = Arc(
+                radius=0.5 / 3 * GLOBAL_SCALE,
+                start_angle=0.0,
+                angle=beta_arc_angle,
+                arc_center=p_tip,
+                color=GREEN,
+                stroke_width=2.0 * GLOBAL_SCALE,
+            )
+            beta_parts = [beta_arc]
 
             beta2_arc = Arc(
                 radius=0.4 * GLOBAL_SCALE,
@@ -464,12 +463,7 @@ class VectorTrans(Scene):
                 color=GREEN,
                 stroke_width=2.0 * GLOBAL_SCALE,
             )
-            if abs(beta_arc_angle_neg) > 1e-3:
-                beta3_label = MathTex(r"-\beta", color=GREEN).scale(0.5 * GLOBAL_SCALE)
-                beta3_label.move_to(beta3_arc.point_from_proportion(0.5) + 0.05 * DOWN * GLOBAL_SCALE)
-                beta3_parts = [beta3_arc, beta3_label]
-            else:
-                beta3_parts = [beta3_arc]
+            beta3_parts = [beta3_arc]
 
             return pack_group(beta_parts, beta2_parts, beta3_parts)
 
