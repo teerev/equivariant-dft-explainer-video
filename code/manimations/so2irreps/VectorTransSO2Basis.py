@@ -438,7 +438,11 @@ class VectorTrans(Scene):
                 color=GREEN,
                 stroke_width=2.0 * GLOBAL_SCALE,
             )
-            beta_parts = [beta_arc]
+            beta_label_dynamic = MathTex(r"\beta", color=GREEN).scale(0.5 * GLOBAL_SCALE)
+            beta_label_dynamic.move_to(
+                beta_arc.point_from_proportion(0.5) + 0.05 * UP * GLOBAL_SCALE
+            )
+            beta_parts = [beta_arc, beta_label_dynamic]
 
             beta2_arc = Arc(
                 radius=0.4 * GLOBAL_SCALE,
@@ -463,7 +467,11 @@ class VectorTrans(Scene):
                 color=GREEN,
                 stroke_width=2.0 * GLOBAL_SCALE,
             )
-            beta3_parts = [beta3_arc]
+            beta3_label = MathTex(r"-\beta", color=GREEN).scale(0.5 * GLOBAL_SCALE)
+            beta3_label.move_to(
+                beta3_arc.point_from_proportion(0.5) + 0.05 * DOWN * GLOBAL_SCALE
+            )
+            beta3_parts = [beta3_arc, beta3_label]
 
             return pack_group(beta_parts, beta2_parts, beta3_parts)
 
