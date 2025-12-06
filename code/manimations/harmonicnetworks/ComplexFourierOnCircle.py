@@ -119,8 +119,8 @@ class ComplexFourierOnCircle(Scene):
                 stroke_width=2,
             )
 
-            sigma_label = MathTex(r"\sigma", color=SCARLET).scale(0.4)
-            tau_label   = MathTex(r"\tau",   color=SCARLET).scale(0.4)
+            sigma_label = MathTex(r"x'", color=SCARLET).scale(0.4)
+            tau_label   = MathTex(r"y'",   color=SCARLET).scale(0.4)
 
             sigma_label.next_to(x_axis.get_end(), RIGHT, buff=0.05)
             tau_label.next_to(y_axis.get_end(), UP, buff=0.05)
@@ -182,7 +182,7 @@ class ComplexFourierOnCircle(Scene):
 
             # Label to the left of the circle to save space? Or tiny below?
             # Let's put it tiny below as before but scale it down
-            label_re = MathTex(r"\Re\left(e^{i " + f"{m}" + r"\theta}\right)").scale(0.5)
+            label_re = MathTex(r"\Re\left(e^{i \left(" + f"{m}" + r"\theta'\right)}\right)").scale(0.5)
             label_re.next_to(center_re, DOWN, buff=0.1 + small_radius*0.2) # Adjust buff to clear axis
 
             basis_mobjects.append(ring_re)
@@ -199,7 +199,7 @@ class ComplexFourierOnCircle(Scene):
             axes_im = make_axes(center_im, small_radius)
             basis_axes.append(axes_im)
 
-            label_im = MathTex(r"\Im\left(e^{i " + f"{m}" + r"\theta}\right)").scale(0.5)
+            label_im = MathTex(r"\Im\left(e^{i \left(" + f"{m}" + r"\theta'\right)}\right)").scale(0.5)
             label_im.next_to(center_im, DOWN, buff=0.1 + small_radius*0.2)
 
             basis_mobjects.append(ring_im)
@@ -237,10 +237,10 @@ class ComplexFourierOnCircle(Scene):
         main_axes_imag = make_axes(center_big_imag, big_radius)
 
         # Labels for the big circles
-        label_f_real = MathTex(r"\Re\big(\Theta(\theta)\big)").scale(0.7)
+        label_f_real = MathTex(r"\Re\big(\Theta(\theta')\big)").scale(0.7)
         label_f_real.next_to(center_big_real, DOWN, buff=0.25 + big_radius*0.1)
 
-        label_f_imag = MathTex(r"\Im\big(\Theta(\theta)\big)").scale(0.7)
+        label_f_imag = MathTex(r"\Im\big(\Theta(\theta')\big)").scale(0.7)
         label_f_imag.next_to(center_big_imag, DOWN, buff=0.25 + big_radius*0.1)
 
         # ------------------------------------------------------------
@@ -298,7 +298,7 @@ class ComplexFourierOnCircle(Scene):
         # 8. Analytic expression for f(θ)
         # ------------------------------------------------------------
         full_expr = MathTex(
-            r"\Theta(\theta) \;=\; \sum_{m=-2}^{2} c_m\,e^{i m \theta}"
+            r"\Theta(\theta') \;=\; \sum_{m=-2}^{2} c_m\,e^{i \left(m \theta'\right)}"
         ).scale(0.6) # Reduced scale
         
         # Position above the coefficients in the same panel

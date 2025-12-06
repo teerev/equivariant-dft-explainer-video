@@ -22,8 +22,8 @@ class StressTensorRotation(Scene):
             },
         )
         axes_labels = axes.get_axis_labels(
-            MathTex("s", color=WHITE).scale(GLOBAL_SCALE),
-            MathTex("t", color=WHITE).scale(GLOBAL_SCALE),
+            MathTex("x", color=WHITE).scale(GLOBAL_SCALE),
+            MathTex("y", color=WHITE).scale(GLOBAL_SCALE),
         )
         axes_group = VGroup(axes, axes_labels).to_corner(UL, buff=0.6)
         self.add(axes_group)

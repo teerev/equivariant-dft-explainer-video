@@ -49,8 +49,8 @@ class ConvolutionPullback2(MovingCameraScene):
         axes_shift = LEFT * 4.5 + UP * 1.5
         axes.shift(axes_shift)
         axes_labels = axes.get_axis_labels(
-            MathTex("s", color=WHITE).scale(GLOBAL_SCALE), 
-            MathTex("t", color=WHITE).scale(GLOBAL_SCALE)
+            MathTex("x", color=WHITE).scale(GLOBAL_SCALE), 
+            MathTex("y", color=WHITE).scale(GLOBAL_SCALE)
         ) 
         
         # --- Trackers ---
@@ -201,7 +201,7 @@ class ConvolutionPullback2(MovingCameraScene):
             
             alpha = global_label_alpha.get_value()
             
-            lbl_st = MathTex(r"(s,t)", color=vector_color).scale(0.5 * GLOBAL_SCALE)
+            lbl_st = MathTex(r"(x,y)", color=vector_color).scale(0.5 * GLOBAL_SCALE)
             lbl_p = MathTex(r"\mathbf{p}", color=vector_color).scale(0.5 * GLOBAL_SCALE * 1.5)
             
             pos = final_target + UP * 0.2 * GLOBAL_SCALE
@@ -251,7 +251,7 @@ class ConvolutionPullback2(MovingCameraScene):
             
             alpha = offset_label_alpha.get_value()
             
-            lbl_st = MathTex(r"(\sigma,\tau)", color=SCARLET).scale(0.6 * GLOBAL_SCALE)
+            lbl_st = MathTex(r"(x',y')", color=SCARLET).scale(0.6 * GLOBAL_SCALE)
             lbl_p = MathTex(r"\mathbf{p}'", color=SCARLET).scale(0.6 * GLOBAL_SCALE * 1.5)
             
             pos = base + rotated_offset + UP * 0.2 * GLOBAL_SCALE
@@ -366,8 +366,8 @@ class ConvolutionPullback2(MovingCameraScene):
             origin_offset = new_axes.c2p(0,0)
             new_axes.shift(center - origin_offset)
             
-            l_s = MathTex(r"\mathbf{Q}_{-\alpha} s", color=WHITE).scale(GLOBAL_SCALE)
-            l_t = MathTex(r"\mathbf{Q}_{-\alpha} t", color=WHITE).scale(GLOBAL_SCALE)
+            l_s = MathTex(r"\mathbf{Q}_{-\alpha} x", color=WHITE).scale(GLOBAL_SCALE)
+            l_t = MathTex(r"\mathbf{Q}_{-\alpha} y", color=WHITE).scale(GLOBAL_SCALE)
             l_s.next_to(new_axes.x_axis.get_end(), RIGHT, buff=0.1 * GLOBAL_SCALE)
             l_t.next_to(new_axes.y_axis.get_end(), UP, buff=0.1 * GLOBAL_SCALE)
             
@@ -428,9 +428,9 @@ class ConvolutionPullback2(MovingCameraScene):
         # So offset should be around DOWN * 3.0 to 3.5
         eq_y_offset = DOWN * 2.8
         
-        eq_lhs = MathTex(r"(\mathbf{Q}_\alpha \cdot X)(p)", color=WHITE).scale(GLOBAL_SCALE)
+        eq_lhs = MathTex(r"(\mathbf{Q}_\alpha \cdot V)(p)", color=WHITE).scale(GLOBAL_SCALE)
         eq_eq = MathTex(r"\;:=", color=WHITE).scale(GLOBAL_SCALE)
-        eq_rhs = MathTex(r"X\bigl(\mathbf{Q}_{-\alpha}\,p\bigr)", color=WHITE).scale(GLOBAL_SCALE)
+        eq_rhs = MathTex(r"V\bigl(\mathbf{Q}_{-\alpha}\,p\bigr)", color=WHITE).scale(GLOBAL_SCALE)
         
         # Calculate positions
         # Note: separation_vector is used directly here as it defines the final translation

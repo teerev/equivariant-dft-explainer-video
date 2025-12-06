@@ -70,8 +70,8 @@ class RealFourierOnCircle(Scene):
             x_ax = Line(center + LEFT*neg_len, center + RIGHT*pos_len, color=SCARLET, stroke_width=2)
             y_ax = Line(center + DOWN*neg_len, center + UP*pos_len, color=SCARLET, stroke_width=2)
             
-            x_lab = MathTex(r"\tau", color=SCARLET).scale(0.5).next_to(x_ax, RIGHT, buff=0.1)
-            y_lab = MathTex(r"\sigma", color=SCARLET).scale(0.5).next_to(y_ax, UP, buff=0.1)
+            x_lab = MathTex(r"x'", color=SCARLET).scale(0.5).next_to(x_ax, RIGHT, buff=0.1)
+            y_lab = MathTex(r"y'", color=SCARLET).scale(0.5).next_to(y_ax, UP, buff=0.1)
             
             axes_group.add(x_ax, y_ax, x_lab, y_lab)
             return axes_group
@@ -113,10 +113,10 @@ class RealFourierOnCircle(Scene):
 
         basis_funcs = [basis_cos1, basis_sin1, basis_cos2, basis_sin2]
         basis_labels_tex = [
-            r"\cos\theta",
-            r"\sin\theta",
-            r"\cos 2\theta",
-            r"\sin 2\theta",
+            r"\cos\theta'",
+            r"\sin\theta'",
+            r"\cos 2\theta'",
+            r"\sin 2\theta'",
         ]
 
         basis_mobjects = []
@@ -218,11 +218,11 @@ class RealFourierOnCircle(Scene):
         # 8. Analytic expression for f(theta)
         # ------------------------------------------------------------
         full_expr = MathTex(
-            r"\Theta(\theta) = a_0"
-            r" + a_1 \cos\theta"
-            r" + b_1 \sin\theta"
-            r" + a_2 \cos 2\theta"
-            r" + b_2 \sin 2\theta"
+            r"\Theta(\theta') = a_0"
+            r" + a_1 \cos\theta'"
+            r" + b_1 \sin\theta'"
+            r" + a_2 \cos 2\theta'"
+            r" + b_2 \sin 2\theta'"
         ).scale(0.8)
         full_expr.move_to(np.array([-2.0, -3.5, 0.0]))
 

@@ -37,10 +37,26 @@ class ClebschGordanSO2Ordered(Scene):
         target_width = config.frame_width * 0.8
         if matrix_group.width > target_width:
             matrix_group.scale_to_fit_width(target_width)
-        matrix_group.shift(0.2 * DOWN)
+        matrix_group.shift(0.5 * UP)
 
-        rule_text = MathTex(r"m+n=k").scale(0.7)
-        rule_text.to_edge(RIGHT)
+        scene_bottom = -config.frame_height / 2
+        matrix_bottom = matrix_group.get_bottom()[1]
+        midpoint_y = 0.5 * (scene_bottom + matrix_bottom)
+
+        rule_x_offset = 0.35
+        rule_y_offset = 0.0
+        equations_x_buff = 0.9
+        equations_y_offset = -0.3
+        rule_text = MathTex(r"k = m + n").scale(0.45)
+        rule_text.move_to(
+            np.array(
+                [
+                    matrix_group.get_right()[0] + rule_x_offset,
+                    midpoint_y + rule_y_offset,
+                    0,
+                ]
+            )
+        )
         self.play(Write(rule_text))
         self.play(FadeIn(matrix_group, shift=DOWN * 0.2))
 
@@ -70,7 +86,14 @@ class ClebschGordanSO2Ordered(Scene):
             equations = self._build_equation_block(
                 combos, row_fields, col_filters, target_spin, spin_colors[target_spin]
             )
-            equations.next_to(rule_text, DOWN, buff=0.3)
+            equations.scale(0.8)
+            equations.next_to(
+                matrix_group,
+                RIGHT,
+                buff=equations_x_buff,
+                aligned_edge=DOWN,
+            )
+            equations.shift(equations_y_offset * UP)
             if equation_display is None:
                 equation_display = equations
                 self.play(FadeIn(equation_display, shift=0.1 * DOWN), run_time=0.5)

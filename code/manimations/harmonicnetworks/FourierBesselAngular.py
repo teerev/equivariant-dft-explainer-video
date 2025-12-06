@@ -20,7 +20,7 @@ class FourierBesselAngular(Scene):
             axis_config={"color": scarlet},
         ).to_edge(LEFT, buff=0.5)
 
-        axes_labels = axes.get_axis_labels(r"\sigma", r"\tau").set_color(scarlet)
+        axes_labels = axes.get_axis_labels(r"x'", r"y'").set_color(scarlet)
 
         # Vector p' at 30 degrees
         alpha = 30 * DEGREES
@@ -46,8 +46,8 @@ class FourierBesselAngular(Scene):
 
         # Initial equation
         equation = MathTex(
-            r"\Re[e^{i m\theta}] = \cos(m\theta),\quad "
-            r"\Im[e^{i m\theta}] = \sin(m\theta)"
+            r"\Re[e^{i m\theta'}] = \cos(m\theta'),\quad "
+            r"\Im[e^{i m\theta'}] = \sin(m\theta')"
         ).scale(0.8)
         equation.next_to(axes, DOWN, buff=0.4)
         equation.set_z_index(13)
@@ -88,7 +88,7 @@ class FourierBesselAngular(Scene):
             # REAL part
             Z_real = np.cos(m * THETA)
             eq_real = MathTex(
-                fr"\Re[e^{{i {m}\theta}}] = \cos({m}\theta)"
+                fr"\Re[e^{{i {m}\theta'}}] = \cos({m}\theta')"
             ).scale(0.9)
             eq_real.next_to(axes, DOWN, buff=0.4)
             eq_real.set_z_index(13)
@@ -112,7 +112,7 @@ class FourierBesselAngular(Scene):
             # IMAG part
             Z_imag = np.sin(m * THETA)
             eq_imag = MathTex(
-                fr"\Im[e^{{i {m}\theta}}] = \sin({m}\theta)"
+                fr"\Im[e^{{i {m}\theta'}}] = \sin({m}\theta')"
             ).scale(0.9)
             eq_imag.next_to(axes, DOWN, buff=0.4)
             eq_imag.set_z_index(13)

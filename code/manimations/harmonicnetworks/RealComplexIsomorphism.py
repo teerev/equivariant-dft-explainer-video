@@ -95,8 +95,8 @@ def make_axes(center):
         stroke_width=3,
     )
 
-    sigma_label = MathTex(r"\sigma", color=SCARLET).scale(0.6)
-    tau_label   = MathTex(r"\tau",   color=SCARLET).scale(0.6)
+    sigma_label = MathTex(r"x'", color=SCARLET).scale(0.6)
+    tau_label   = MathTex(r"y'",   color=SCARLET).scale(0.6)
 
     def update_sigma(mob):
         mob.next_to(x_axis.get_end(), RIGHT, buff=0.1)
@@ -141,7 +141,7 @@ def make_pprime_and_theta(center):
         arc_center=center,
         color=SCARLET,
     )
-    theta_label = MathTex(r"\theta", color=SCARLET).scale(0.6)
+    theta_label = MathTex(r"\theta'", color=SCARLET).scale(0.6)
     theta_label.move_to(
         center
         + 0.9
@@ -180,19 +180,19 @@ def layout_scene():
     circle_top, deco_top, axes_lbl_top, p_lbl_top, func_lbl_top = make_circle_components(
         top_center,
         real_fourier,
-        r"\Theta_{\text{real}}(\theta)"
+        r"\Theta_{\text{real}}(\theta')"
     )
 
     circle_breal, deco_breal, axes_lbl_breal, p_lbl_breal, func_lbl_breal = make_circle_components(
         bottom_left_center,
         lambda th: np.real(complex_fourier(th)),
-        r"\Re(\Theta_{\text{complex}}(\theta))"
+        r"\Re(\Theta_{\text{complex}}(\theta'))"
     )
 
     circle_bimag, deco_bimag, axes_lbl_bimag, p_lbl_bimag, func_lbl_bimag = make_circle_components(
         bottom_right_center,
         lambda th: np.imag(complex_fourier(th)),
-        r"\Im(\Theta_{\text{complex}}(\theta))"
+        r"\Im(\Theta_{\text{complex}}(\theta'))"
     )
 
     return (

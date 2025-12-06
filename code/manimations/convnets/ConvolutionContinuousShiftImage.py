@@ -23,13 +23,13 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
 
         # Create convolution equation at top of frame (finite limits initially)
         equation_finite = MathTex(
-            r"Y(s,t) = (X * F)(s,t) = \int_{-A/2}^{A/2}\!\!\int_{-B/2}^{B/2} X(s + \sigma,\; t + \tau) F(\sigma,\tau)\,\mathrm{d}\sigma\mathrm{d}\tau",
+            r"L(x,y) = (V * F)(x,y) = \int_{-A/2}^{A/2}\!\!\int_{-B/2}^{B/2} V(x + x',\; y + y') F(x',y')\,\mathrm{d}x'\mathrm{d}y'",
             color=WHITE
         ).scale(0.55).to_edge(UP, buff=0.5)
 
         # Create equation with infinite limits for morphing
         equation_infinite = MathTex(
-            r"Y(s,t) = (X * F)(s,t) = \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty} X(s + \sigma,\; t + \tau) F(\sigma,\tau)\,\mathrm{d}\sigma\mathrm{d}\tau",
+            r"L(x,y) = (V * F)(x,y) = \int_{-\infty}^{\infty}\!\!\int_{-\infty}^{\infty} V(x + x',\; y + y') F(x',y')\,\mathrm{d}x'\mathrm{d}y'",
             color=WHITE
         ).scale(0.55).to_edge(UP, buff=0.5)
 
@@ -46,7 +46,7 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
         )
         axes_shift = LEFT * 5.9 + DOWN * 3.5
         axes.shift(axes_shift)
-        axes_labels = axes.get_axis_labels(MathTex("s"), MathTex("t"))
+        axes_labels = axes.get_axis_labels(MathTex("x"), MathTex("y"))
 
         # --- background image: richer signed field in bright cyan/orange ---
         input_image = self.create_input_image(resolution=360, span=6.5)
@@ -91,10 +91,10 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
             sigma_tick = Line(UP * 0.08, DOWN * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.x_axis.get_end())
             tau_tick = Line(LEFT * 0.08, RIGHT * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.y_axis.get_end())
 
-            sigma_label = MathTex(r"\sigma", color=SCARLET).scale(0.6)
+            sigma_label = MathTex(r"x'", color=SCARLET).scale(0.6)
             sigma_label.next_to(sigma_tick, RIGHT, buff=0.05)
             
-            tau_label = MathTex(r"\tau", color=SCARLET).scale(0.6)
+            tau_label = MathTex(r"y'", color=SCARLET).scale(0.6)
             tau_label.next_to(tau_tick, UP, buff=0.05)
             
             return VGroup(k_axes, sigma_tick, tau_tick, sigma_label, tau_label)
@@ -116,7 +116,7 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
                 tip_length=0.08,
                 max_tip_length_to_length_ratio=1.0,
             ).set_z_index(2)
-            label = MathTex(r"(s,t)", color=vector_color).scale(0.5)
+            label = MathTex(r"(x,y)", color=vector_color).scale(0.5)
             label.move_to(target + UP * 0.2)
             return VGroup(arrow, label)
 
@@ -145,7 +145,7 @@ class ConvolutionContinuousShiftImage(RightRegionScene):
                 tip_length=0.22,
                 max_tip_length_to_length_ratio=0.06,
             ).set_z_index(2)
-            label = MathTex(r"(\sigma,\tau)", color=SCARLET).scale(0.5)
+            label = MathTex(r"(x',y')", color=SCARLET).scale(0.5)
             label.move_to(base + offset + UP * 0.2)
             
             return VGroup(arrow, label)

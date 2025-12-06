@@ -51,8 +51,8 @@ def get_panel_center(row: int, col: int) -> np.ndarray:
 
 
 def make_axes(center: np.ndarray,
-              s_label="s",
-              t_label="t",
+              s_label="x",
+              t_label="y",
               prefix=None,
               rotate_angle=0) -> VGroup:
     """
@@ -172,7 +172,7 @@ def make_panel(index: int) -> Mobject:
     
     if index == 1:
         # --- Panel 1: original coordinates, image X, point p ---
-        axes = make_axes(center, s_label="s", t_label="t")
+        axes = make_axes(center, s_label="x", t_label="y")
         s_obj = make_S(center, offset_vector=p_initial_offset)
         origin = center  # intersection of axes
 
@@ -187,7 +187,7 @@ def make_panel(index: int) -> Mobject:
     elif index == 2:
         # --- Panel 2: same as 1, plus p' at S ---
         # Rotate p and p' rigidly by ALPHA
-        axes = make_axes(center, s_label="s", t_label="t")
+        axes = make_axes(center, s_label="x", t_label="y")
         
         rot_offset = rotate_vector(p_initial_offset, ALPHA)
         # Create S at the rotated position
@@ -210,8 +210,8 @@ def make_panel(index: int) -> Mobject:
     elif index == 3:
         # --- Panel 3: rotated coordinates Q_{-α}, still showing S and p' ---
         axes = make_axes(center,
-                         s_label="s",
-                         t_label="t",
+                         s_label="x",
+                         t_label="y",
                          prefix=r"Q_{-\alpha}",
                          rotate_angle=-ALPHA)
         s_obj = make_S(center, offset_vector=p_initial_offset)
@@ -228,8 +228,8 @@ def make_panel(index: int) -> Mobject:
     elif index == 4:
         # --- Panel 4: rotated coordinates, kernel response at p, p' arrow ---
         axes = make_axes(center,
-                         s_label="s",
-                         t_label="t",
+                         s_label="x",
+                         t_label="y",
                          prefix=r"Q_{-\alpha}",
                          rotate_angle=-ALPHA)
         blob = make_kernel_blob(center, offset_vector=p_initial_offset)
@@ -246,7 +246,7 @@ def make_panel(index: int) -> Mobject:
 
     elif index == 5:
         # --- Panel 5: original coordinates, kernel response at p (X*F)(p) ---
-        axes = make_axes(center, s_label="s", t_label="t")
+        axes = make_axes(center, s_label="x", t_label="y")
         blob = make_kernel_blob(center, offset_vector=p_initial_offset)
         origin = center
 
@@ -264,7 +264,7 @@ def make_panel(index: int) -> Mobject:
 
     elif index == 6:
         # --- Panel 6: original coordinates, blob at Q_α p ---
-        axes = make_axes(center, s_label="s", t_label="t")
+        axes = make_axes(center, s_label="x", t_label="y")
         # place blob as if p has been rotated by +α
         
         # Here we rotate the original p_offset by ALPHA
@@ -285,8 +285,8 @@ def make_panel(index: int) -> Mobject:
     elif index == 7:
         # --- Panel 7: rotated coordinates, blob at p in Q_{-α} frame ---
         axes = make_axes(center,
-                         s_label="s",
-                         t_label="t",
+                         s_label="x",
+                         t_label="y",
                          prefix=r"Q_{-\alpha}",
                          rotate_angle=-ALPHA)
         blob = make_kernel_blob(center, offset_vector=p_initial_offset)
@@ -307,8 +307,8 @@ def make_panel(index: int) -> Mobject:
     elif index == 8:
         # --- Panel 8: rotated coordinates, highlight p' mismatch ---
         axes = make_axes(center,
-                         s_label="s",
-                         t_label="t",
+                         s_label="x",
+                         t_label="y",
                          prefix=r"Q_{-\alpha}",
                          rotate_angle=-ALPHA)
         blob = make_S(center, offset_vector=p_initial_offset)

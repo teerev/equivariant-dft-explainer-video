@@ -50,8 +50,8 @@ def get_panel_center(row: int, col: int) -> np.ndarray:
 
 
 def make_axes(center: np.ndarray,
-              s_label="s",
-              t_label="t",
+              s_label="x",
+              t_label="y",
               prefix=None,
               rotate_angle=0) -> VGroup:
     """
@@ -161,8 +161,8 @@ def make_panel(index: int) -> Mobject:
     if index == 3:
         # --- Panel 3: rotated coordinates Q_{-α}, still showing S and p' ---
         axes = make_axes(center,
-                         s_label="s",
-                         t_label="t",
+                         s_label="x",
+                         t_label="y",
                          prefix=r"Q_{-\alpha}",
                          rotate_angle=-ALPHA)
         s_obj = make_S(center, offset_vector=p_initial_offset)
@@ -179,8 +179,8 @@ def make_panel(index: int) -> Mobject:
     elif index == 8:
         # --- Panel 8: rotated coordinates, highlight p' mismatch ---
         axes = make_axes(center,
-                         s_label="s",
-                         t_label="t",
+                         s_label="x",
+                         t_label="y",
                          prefix=r"Q_{-\alpha}",
                          rotate_angle=-ALPHA)
         blob = make_S(center, offset_vector=p_initial_offset)

@@ -20,8 +20,9 @@ class FourierBesselRadial(Scene):
             y_length=6,
             axis_config={"color": scarlet},
         ).to_edge(LEFT, buff=0.5)
+        axes.shift(UP * 0.4)
 
-        axes_labels = axes.get_axis_labels(r"\sigma", r"\tau").set_color(scarlet)
+        axes_labels = axes.get_axis_labels(r"x'", r"y'").set_color(scarlet)
 
         # Vector p' at 30 degrees
         alpha = 30 * DEGREES
@@ -49,7 +50,7 @@ class FourierBesselRadial(Scene):
         equation = MathTex(
             r"R_{m,n}(r) = J_m\!\left(\alpha_{m,n}\,\frac{r}{R}\right)"
         ).scale(0.8)
-        equation.next_to(axes, DOWN, buff=0.4)
+        equation.next_to(axes, DOWN, buff=0.25)
         equation.set_z_index(13)
         self.play(FadeIn(equation, run_time=0.5))
 

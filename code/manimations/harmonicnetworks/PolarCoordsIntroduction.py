@@ -67,10 +67,10 @@ class PolarCoordsIntroduction(RightRegionScene):
         sigma_tick = Line(UP * 0.08, DOWN * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.x_axis.get_end())
         tau_tick = Line(LEFT * 0.08, RIGHT * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.y_axis.get_end())
 
-        sigma_label = MathTex(r"\sigma", color=SCARLET).scale(0.6)
+        sigma_label = MathTex(r"x'", color=SCARLET).scale(0.6)
         sigma_label.next_to(sigma_tick, RIGHT, buff=0.05)
         
-        tau_label = MathTex(r"\tau", color=SCARLET).scale(0.6)
+        tau_label = MathTex(r"y'", color=SCARLET).scale(0.6)
         tau_label.next_to(tau_tick, UP, buff=0.05)
         
         kernel_axes_group = VGroup(k_axes, sigma_tick, tau_tick, sigma_label, tau_label)
@@ -129,7 +129,7 @@ class PolarCoordsIntroduction(RightRegionScene):
                 stroke_width=1.5
             )
             
-            theta_label = MathTex(r"\theta", color=SCARLET).scale(0.5)
+            theta_label = MathTex(r"\theta'", color=SCARLET).scale(0.5)
             # Position theta label
             # Ideally at the midpoint of the arc, slightly outward
             mid_arc_angle = angle / 2
@@ -149,7 +149,7 @@ class PolarCoordsIntroduction(RightRegionScene):
             if np.linalg.norm(perp) > 1e-6:
                 perp = perp / np.linalg.norm(perp)
             
-            r_label = MathTex("r", color=SCARLET).scale(0.5)
+            r_label = MathTex("r'", color=SCARLET).scale(0.5)
             r_label.move_to(midpoint + perp * 0.15)
             
             return VGroup(arrow, lbl_p, angle_arc, theta_label, r_label)

@@ -22,16 +22,6 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
     def construct(self):
         self.camera.background_color = BLACK
 
-        # --- Equations ---
-        # Final equation: convolution notation with vector p
-        # equation_rot_text = r"(X * F)(p) = \int_{\mathbb{R}^2} X(p + p') F(p')\,\mathrm{d}p'"
-        equation_rot = MathTex(
-            r"(X * F)(p) = \int_{\mathbb{R}^2} X(p + p') F(p')\,\mathrm{d}p'",
-            color=WHITE
-        ).scale(0.55).to_edge(UP, buff=0.5)
-
-        self.add(equation_rot)
-        
         axes = Axes(
             x_range=[-3, 3, 1],
             y_range=[-3, 3, 1],
@@ -45,7 +35,7 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
         )
         axes_shift = LEFT * 5.9 + DOWN * 3.0
         axes.shift(axes_shift)
-        axes_labels = axes.get_axis_labels(MathTex("s"), MathTex("t"))
+        axes_labels = axes.get_axis_labels(MathTex("x"), MathTex("y"))
 
         # --- background image ---
         # Matched to ConvolutionContinuousShiftImage
@@ -101,10 +91,10 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
             sigma_tick = Line(UP * 0.08, DOWN * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.x_axis.get_end())
             tau_tick = Line(LEFT * 0.08, RIGHT * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.y_axis.get_end())
 
-            sigma_label = MathTex(r"\sigma", color=SCARLET).scale(0.6)
+            sigma_label = MathTex(r"x'", color=SCARLET).scale(0.6)
             sigma_label.next_to(sigma_tick, RIGHT, buff=0.05)
             
-            tau_label = MathTex(r"\tau", color=SCARLET).scale(0.6)
+            tau_label = MathTex(r"y'", color=SCARLET).scale(0.6)
             tau_label.next_to(tau_tick, UP, buff=0.05)
             
             return VGroup(k_axes, sigma_tick, tau_tick, sigma_label, tau_label)
@@ -337,23 +327,6 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
              current_kernel = new_img_imag
              current_eq = new_eq_imag
 
-        # --- Final Equation Morph ---
-        # "Make the equation at the top of the page morph from its current form into a form 
-        # where a bar appears over the top of the F(p') function in the integral."
-        
-        equation_bar = MathTex(
-            r"(X * F)(p) = \int_{\mathbb{R}^2} X(p + p') \overline{F(p')}\,\mathrm{d}p'",
-            color=WHITE
-        ).scale(0.55).move_to(equation_rot)
-
-        self.play(
-            ReplacementTransform(equation_rot, equation_bar),
-            run_time=2.0
-        )
-
-        self.wait(2)
-
-
     def get_bessel_label(self, m, n, part):
         # Format label string for MathTex
         # e.g. \psi_{m,n}^{(\cos)}(r,\theta)
@@ -363,12 +336,12 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
         
         if m == 0:
             # No angular part for m=0 real, and imag is 0 (handled by logic loop usually skipping it, but here for completeness)
-            return fr"F_{{{m},{n}}}(r,\theta) = J_{{{m}}}\!\left(\alpha_{{{m},{n}}}\frac{{r}}{{R}}\right)"
+            return fr"F_{{{m},{n}}}(r',\theta') = J_{{{m}}}\!\left(\alpha_{{{m},{n}}}\frac{{r'}}{{R}}\right)"
         
         return (
-            fr"F_{{{m},{n}}}^{{{func_type}}}(r,\theta) = "
-            fr"J_{{{m}}}\!\left(\alpha_{{{m},{n}}}\frac{{r}}{{R}}\right)"
-            fr"\,{trig}({m}\theta)"
+            fr"F_{{{m},{n}}}^{{{func_type}}}(r',\theta') = "
+            fr"J_{{{m}}}\!\left(\alpha_{{{m},{n}}}\frac{{r'}}{{R}}\right)"
+            fr"\,{trig}({m}\theta')"
         )
 
     def create_bessel_image(self, m, n, part="real", resolution=240, span=3.0, shape="square"):
