@@ -27,12 +27,12 @@ class ClebschGordanSO2(mn.Scene):
 
     def construct(self):
         row_fields = [
-            {"symbol": r"\sigma^{(-2)}_{(r,\theta)}", "spin": -2},
-            {"symbol": r"u^{(-1)}_{(r,\theta)}", "spin": -1},
-            {"symbol": r"T_{(r,\theta)}", "spin": 0},
-            {"symbol": r"\sigma^{(0)}_{(r,\theta)}", "spin": 0},
-            {"symbol": r"u^{(+1)}_{(r,\theta)}", "spin": +1},
-            {"symbol": r"\sigma^{(+2)}_{(r,\theta)}", "spin": +2},
+            {"symbol": r"\sigma^{(-2)}", "spin": -2},
+            {"symbol": r"u^{(-1)}", "spin": -1},
+            {"symbol": r"T", "spin": 0},
+            {"symbol": r"\sigma^{(0)}", "spin": 0},
+            {"symbol": r"u^{(+1)}", "spin": +1},
+            {"symbol": r"\sigma^{(+2)}", "spin": +2},
         ]
 
         col_filters = [
