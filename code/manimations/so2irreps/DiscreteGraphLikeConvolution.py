@@ -425,6 +425,8 @@ class SplitPanelConvolution(mn.Scene):
         axes_shift = mn.RIGHT * 0.1 + mn.DOWN * 3.0
         axes.shift(axes_shift)
         axes_labels = axes.get_axis_labels(mn.MathTex("x"), mn.MathTex("y"))
+        # nudge the x label closer to the x axis so it matches the y label placement
+        axes_labels[0].shift(mn.DOWN * 1.25)
 
         # Point Cloud
         rng = np.random.default_rng(2042)
