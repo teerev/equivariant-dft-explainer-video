@@ -16,6 +16,8 @@ IMAGE_POS_RGB = np.array(IMAGE_POS_COLOR.to_rgb())
 PURE_BLUE = mn.ManimColor("#0000FF")
 BRIGHT_GREEN = mn.ManimColor("#8f02fa")
 GREEN_C = mn.ManimColor("#88CC88")
+KERNEL_IMAGE_SCALE = 0.475
+KERNEL_CIRCLE_RADIUS_SCALE = 0.5
 
 # Add parent directory
 sys.path.append(str(Path(__file__).parent.parent))
@@ -433,13 +435,14 @@ class SplitPanelConvolution(mn.Scene):
         # New requirements:
         # Stretch distribution as well?
         # Range was [0.2, 2.2]. Stretched 50%: [0.2, 3.3].
+        # Further stretching to fill axes more.
         
-        x_min_ax, x_max_ax = 0.2, 3.3
-        y_min_ax, y_max_ax = 0.2, 3.3
+        x_min_ax, x_max_ax = 0.2, 4.8
+        y_min_ax, y_max_ax = 0.2, 4.8
         
         point_cloud_group = mn.VGroup()
         # Halve number of points: 60 -> 30
-        for _ in range(30):
+        for _ in range(60):
             x_ax = rng.uniform(x_min_ax, x_max_ax)
             y_ax = rng.uniform(y_min_ax, y_max_ax)
             pt = axes.c2p(x_ax, y_ax)
@@ -452,12 +455,16 @@ class SplitPanelConvolution(mn.Scene):
             point_cloud_group.add(dot)
 
         # Kernel
-        kernel_span = 3.0
+        kernel_span = 6.0
         kernel_image = create_bessel_image(2, 1, resolution=240, span=kernel_span)
-        kernel_image.set_width(axes.width * 0.475)
+        kernel_image.set_width(axes.width * KERNEL_IMAGE_SCALE)
         kernel_image.set_z_index(-1)
         
-        kernel_box = mn.Circle(radius=kernel_image.width * 0.2, color=SCARLET, stroke_width=2.0)
+        kernel_box = mn.Circle(
+            radius=axes.width * KERNEL_CIRCLE_RADIUS_SCALE*0.2, 
+            color=SCARLET, 
+            stroke_width=2.0
+        )
         kernel_box.set_z_index(-0.9)
         
         # Simple kernel axes
