@@ -9,7 +9,7 @@ class FourierBesselAngular(Scene):
         self.camera.background_color = BLACK
 
         # Scarlet red for axes, labels, vector
-        scarlet = RED
+        BLUE = ManimColor("#0066F5")
 
         # Axes on the left
         axes = Axes(
@@ -17,10 +17,10 @@ class FourierBesselAngular(Scene):
             y_range=[-4, 4, 1],
             x_length=6,
             y_length=6,
-            axis_config={"color": scarlet},
+            axis_config={"color": BLUE},
         ).to_edge(LEFT, buff=0.5)
 
-        axes_labels = axes.get_axis_labels(r"x'", r"y'").set_color(scarlet)
+        axes_labels = axes.get_axis_labels(r"x'", r"y'").set_color(BLUE)
 
         # Vector p' at 30 degrees
         alpha = 30 * DEGREES
@@ -29,10 +29,10 @@ class FourierBesselAngular(Scene):
             start=axes.c2p(0, 0),
             end=axes.c2p(p_vec[0], p_vec[1]),
             buff=0,
-            color=scarlet,
+            color=BLUE,
             max_tip_length_to_length_ratio=0.15,
         )
-        vec_label = MathTex("p'").set_color(scarlet).next_to(vector.get_end(), RIGHT)
+        vec_label = MathTex("p'").set_color(BLUE).next_to(vector.get_end(), RIGHT)
 
         # Draw static
         self.play(Create(axes), FadeIn(axes_labels))
@@ -81,6 +81,8 @@ class FourierBesselAngular(Scene):
         ys = np.linspace(-r_max, r_max, grid_size)
         X, Y = np.meshgrid(xs, ys)
         THETA = np.arctan2(Y, X)
+        R = np.sqrt(X**2 + Y**2)
+        CIRCLE_MASK = (R <= r_max).astype(float)
 
         max_m = 3  # m = 1,2,3
 
@@ -96,6 +98,8 @@ class FourierBesselAngular(Scene):
             equation = eq_real
 
             rgb, alpha = value_to_rgb_and_alpha(Z_real)
+            rgb = rgb * CIRCLE_MASK[..., None]
+            alpha = alpha * CIRCLE_MASK
             rgba = np.zeros((grid_size, grid_size, 4), dtype=np.uint8)
             rgba[..., 0:3] = (rgb * 255).astype(np.uint8)
             rgba[..., 3] = (alpha * 255).astype(np.uint8)
@@ -120,6 +124,8 @@ class FourierBesselAngular(Scene):
             equation = eq_imag
 
             rgb, alpha = value_to_rgb_and_alpha(Z_imag)
+            rgb = rgb * CIRCLE_MASK[..., None]
+            alpha = alpha * CIRCLE_MASK
             rgba = np.zeros((grid_size, grid_size, 4), dtype=np.uint8)
             rgba[..., 0:3] = (rgb * 255).astype(np.uint8)
             rgba[..., 3] = (alpha * 255).astype(np.uint8)

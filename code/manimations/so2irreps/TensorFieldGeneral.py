@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from scipy.special import jv, jn_zeros
 
-SCARLET = mn.ManimColor("#F20000")
+BLUE = mn.ManimColor("#0066F5")
 IMAGE_NEG_HEX = "#00D5FF"
 IMAGE_POS_HEX = "#F26D00"
 IMAGE_NEG_COLOR = mn.ManimColor(IMAGE_NEG_HEX)
@@ -56,7 +56,7 @@ class TensorFieldSceneBase(RightRegionScene):
 
         kernel_box = mn.Circle(
             radius=(kernel_image.width * 0.4) / 2,
-            color=SCARLET,
+            color=BLUE,
             stroke_width=2.0,
         )
         kernel_box.move_to(kernel_image)
@@ -74,7 +74,7 @@ class TensorFieldSceneBase(RightRegionScene):
                 x_length=w * 0.6,
                 y_length=h * 0.6,
                 axis_config={
-                    "color": SCARLET,
+                    "color": BLUE,
                     "stroke_width": 2,
                     "include_tip": False,
                     "include_ticks": False,
@@ -83,20 +83,20 @@ class TensorFieldSceneBase(RightRegionScene):
             k_axes.shift(center - k_axes.c2p(0, 0))
 
             sigma_tick = mn.Line(
-                mn.UP * 0.08, mn.DOWN * 0.08, color=SCARLET, stroke_width=2
+                mn.UP * 0.08, mn.DOWN * 0.08, color=BLUE, stroke_width=2
             ).move_to(
                 k_axes.x_axis.get_end()
             )
             tau_tick = mn.Line(
-                mn.LEFT * 0.08, mn.RIGHT * 0.08, color=SCARLET, stroke_width=2
+                mn.LEFT * 0.08, mn.RIGHT * 0.08, color=BLUE, stroke_width=2
             ).move_to(
                 k_axes.y_axis.get_end()
             )
 
-            sigma_label = mn.MathTex(r"x'", color=SCARLET).scale(0.6)
+            sigma_label = mn.MathTex(r"x'", color=BLUE).scale(0.6)
             sigma_label.next_to(sigma_tick, mn.RIGHT, buff=0.05)
 
-            tau_label = mn.MathTex(r"y'", color=SCARLET).scale(0.6)
+            tau_label = mn.MathTex(r"y'", color=BLUE).scale(0.6)
             tau_label.next_to(tau_tick, mn.UP, buff=0.05)
 
             return mn.VGroup(k_axes, sigma_tick, tau_tick, sigma_label, tau_label)
@@ -107,11 +107,14 @@ class TensorFieldSceneBase(RightRegionScene):
         # --- Global Vector (s,t) -> p ---
         origin_point = axes.c2p(0, 0)
         vector_color = mn.GREY_A
+        self.global_label_tex = getattr(self, "global_label_tex", r"\mathbf{p}")
+        self.offset_label_tex = getattr(self, "offset_label_tex", r"\mathbf{p}'")
 
         global_label_alpha = mn.ValueTracker(1.0)
         offset_label_alpha = mn.ValueTracker(1.0)
         vector_length_tracker = mn.ValueTracker(0.8)
         angle_tracker = mn.ValueTracker(0.0)
+        self.offset_reverse_tracker = mn.ValueTracker(0.0)
 
         def global_vector_group():
             target = kernel_box.get_center()
@@ -128,7 +131,7 @@ class TensorFieldSceneBase(RightRegionScene):
             alpha = global_label_alpha.get_value()
 
             lbl_st = mn.MathTex(r"(s,t)", color=vector_color).scale(0.5)
-            lbl_p = mn.MathTex(r"\mathbf{p}", color=vector_color).scale(0.5)
+            lbl_p = mn.MathTex(self.global_label_tex, color=vector_color).scale(0.5)
 
             pos = target + mn.UP * 0.2
             lbl_st.move_to(pos).set_opacity(1 - alpha)
@@ -145,6 +148,7 @@ class TensorFieldSceneBase(RightRegionScene):
             base = kernel_box.get_center()
             angle = angle_tracker.get_value()
             scale = vector_length_tracker.get_value()
+            reversed_dir = self.offset_reverse_tracker.get_value() > 0.5
 
             cos_a, sin_a = np.cos(angle), np.sin(angle)
             rotated_offset = np.array(
@@ -156,11 +160,19 @@ class TensorFieldSceneBase(RightRegionScene):
             )
             offset = rotated_offset * scale
 
+            # Determine start and end points based on direction
+            if not reversed_dir:
+                start = base
+                end = base + offset
+            else:
+                start = base + offset
+                end = base
+
             arrow = mn.Arrow(
-                base,
-                base + offset,
+                start,
+                end,
                 buff=0,
-                color=SCARLET,
+                color=BLUE,
                 stroke_width=2.2,
                 tip_length=0.08,
                 max_tip_length_to_length_ratio=1.0,
@@ -168,10 +180,12 @@ class TensorFieldSceneBase(RightRegionScene):
 
             alpha = offset_label_alpha.get_value()
 
-            lbl_st = mn.MathTex(r"(\sigma,\tau)", color=SCARLET).scale(0.5)
-            lbl_p = mn.MathTex(r"\mathbf{p}'", color=SCARLET).scale(0.5)
+            lbl_st = mn.MathTex(r"(\sigma,\tau)", color=BLUE).scale(0.5)
+            lbl_p = mn.MathTex(self.offset_label_tex, color=BLUE).scale(0.5)
 
-            pos = base + offset + mn.UP * 0.2
+            # Keep label at the outer point (base + offset) to avoid cluttering the center
+            # Place it on the lower side
+            pos = (base + offset) + mn.DOWN * 0.2
             lbl_st.move_to(pos).set_opacity(1 - alpha)
             lbl_p.move_to(pos).set_opacity(alpha)
 
@@ -427,5 +441,15 @@ class TensorFieldGeneralStage3(TensorFieldSceneBase):
             mn.FadeIn(point_cloud, run_time=1.2),
         )
         self.bring_to_front(point_cloud)
+        # Morph labels and reverse the offset vector direction after points appear
+        self.global_label_tex = r"\vec{r_{a}}"
+        self.offset_label_tex = r"\vec{r_{b}}"
+
+        # Animate the tracker to reverse the arrow.
+        # Labels will update automatically in the next frame due to the variable change.
+        self.play(
+            self.offset_reverse_tracker.animate.set_value(1.0),
+            run_time=1.2
+        )
         self.wait(2.0)
 

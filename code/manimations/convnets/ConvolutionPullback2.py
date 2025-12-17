@@ -4,7 +4,7 @@ import numpy as np
 import sys
 from pathlib import Path
 
-SCARLET = ManimColor("#F20000")
+BLUE = ManimColor("#0066F5")
 IMAGE_NEG_HEX = "#00D5FF"
 IMAGE_POS_HEX = "#F26D00"
 IMAGE_NEG_COLOR = ManimColor(IMAGE_NEG_HEX)
@@ -243,7 +243,7 @@ class ConvolutionPullback2(MovingCameraScene):
                 base,
                 base + rotated_offset,
                 buff=0,
-                color=SCARLET,
+                color=BLUE,
                 stroke_width=2.2 * GLOBAL_SCALE,
                 tip_length=0.08 * GLOBAL_SCALE,
                 max_tip_length_to_length_ratio=1.0,
@@ -251,8 +251,8 @@ class ConvolutionPullback2(MovingCameraScene):
             
             alpha = offset_label_alpha.get_value()
             
-            lbl_st = MathTex(r"(x',y')", color=SCARLET).scale(0.6 * GLOBAL_SCALE)
-            lbl_p = MathTex(r"\mathbf{p}'", color=SCARLET).scale(0.6 * GLOBAL_SCALE * 1.5)
+            lbl_st = MathTex(r"(x',y')", color=BLUE).scale(0.6 * GLOBAL_SCALE)
+            lbl_p = MathTex(r"\mathbf{p}'", color=BLUE).scale(0.6 * GLOBAL_SCALE * 1.5)
             
             pos = base + rotated_offset + UP * 0.2 * GLOBAL_SCALE
             # Rotate label pos offset if needed? Usually UP is fine but maybe better aligned
@@ -325,13 +325,13 @@ class ConvolutionPullback2(MovingCameraScene):
                 base,
                 base + rotated_offset,
                 buff=0,
-                color=SCARLET, 
+                color=BLUE, 
                 stroke_width=2.2 * GLOBAL_SCALE,
                 tip_length=0.08 * GLOBAL_SCALE,
                 max_tip_length_to_length_ratio=1.0,
             ).set_z_index(3)
         
-            lbl = MathTex(r"\mathbf{Q}_\alpha \mathbf{p}'", color=SCARLET).scale(0.6 * GLOBAL_SCALE * 1.5)
+            lbl = MathTex(r"\mathbf{Q}_\alpha \mathbf{p}'", color=BLUE).scale(0.6 * GLOBAL_SCALE * 1.5)
             lbl.next_to(base + rotated_offset, UP, buff=0.1 * GLOBAL_SCALE)
             lbl.set_opacity(offset_label_opacity_tracker.get_value())
             

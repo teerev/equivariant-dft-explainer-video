@@ -5,13 +5,14 @@ from scipy.special import lpmv
 
 IMAGE_NEG_HEX = "#00D5FF"
 IMAGE_POS_HEX = "#F26D00"
+BLUE = ManimColor("#0066F5")
 
 SPHERE_RADIUS = 2.5
 
 # Which harmonics to show (ℓ, m)
 HARMONICS = [
     (l, m)
-    for l in range(0, 7)  # up to l=6
+    for l in range(0, 4)  # up to l=6
     for m in range(-l, l + 1)
 ]
 
@@ -105,15 +106,15 @@ class SphericalHarmonicsOnSphere(ThreeDScene):
             x_range=[-4, 4, 2],
             y_range=[-4, 4, 2],
             z_range=[-4, 4, 2],
-        ).set_color(RED)
+        ).set_color(BLUE)
 
-        x_label = MathTex("x'", color=RED).next_to(
+        x_label = MathTex("x'", color=BLUE).next_to(
             axes.x_axis.get_end(), RIGHT, buff=0.2
         )
-        y_label = MathTex("y'", color=RED).next_to(
+        y_label = MathTex("y'", color=BLUE).next_to(
             axes.y_axis.get_end(), UP, buff=0.2
         )
-        z_label = MathTex("z'", color=RED).next_to(
+        z_label = MathTex("z'", color=BLUE).next_to(
             axes.z_axis.get_end(), OUT, buff=0.2
         )
 
@@ -135,7 +136,7 @@ class SphericalHarmonicsOnSphere(ThreeDScene):
             label = MathTex(
                 fr"Y_{{{l}}}^{{{m}}}",
                 color=WHITE,
-            ).to_corner(UL).shift(IN * 0.5)
+            ).to_corner(UL).shift(IN * 1.5)
 
             if idx == 0:
                 self.play(FadeIn(sh_surface, scale=0.8), FadeIn(label))

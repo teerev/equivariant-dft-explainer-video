@@ -63,10 +63,10 @@ class ConvIndexDiagramAnimation(Scene):
         white_grid = make_grid(*white_size, color=WHITE, stroke_width=4)
         white_grid.shift(origin_white)
 
-        green_grid = make_grid(*green_size, color=GREEN_C, stroke_width=12)
+        green_grid = make_grid(*green_size, color='#00ff00', stroke_width=12)
         green_grid.shift(origin_green)
 
-        red_grid = make_grid(*red_size, color=RED, stroke_width=4)
+        red_grid = make_grid(*red_size, color='#0099ff', stroke_width=4)
         red_grid.shift(origin_red)
 
         red_group = VGroup(red_grid)
@@ -101,7 +101,7 @@ class ConvIndexDiagramAnimation(Scene):
         v_values = np.arange(-(red_size[1] // 2), red_size[1] // 2 + 1)
         for idx, v_val in enumerate(v_values):
             y = origin_red[1] + (idx + 0.5) * cell
-            lab = MathTex(rf"v={v_val}", color=RED)
+            lab = MathTex(rf"v={v_val}", color='#0099ff')
             lab.scale(0.4)
             lab.move_to(np.array([x_v, y, 0.0]))
             v_labels.add(lab)
@@ -112,7 +112,7 @@ class ConvIndexDiagramAnimation(Scene):
         u_values = np.arange(-(red_size[0] // 2), red_size[0] // 2 + 1)
         for idx, u_val in enumerate(u_values):
             x = origin_red[0] + (idx + 0.5) * cell
-            lab = MathTex(rf"u={u_val}", color=RED)
+            lab = MathTex(rf"u={u_val}", color='#0099ff')
             lab.scale(0.4)
             lab.rotate(90 * DEGREES)
             lab.move_to(np.array([x, y_u - 1.6 * cell, 0.0]))

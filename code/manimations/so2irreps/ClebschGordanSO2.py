@@ -9,10 +9,10 @@ MATRIX_VERTICAL_SHIFT = -1.6 * mn.DOWN
 EQUATION_TEXT_BASE_SCALE = 0.52
 EQUATION_BLOCK_SCALE = 0.75  # Shrink spin-sum block to 75% of previous size
 EQUATION_BUFF_FROM_RULE = 0.3
-EQUATION_HORIZONTAL_SHIFT = 3.0 * mn.LEFT  # Move equation block laterally
+EQUATION_HORIZONTAL_SHIFT = 3.4 * mn.LEFT  # Move equation block laterally
 EQUATION_VERTICAL_SHIFT = -0.6 * mn.DOWN       # Optional vertical nudging for equations
 EQUATION_APPEAR_SHIFT = -0.5 * mn.DOWN
-RULE_TEXT_HORIZONTAL_SHIFT = 4.8 * mn.LEFT
+RULE_TEXT_HORIZONTAL_SHIFT = 3.5 * mn.LEFT
 RULE_TEXT_VERTICAL_SHIFT = mn.ORIGIN + 0.8 * mn.DOWN
 
 
@@ -57,7 +57,7 @@ class ClebschGordanSO2(mn.Scene):
         matrix_group.scale(MATRIX_ADDITIONAL_SCALE)
         matrix_group.shift(MATRIX_VERTICAL_SHIFT)
 
-        rule_text = mn.MathTex(r"m+n=k").scale(0.7)
+        rule_text = mn.MathTex(r"m_i + m_f = m_o").scale(0.7)
         rule_text.to_edge(mn.RIGHT)
         rule_text.shift(RULE_TEXT_HORIZONTAL_SHIFT + RULE_TEXT_VERTICAL_SHIFT)
         self.play(mn.Write(rule_text))
@@ -76,7 +76,6 @@ class ClebschGordanSO2(mn.Scene):
             3: mn.MAROON_B,
             4: mn.MAROON_A,
         }
-
         highlight_history = []
         equation_display = None
 
@@ -191,7 +190,7 @@ class ClebschGordanSO2(mn.Scene):
         labels = mn.VGroup()
         for r_idx, row in enumerate(row_fields):
             label = mn.MathTex(
-                rf"n = {self._fmt_spin(row['spin'], include_plus=False)}"
+                rf"m_i = {self._fmt_spin(row['spin'], include_plus=False)}"
             ).scale(0.55)
             label.next_to(cell_lookup[(r_idx, 0)], mn.LEFT, buff=0.45)
             labels.add(label)
@@ -201,7 +200,7 @@ class ClebschGordanSO2(mn.Scene):
         labels = mn.VGroup()
         for c_idx, col in enumerate(col_filters):
             label = mn.MathTex(
-                rf"m = {self._fmt_spin(col['spin'], include_plus=False)}"
+                rf"m_f = {self._fmt_spin(col['spin'], include_plus=False)}"
             ).scale(0.55)
             label.next_to(cell_lookup[(0, c_idx)], mn.UP, buff=0.35)
             labels.add(label)
@@ -230,8 +229,8 @@ class ClebschGordanSO2(mn.Scene):
             row_sym = row_fields[r_idx]["symbol"]
             col_sym = col_filters[c_idx]["symbol"]
             eq = mn.MathTex(
-                rf"{row_sym}\,(n={self._fmt_spin(row_spin)}) + "
-                rf"{col_sym}\,(m={self._fmt_spin(col_spin)})"
+                rf"{row_sym}\,(m_i={self._fmt_spin(row_spin)}) + "
+                rf"{col_sym}\,(m_f={self._fmt_spin(col_spin)})"
                 rf" = k={self._fmt_spin(target_spin, include_plus=False)}",
                 color=color,
             ).scale(EQUATION_TEXT_BASE_SCALE)

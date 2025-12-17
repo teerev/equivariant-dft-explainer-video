@@ -10,7 +10,7 @@ class FourierBesselRadial(Scene):
         self.camera.background_color = BLACK
 
         # Scarlet red for axes, labels, vector
-        scarlet = RED
+        BLUE = ManimColor("#0066F5")
 
         # Axes on the left
         axes = Axes(
@@ -18,11 +18,11 @@ class FourierBesselRadial(Scene):
             y_range=[-4, 4, 1],
             x_length=6,
             y_length=6,
-            axis_config={"color": scarlet},
+            axis_config={"color": BLUE},
         ).to_edge(LEFT, buff=0.5)
         axes.shift(UP * 0.4)
 
-        axes_labels = axes.get_axis_labels(r"x'", r"y'").set_color(scarlet)
+        axes_labels = axes.get_axis_labels(r"x'", r"y'").set_color(BLUE)
 
         # Vector p' at 30 degrees
         alpha = 30 * DEGREES
@@ -31,10 +31,10 @@ class FourierBesselRadial(Scene):
             start=axes.c2p(0, 0),
             end=axes.c2p(p_vec[0], p_vec[1]),
             buff=0,
-            color=scarlet,
+            color=BLUE,
             max_tip_length_to_length_ratio=0.15,
         )
-        vec_label = MathTex("p'").set_color(scarlet).next_to(vector.get_end(), RIGHT)
+        vec_label = MathTex("p'").set_color(BLUE).next_to(vector.get_end(), RIGHT)
 
         # Draw static geometry
         self.play(Create(axes), FadeIn(axes_labels))

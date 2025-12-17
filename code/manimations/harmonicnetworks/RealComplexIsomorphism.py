@@ -4,7 +4,7 @@ import numpy as np
 # ------------------------------------------------------------
 # Global config / colours
 # ------------------------------------------------------------
-SCARLET = ManimColor("#ff2400")
+BLUE = ManimColor("#0066F5")
 RADIUS = 1.35
 
 C_CYAN   = np.array([0.0, 0.8, 1.0])
@@ -85,18 +85,18 @@ def make_axes(center):
     x_axis = Line(
         center + LEFT * neg_stub,
         center + RIGHT * axis_len,
-        color=SCARLET,
+        color=BLUE,
         stroke_width=3,
     )
     y_axis = Line(
         center + DOWN * neg_stub,
         center + UP * axis_len,
-        color=SCARLET,
+        color=BLUE,
         stroke_width=3,
     )
 
-    sigma_label = MathTex(r"x'", color=SCARLET).scale(0.6)
-    tau_label   = MathTex(r"y'",   color=SCARLET).scale(0.6)
+    sigma_label = MathTex(r"x'", color=BLUE).scale(0.6)
+    tau_label   = MathTex(r"y'",   color=BLUE).scale(0.6)
 
     def update_sigma(mob):
         mob.next_to(x_axis.get_end(), RIGHT, buff=0.1)
@@ -122,11 +122,11 @@ def make_pprime_and_theta(center):
         end=end,
         buff=0,
         stroke_width=4,
-        color=SCARLET,
+        color=BLUE,
         max_tip_length_to_length_ratio=0.15,
     )
 
-    p_label = MathTex("p'", color=SCARLET).scale(0.7)
+    p_label = MathTex("p'", color=BLUE).scale(0.7)
 
     def update_p_label(mob):
         mob.next_to(arrow.get_end(), UP + RIGHT, buff=0.15)
@@ -139,9 +139,9 @@ def make_pprime_and_theta(center):
         start_angle=0.0,
         angle=THETA0,
         arc_center=center,
-        color=SCARLET,
+        color=BLUE,
     )
-    theta_label = MathTex(r"\theta'", color=SCARLET).scale(0.6)
+    theta_label = MathTex(r"\theta'", color=BLUE).scale(0.6)
     theta_label.move_to(
         center
         + 0.9

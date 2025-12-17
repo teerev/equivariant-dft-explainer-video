@@ -67,7 +67,7 @@ class ComplexFourierOnCircle(Scene):
         # ... (keep existing code) ...
         # Right Panel (25%): Coefficients
         
-        SCARLET = ManimColor("#ff2400")
+        BLUE  = ManimColor("#0066F5")
 
         # Vertical positions for the 5 modes (m = -2 to 2)
         # Spreading them vertically from top to bottom
@@ -109,18 +109,18 @@ class ComplexFourierOnCircle(Scene):
             x_axis = Line(
                 center + LEFT * neg_stub,
                 center + RIGHT * axis_len,
-                color=SCARLET,
+                color=BLUE,
                 stroke_width=2,
             )
             y_axis = Line(
                 center + DOWN * neg_stub,
                 center + UP * axis_len,
-                color=SCARLET,
+                color=BLUE,
                 stroke_width=2,
             )
 
-            sigma_label = MathTex(r"x'", color=SCARLET).scale(0.4)
-            tau_label   = MathTex(r"y'",   color=SCARLET).scale(0.4)
+            sigma_label = MathTex(r"x'", color=BLUE).scale(0.4)
+            tau_label   = MathTex(r"y'",   color=BLUE).scale(0.4)
 
             sigma_label.next_to(x_axis.get_end(), RIGHT, buff=0.05)
             tau_label.next_to(y_axis.get_end(), UP, buff=0.05)

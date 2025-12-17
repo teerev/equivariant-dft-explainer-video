@@ -58,13 +58,13 @@ class ConvolutionTransEq(RightRegionScene):
         
         # Shape f(X) in top-right of right plane (convolved - fuzzy/blurred)
         fV_shape = self.create_mnist_image(conv_image_path)
-        fV_shape.move_to(right_plane.get_corner(UR) + LEFT * 0.8 + DOWN * 0.8)
+        fV_shape.move_to(right_plane.get_corner(UL) + RIGHT*0.7 + DOWN * 0.8)
         fV_label = MathTex("f(V)", font_size=32)
         fV_label.next_to(fV_shape, RIGHT, buff=0.25)
         
         # Shape at bottom-right (final result - also fuzzy)
         final_shape = self.create_mnist_image(conv_image_path)
-        final_shape.move_to(right_plane.get_corner(DR) + LEFT * 0.8 + UP * 0.8)
+        final_shape.move_to(right_plane.get_corner(DL) + RIGHT*0.7 + UP * 0.8)
         final_label = MathTex(r"gf(V)=fg(V)", font_size=32)
         final_label.next_to(final_shape, RIGHT, buff=0.25)
         
@@ -77,7 +77,7 @@ class ConvolutionTransEq(RightRegionScene):
             stroke_width=3
         )
         g_label_right = MathTex("g", font_size=32, color=WHITE)
-        g_label_right.move_to(right_plane.get_right() + LEFT * 0.25).move_to([g_label_right.get_x(), g_arrow_right.get_center()[1], 0])
+        g_label_right.move_to(right_plane.get_left() + RIGHT*0.25) # + LEFT * 0.25)#.move_to([g_label_right.get_x(), g_arrow_right.get_center()[1], 0])
 
         fgV_label = MathTex("gf(V)=fg(V)", font_size=28, color=WHITE)
         fgV_label.next_to(final_shape, RIGHT, buff=0.25)

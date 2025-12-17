@@ -78,8 +78,8 @@ class ConvolutionScan(RightRegionScene):
             row = VGroup()
             for j in range(kernel_size):
                 square = Square(side_length=cell_size)
-                square.set_fill(color=RED, opacity=0.4)
-                square.set_stroke(color=RED_E, width=2)
+                square.set_fill(color=BLUE, opacity=0.4)
+                square.set_stroke(color=BLUE, width=2)
                 square.move_to(np.array([j*cell_size, -i*cell_size, 0]))
                 row.add(square)
             kernel.add(row)
@@ -120,12 +120,29 @@ class ConvolutionScan(RightRegionScene):
 
         patch_display = create_matrix_display(np.zeros((kernel_size, kernel_size)), stroke_color=WHITE)
         product_display = create_matrix_display(np.zeros((kernel_size, kernel_size)), stroke_color=WHITE, text_color=WHITE)
-        kernel_reference_display = create_matrix_display(kernel_values, stroke_color=RED, text_color=RED_E)
+        kernel_reference_display = create_matrix_display(kernel_values, stroke_color=BLUE, text_color=BLUE)
 
         patch_column = VGroup(Text("Input patch").scale(0.35), patch_display).arrange(DOWN, buff=0.08)
         kernel_column = VGroup(Text("Kernel").scale(0.35), kernel_reference_display).arrange(DOWN, buff=0.08)
 
-        product_column = VGroup(Text("Elementwise product").scale(0.35), product_display).arrange(DOWN, buff=0.08)
+        # Show that the convolution output is the *sum* of the elementwise product
+        sum_symbol = MathTex(r"\sum").scale(0.6)
+        left_bracket = MathTex(r"\Big[").scale(0.8)
+        right_bracket = MathTex(r"\Big]").scale(0.8)
+        left_bracket.stretch_to_fit_height(product_display.height * 1.2)
+        right_bracket.stretch_to_fit_height(product_display.height * 1.2)
+
+        summed_product = VGroup(
+            sum_symbol,
+            left_bracket,
+            product_display,
+            right_bracket,
+        ).arrange(RIGHT, buff=0.06)
+
+        product_column = VGroup(
+            Text("Elementwise product").scale(0.35),
+            summed_product,
+        ).arrange(DOWN, buff=0.08)
 
         multiply_symbol = MathTex("*").scale(0.6)
         equals_symbol = MathTex("=").scale(0.6)

@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from scipy.special import jv, jn_zeros
 
-SCARLET = ManimColor("#F20000")
+BLUE = ManimColor("#0066F5")
 IMAGE_NEG_HEX = "#00D5FF"
 IMAGE_POS_HEX = "#F26D00"
 IMAGE_NEG_COLOR = ManimColor(IMAGE_NEG_HEX)
@@ -61,7 +61,7 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
         # Circle radius was half that width.
         kernel_box = Circle(
             radius=(kernel_image.width * 0.4) / 2,
-            color=SCARLET,
+            color=BLUE,
             stroke_width=2.0,
         )
         kernel_box.move_to(kernel_image)
@@ -80,7 +80,7 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
                 x_length=w * 0.6,
                 y_length=h * 0.6,
                 axis_config={
-                    "color": SCARLET,
+                    "color": BLUE,
                     "stroke_width": 2,
                     "include_tip": False,
                     "include_ticks": False,
@@ -88,13 +88,13 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
             )
             k_axes.shift(center - k_axes.c2p(0, 0))
             
-            sigma_tick = Line(UP * 0.08, DOWN * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.x_axis.get_end())
-            tau_tick = Line(LEFT * 0.08, RIGHT * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.y_axis.get_end())
+            sigma_tick = Line(UP * 0.08, DOWN * 0.08, color=BLUE, stroke_width=2).move_to(k_axes.x_axis.get_end())
+            tau_tick = Line(LEFT * 0.08, RIGHT * 0.08, color=BLUE, stroke_width=2).move_to(k_axes.y_axis.get_end())
 
-            sigma_label = MathTex(r"x'", color=SCARLET).scale(0.6)
+            sigma_label = MathTex(r"x'", color=BLUE).scale(0.6)
             sigma_label.next_to(sigma_tick, RIGHT, buff=0.05)
             
-            tau_label = MathTex(r"y'", color=SCARLET).scale(0.6)
+            tau_label = MathTex(r"y'", color=BLUE).scale(0.6)
             tau_label.next_to(tau_tick, UP, buff=0.05)
             
             return VGroup(k_axes, sigma_tick, tau_tick, sigma_label, tau_label)
@@ -164,7 +164,7 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
                 base,
                 base + offset,
                 buff=0,
-                color=SCARLET,
+                color=BLUE,
                 stroke_width=2.2,
                 tip_length=0.08,
                 max_tip_length_to_length_ratio=1.0,
@@ -172,8 +172,8 @@ class CircularKernelsEquivarianceDemo(RightRegionScene):
             
             alpha = offset_label_alpha.get_value()
             
-            lbl_st = MathTex(r"(\sigma,\tau)", color=SCARLET).scale(0.5)
-            lbl_p = MathTex(r"\mathbf{p}'", color=SCARLET).scale(0.5)
+            lbl_st = MathTex(r"(\sigma,\tau)", color=BLUE).scale(0.5)
+            lbl_p = MathTex(r"\mathbf{p}'", color=BLUE).scale(0.5)
             
             pos = base + offset + UP * 0.2
             lbl_st.move_to(pos).set_opacity(1 - alpha)

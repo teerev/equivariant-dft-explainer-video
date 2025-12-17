@@ -4,7 +4,7 @@ import numpy as np
 import sys
 from pathlib import Path
 
-SCARLET = ManimColor("#F20000")
+BLUE = ManimColor("#0066F5")
 IMAGE_NEG_HEX = "#00D5FF"
 IMAGE_POS_HEX = "#F26D00"
 IMAGE_NEG_COLOR = ManimColor(IMAGE_NEG_HEX)
@@ -56,7 +56,7 @@ class PolarCoordsIntroduction(RightRegionScene):
             x_length=kernel_image.width * 0.4 * 0.6,
             y_length=kernel_image.height * 0.4 * 0.6,
             axis_config={
-                "color": SCARLET,
+                "color": BLUE,
                 "stroke_width": 2,
                 "include_tip": False,
                 "include_ticks": False,
@@ -64,13 +64,13 @@ class PolarCoordsIntroduction(RightRegionScene):
         )
         k_axes.move_to(kernel_image.get_center(), aligned_edge=DL)
         
-        sigma_tick = Line(UP * 0.08, DOWN * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.x_axis.get_end())
-        tau_tick = Line(LEFT * 0.08, RIGHT * 0.08, color=SCARLET, stroke_width=2).move_to(k_axes.y_axis.get_end())
+        sigma_tick = Line(UP * 0.08, DOWN * 0.08, color=BLUE, stroke_width=2).move_to(k_axes.x_axis.get_end())
+        tau_tick = Line(LEFT * 0.08, RIGHT * 0.08, color=BLUE, stroke_width=2).move_to(k_axes.y_axis.get_end())
 
-        sigma_label = MathTex(r"x'", color=SCARLET).scale(0.6)
+        sigma_label = MathTex(r"x'", color=BLUE).scale(0.6)
         sigma_label.next_to(sigma_tick, RIGHT, buff=0.05)
         
-        tau_label = MathTex(r"y'", color=SCARLET).scale(0.6)
+        tau_label = MathTex(r"y'", color=BLUE).scale(0.6)
         tau_label.next_to(tau_tick, UP, buff=0.05)
         
         kernel_axes_group = VGroup(k_axes, sigma_tick, tau_tick, sigma_label, tau_label)
@@ -105,14 +105,14 @@ class PolarCoordsIntroduction(RightRegionScene):
                 center,
                 target,
                 buff=0,
-                color=SCARLET,
+                color=BLUE,
                 stroke_width=2.5,
                 tip_length=0.1,
                 max_tip_length_to_length_ratio=1.0,
             ).set_z_index(2)
             
             # Label p'
-            lbl_p = MathTex(r"\mathbf{p}'", color=SCARLET).scale(0.6)
+            lbl_p = MathTex(r"\mathbf{p}'", color=BLUE).scale(0.6)
             lbl_p.next_to(arrow.get_end(), UP, buff=0.1)
             lbl_p.shift(RIGHT * 0.15 * self.label_shift_tracker.get_value())
             
@@ -125,11 +125,11 @@ class PolarCoordsIntroduction(RightRegionScene):
                 line_sigma, line_vec,
                 radius=0.4,
                 other_angle=False,
-                color=SCARLET,
+                color=BLUE,
                 stroke_width=1.5
             )
             
-            theta_label = MathTex(r"\theta'", color=SCARLET).scale(0.5)
+            theta_label = MathTex(r"\theta'", color=BLUE).scale(0.5)
             # Position theta label
             # Ideally at the midpoint of the arc, slightly outward
             mid_arc_angle = angle / 2
@@ -149,7 +149,7 @@ class PolarCoordsIntroduction(RightRegionScene):
             if np.linalg.norm(perp) > 1e-6:
                 perp = perp / np.linalg.norm(perp)
             
-            r_label = MathTex("r'", color=SCARLET).scale(0.5)
+            r_label = MathTex("r'", color=BLUE).scale(0.5)
             r_label.move_to(midpoint + perp * 0.15)
             
             return VGroup(arrow, lbl_p, angle_arc, theta_label, r_label)

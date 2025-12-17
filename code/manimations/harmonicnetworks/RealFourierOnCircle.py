@@ -13,7 +13,7 @@ class RealFourierOnCircle(Scene):
         C_CYAN   = np.array([0.0, 0.8, 1.0])
         C_ORANGE = np.array([1.0, 0.35, 0.0])
         C_BLACK  = np.array([0.0, 0.0, 0.0])
-        SCARLET  = ManimColor("#ff2400")
+        BLUE  = ManimColor("#0066F5")
 
         def value_to_rgb(v):
             """
@@ -67,11 +67,11 @@ class RealFourierOnCircle(Scene):
             pos_len = radius * 1.1
             neg_len = 0.25
             
-            x_ax = Line(center + LEFT*neg_len, center + RIGHT*pos_len, color=SCARLET, stroke_width=2)
-            y_ax = Line(center + DOWN*neg_len, center + UP*pos_len, color=SCARLET, stroke_width=2)
+            x_ax = Line(center + LEFT*neg_len, center + RIGHT*pos_len, color=BLUE, stroke_width=2)
+            y_ax = Line(center + DOWN*neg_len, center + UP*pos_len, color=BLUE, stroke_width=2)
             
-            x_lab = MathTex(r"x'", color=SCARLET).scale(0.5).next_to(x_ax, RIGHT, buff=0.1)
-            y_lab = MathTex(r"y'", color=SCARLET).scale(0.5).next_to(y_ax, UP, buff=0.1)
+            x_lab = MathTex(r"x'", color=BLUE).scale(0.5).next_to(x_ax, RIGHT, buff=0.1)
+            y_lab = MathTex(r"y'", color=BLUE).scale(0.5).next_to(y_ax, UP, buff=0.1)
             
             axes_group.add(x_ax, y_ax, x_lab, y_lab)
             return axes_group
