@@ -384,8 +384,67 @@ class EquivariancePanels4(BaseGridScene):
 class EquivariancePanels5(BaseGridScene):
     panels_to_show = 5
 
-class EquivariancePanels6(BaseGridScene):
-    panels_to_show = 6
+class EquivariancePanels6(Scene):
+    """
+    Stage 6: show panels 1..6, but place the kernel blob, circle, and p'' in
+    the same location as stage 5 (i.e., not yet at the Q_α p endpoint). This
+    keeps the un-translated state visible before the dedicated translation stage.
+    """
+
+    def construct(self):
+        # Build panels 1..6
+        panels = [make_panel(k) for k in range(1, 7)]
+
+        # Add panels 1..5 (static)
+        if len(panels) >= 5:
+            self.add(*panels[:5])
+
+        panel6 = panels[5]
+
+        # Shift circle/p'' back to stage-5 position; keep blob at final (Q_α p)
+        def _walk(mobj):
+            yield mobj
+            for sm in getattr(mobj, "submobjects", []):
+                yield from _walk(sm)
+
+        blob6 = None
+        circle6 = None
+        pprime6 = None
+
+        for m in _walk(panel6):
+            if isinstance(m, ImageMobject):
+                blob6 = m
+                break
+
+        for m in _walk(panel6):
+            if isinstance(m, Circle):
+                circle6 = m
+                break
+
+        for m in _walk(panel6):
+            kids = getattr(m, "submobjects", [])
+            if len(kids) == 2 and isinstance(kids[0], Arrow) and isinstance(kids[1], MathTex):
+                tex = getattr(kids[1], "tex_string", "")
+                if "p''" in tex:
+                    pprime6 = m
+                    break
+
+        PANEL_SCALE = 0.8
+        p_initial_offset = RIGHT * 2.0 + UP * 0.6
+        panel6_center = get_panel_center(row=1, col=1) + LEFT * 1.0 + DOWN * 1.0
+        start_center = panel6_center + p_initial_offset * PANEL_SCALE
+
+        if blob6 is not None:
+            target_center = blob6.get_center()
+            start_delta = start_center - target_center
+            if circle6 is not None:
+                circle6.shift(start_delta)
+            if pprime6 is not None:
+                pprime6.shift(start_delta)
+
+        # Show panel 6 (blob final; circle/p'' at stage-5 position)
+        self.play(FadeIn(panel6))
+        self.wait(0.5)
 
 
 class EquivariancePanels6Translation(Scene):
@@ -436,39 +495,34 @@ class EquivariancePanels6Translation(Scene):
                     pprime6 = m
                     break
 
-        # --- Move these objects to the panel-5 position (within panel 6) ---
-        # Panel 6 center and the same p_initial_offset used in make_panel(), then scaled.
+        # Blob stays at final Q_α p position. Circle/p'' start at stage-5 position, then animate to final.
         PANEL_SCALE = 0.8
         p_initial_offset = RIGHT * 2.0 + UP * 0.6
         panel6_center = get_panel_center(row=1, col=1) + LEFT * 1.0 + DOWN * 1.0
         start_center = panel6_center + p_initial_offset * PANEL_SCALE
 
+        start_delta = ORIGIN
         if blob6 is not None:
             target_center = blob6.get_center()
             start_delta = start_center - target_center
+        # Move only circle and p'' back to stage-5 start
+        if circle6 is not None:
+            circle6.shift(start_delta)
+        if pprime6 is not None:
+            pprime6.shift(start_delta)
 
-            # Put the objects at the "panel 5" start location
-            blob6.shift(start_delta)
-            if circle6 is not None:
-                circle6.shift(start_delta)
-            if pprime6 is not None:
-                pprime6.shift(start_delta)
-        else:
-            start_delta = ORIGIN
-
-        # Panel 6 should already be visible at the start of this stage.
-        # The only animated action in this stage is the translation below.
+        # Panel 6 visible at start
         self.add(panel6)
         self.wait(0.2)
 
-        # Animate the translation to the existing panel-6 ("current") location
-        if blob6 is not None and np.linalg.norm(start_delta) > 1e-6:
-            anims = [blob6.animate.shift(-start_delta)]
-            if circle6 is not None:
-                anims.append(circle6.animate.shift(-start_delta))
-            if pprime6 is not None:
-                anims.append(pprime6.animate.shift(-start_delta))
+        # Animate circle/p'' to final; blob stays put
+        anims = []
+        if circle6 is not None and np.linalg.norm(start_delta) > 1e-6:
+            anims.append(circle6.animate.shift(-start_delta))
+        if pprime6 is not None and np.linalg.norm(start_delta) > 1e-6:
+            anims.append(pprime6.animate.shift(-start_delta))
 
+        if anims:
             self.play(*anims, run_time=1.2, rate_func=smooth)
 
         self.wait(0.5)
