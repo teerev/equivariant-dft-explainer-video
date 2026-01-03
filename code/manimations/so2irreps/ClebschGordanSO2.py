@@ -60,8 +60,8 @@ class ClebschGordanSO2(mn.Scene):
         rule_text = mn.MathTex(r"m_i + m_f = m_o").scale(0.7)
         rule_text.to_edge(mn.RIGHT)
         rule_text.shift(RULE_TEXT_HORIZONTAL_SHIFT + RULE_TEXT_VERTICAL_SHIFT)
-        self.play(mn.Write(rule_text))
-        self.play(mn.FadeIn(matrix_group, shift=mn.DOWN * 0.2))
+        self.play(mn.Write(rule_text), run_time=0.5)
+        self.play(mn.FadeIn(matrix_group, shift=mn.DOWN * 0.2), run_time=0.5)
 
         combos_by_spin = self._compute_spin_combos(row_fields, col_filters)
         focus_spins = list(range(-4, 5))
@@ -93,9 +93,9 @@ class ClebschGordanSO2(mn.Scene):
             equations.shift(EQUATION_HORIZONTAL_SHIFT + EQUATION_VERTICAL_SHIFT)
             if equation_display is None:
                 equation_display = equations
-                self.play(mn.FadeIn(equation_display, shift=EQUATION_APPEAR_SHIFT), run_time=0.5)
+                self.play(mn.FadeIn(equation_display, shift=EQUATION_APPEAR_SHIFT), run_time=0.25)
             else:
-                self.play(mn.Transform(equation_display, equations), run_time=0.5)
+                self.play(mn.Transform(equation_display, equations), run_time=0.25)
 
             highlight_rects = mn.VGroup(
                 *[
@@ -114,27 +114,27 @@ class ClebschGordanSO2(mn.Scene):
 
             self.play(
                 mn.LaggedStart(*[mn.Create(rect) for rect in highlight_rects], lag_ratio=0.08),
-                run_time=0.8,
+                run_time=0.4,
             )
             self.play(
                 mn.LaggedStart(
                     *[cell.animate.set_color(spin_colors[target_spin]) for cell in colored_cells],
                     lag_ratio=0.05,
                 ),
-                run_time=0.6,
+                run_time=0.3,
             )
-            self.wait(0.4)
+            self.wait(0.2)
             self.play(
                 mn.LaggedStart(
                     *[cell.animate.set_color(mn.WHITE) for cell in colored_cells],
                     lag_ratio=0.05,
                 ),
                 mn.FadeOut(highlight_rects),
-                run_time=0.8,
+                run_time=0.4,
             )
 
         if equation_display is not None:
-            self.play(mn.FadeOut(equation_display, shift=EQUATION_APPEAR_SHIFT), run_time=0.4)
+            self.play(mn.FadeOut(equation_display, shift=EQUATION_APPEAR_SHIFT), run_time=0.2)
 
         final_rects = mn.VGroup()
         final_color_anims = []
@@ -159,9 +159,9 @@ class ClebschGordanSO2(mn.Scene):
                 *[mn.Create(rect) for rect in final_rects],
                 lag_ratio=0,
             ),
-            run_time=1.2,
+            run_time=0.6,
         )
-        self.wait(2.0)
+        self.wait(1.0)
 
     def _build_cell_grid(self, row_fields, col_filters, scale_factor):
         """Create MathTex entries laid out in a grid with lookup for highlighting."""

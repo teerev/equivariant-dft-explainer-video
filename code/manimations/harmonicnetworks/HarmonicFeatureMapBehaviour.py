@@ -22,28 +22,6 @@ class HarmonicFeatureMapBehaviour(Scene):
         top_row = Group(input_panel).arrange(RIGHT, buff=1.5)
         top_row.to_edge(UP, buff=1.0)
 
-        eq1 = MathTex(
-            r"Y^{\alpha}\bigl(\mathbf{Q}_{\alpha} p\bigr) = D(\alpha)\,Y(p)",
-            font_size=32
-        )
-        
-        matrix_content = (
-            r"D(\alpha) ="
-            r"\begin{pmatrix}"
-            r"e^{-3\mathrm{i}\alpha} & 0 & 0 & 0 & 0 & 0 & 0 \\"
-            r"0 & e^{-2\mathrm{i}\alpha} & 0 & 0 & 0 & 0 & 0 \\"
-            r"0 & 0 & e^{-\mathrm{i}\alpha} & 0 & 0 & 0 & 0 \\"
-            r"0 & 0 & 0 & 1 & 0 & 0 & 0 \\"
-            r"0 & 0 & 0 & 0 & e^{\mathrm{i}\alpha} & 0 & 0 \\"
-            r"0 & 0 & 0 & 0 & 0 & e^{2\mathrm{i}\alpha} & 0 \\"
-            r"0 & 0 & 0 & 0 & 0 & 0 & e^{3\mathrm{i}\alpha}"
-            r"\end{pmatrix}"
-        )
-        eq2 = MathTex(matrix_content, font_size=20)
-        
-        equation = VGroup(eq1, eq2).arrange(DOWN, buff=0.2)
-        equation.next_to(top_row, RIGHT, buff=0.4)
-
         # --------------------------------------------------------------
         # Bottom: grid of Re/Im panels for m = -2,-1,0,1,2
         # --------------------------------------------------------------
@@ -85,27 +63,14 @@ class HarmonicFeatureMapBehaviour(Scene):
         bottom_grid = Group(*columns).arrange(RIGHT, buff=0.4)
         bottom_grid.to_edge(DOWN, buff=0.3)
 
-        # Shift everything left by one column width
-        # Approx width of one column = image width + buff
-        # Image height 1.0 -> width depends on aspect ratio but likely similar
-        # Let's assume aspect ratio ~1.0 for square tiles, plus padding.
-        # Visually shifting LEFT * 1.5 should be safe based on layout.
-        
-        # User requested to move image and equation to the left a bit more
-        # Original shift was LEFT * 1.8
-        # I will shift top_row and equation further left by adding an extra shift
-        
-        shift_vec = LEFT * 1.8
-        top_row_extra_shift = LEFT * 1.1 # Tweak this value to move image/equation further left
-        
-        top_row.shift(shift_vec + top_row_extra_shift)
-        equation.next_to(top_row, RIGHT, buff=0.4)
-        bottom_grid.shift(shift_vec)
+        # Center the main input image at the top, keep feature maps at the bottom
+        top_row.to_edge(UP, buff=0.8)
+        bottom_grid.to_edge(DOWN, buff=0.3)
 
         # --------------------------------------------------------------
         # Add everything before attaching updaters
         # --------------------------------------------------------------
-        self.add(equation, top_row, bottom_grid)
+        self.add(top_row, bottom_grid)
 
         # --------------------------------------------------------------
         # Updater factory: rotate about a fixed centre

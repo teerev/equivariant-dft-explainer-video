@@ -24,13 +24,13 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
         # --- Equations ---
         # Initial equation: centred convolution
         equation_centred = MathTex(
-            r"Y(s,t) = (X * F)(s,t) = \int_{-A/2}^{A/2}\!\!\int_{-B/2}^{B/2} X(s + \sigma,\; t + \tau) F(\sigma,\tau)\,\mathrm{d}\sigma\mathrm{d}\tau",
+            r"L(x,y) = (V * F)(x,y) = \int_{-A/2}^{A/2}\!\!\int_{-B/2}^{B/2} V(x + x',\; y + y') F(x',y')\,\mathrm{d}x'\mathrm{d}y'",
             color=WHITE
         ).scale(0.55).to_edge(UP, buff=0.5)
 
         # Final equation: convolution notation with vector p
         equation_rot = MathTex(
-            r"(X * F)(p) = \int_{\mathbb{R}^2} X(p + p') F(p')\,\mathrm{d}p'",
+            r"L(p) = (V * F)(p) = \int_{\mathbb{R}^2} V(p + p') F(p')\,\mathrm{d}p'",
             color=WHITE
         ).scale(0.55).to_edge(UP, buff=0.5)
 
@@ -49,7 +49,7 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
         )
         axes_shift = LEFT * 5.9 + DOWN * 3.5
         axes.shift(axes_shift)
-        axes_labels = axes.get_axis_labels(MathTex("s"), MathTex("t"))
+        axes_labels = axes.get_axis_labels(MathTex("x"), MathTex("y"))
 
         # --- background image ---
         # Matched to ConvolutionContinuousShiftImage
@@ -107,10 +107,10 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
             sigma_tick = Line(UP * 0.08, DOWN * 0.08, color=BLUE, stroke_width=2).move_to(k_axes.x_axis.get_end())
             tau_tick = Line(LEFT * 0.08, RIGHT * 0.08, color=BLUE, stroke_width=2).move_to(k_axes.y_axis.get_end())
 
-            sigma_label = MathTex(r"\sigma", color=BLUE).scale(0.6)
+            sigma_label = MathTex(r"x'", color=BLUE).scale(0.6)
             sigma_label.next_to(sigma_tick, RIGHT, buff=0.05)
             
-            tau_label = MathTex(r"\tau", color=BLUE).scale(0.6)
+            tau_label = MathTex(r"y'", color=BLUE).scale(0.6)
             tau_label.next_to(tau_tick, UP, buff=0.05)
             
             return VGroup(k_axes, sigma_tick, tau_tick, sigma_label, tau_label)
@@ -142,7 +142,7 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
             
             alpha = global_label_alpha.get_value()
             
-            lbl_st = MathTex(r"(s,t)", color=vector_color).scale(0.5)
+            lbl_st = MathTex(r"(x,y)", color=vector_color).scale(0.5)
             lbl_p = MathTex(r"\mathbf{p}", color=vector_color).scale(0.5)
             
             pos = target + UP * 0.2
@@ -187,7 +187,7 @@ class ConvolutionContinuousVariableChange(RightRegionScene):
             
             alpha = offset_label_alpha.get_value()
             
-            lbl_st = MathTex(r"(\sigma,\tau)", color=BLUE).scale(0.5)
+            lbl_st = MathTex(r"(x',y')", color=BLUE).scale(0.5)
             lbl_p = MathTex(r"\mathbf{p}'", color=BLUE).scale(0.5)
             
             pos = base + offset + UP * 0.2
