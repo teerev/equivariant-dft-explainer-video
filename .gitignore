@@ -235,3 +235,6 @@ __marimo__/
 *.synctex.gz
 **/.build/
 
+
+# Large Keynote file (kept outside git)
+notes/equivariant_convolutions.key
