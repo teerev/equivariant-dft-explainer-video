@@ -1,2 +1,3 @@
-# equivariant-dft-explainer-video
-Explainer video for equivariant graph neural networks for density functional theory
+# equivariant-convolutions-explainer
+
+This mini explainer video series explains some of the theory behind equivariant convolutions of interest to physics and chemistry.
